@@ -66,13 +66,16 @@ jobs:
         with:
           name: cache-headers
           path: build_git2/source/include
+      - name : Export git2 library
+        run: | 
+          mkdir export 
+          cp build_git2/build/Debug/git2.dll export/git2-1.6.1.dll 
+          cp D:/Temp/libssh2/libssh2.dll export/libssh2.dll
       - name: Cache git2 library
         uses: actions/upload-artifact@master
         with:
           name: cache-${{ matrix.platform.os }}
-          path: |
-            build_git2/build/Debug/git2.dll
-            /Temp/libssh2/libssh2.dll
+          path: export/**
           retention-days: 1
         
   generate_bindings:
