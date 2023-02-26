@@ -57,41 +57,12 @@ jobs:
         shell: bash
       - name: Build and test
         run: |
-          export GITTEST_NEGOTIATE_PASSWORD="${{ secrets.GITTEST_NEGOTIATE_PASSWORD }}"
-          export GITTEST_GITHUB_SSH_KEY="${{ secrets.GITTEST_GITHUB_SSH_KEY }}"
-          export GITTEST_GITHUB_SSH_PUBKEY="${{ secrets.GITTEST_GITHUB_SSH_PUBKEY }}"
-          export GITTEST_GITHUB_SSH_PASSPHRASE="${{ secrets.GITTEST_GITHUB_SSH_PASSPHRASE }}"
-          export GITTEST_GITHUB_SSH_REMOTE_HOSTKEY="${{ secrets.GITTEST_GITHUB_SSH_REMOTE_HOSTKEY }}"
-
-          if [ -n "${{ matrix.platform.container.name }}" ]; then
-            mkdir build
-            docker run \
-                --rm \
-                --user "$(id -u):$(id -g)" \
-                -v "$(pwd)/build_libgit2/source:/home/libgit2/source" \
-                -v "$(pwd)/build_libgit2/build:/home/libgit2/build" \
-                -w /home/libgit2 \
-                -e ASAN_SYMBOLIZER_PATH \
-                -e CC \
-                -e CFLAGS \
-                -e CMAKE_GENERATOR \
-                -e CMAKE_OPTIONS \
-                -e GITTEST_NEGOTIATE_PASSWORD \
-                -e GITTEST_FLAKY_STAT \
-                -e PKG_CONFIG_PATH \
-                -e SKIP_NEGOTIATE_TESTS \
-                -e SKIP_SSH_TESTS \
-                -e TSAN_OPTIONS \
-                -e UBSAN_OPTIONS \
-                ${{ env.docker-registry-container-sha }} \
-                /bin/bash -c "cd build && ../source/ci/build.sh && ../source/ci/test.sh"
-          else
-            cd build_libgit2/source
-            mkdir build
-            cd build
-            ../source/ci/build.sh
-            ../source/ci/test.sh
-          fi
+          cd build_libgit2/source
+          mkdir build
+          cd build
+          ls 
+          ../source/ci/build.sh
+          ../source/ci/test.sh
         shell: bash
 
   #  matrix:
