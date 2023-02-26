@@ -91,8 +91,7 @@ jobs:
         run: dart pub get
 
       - name: generate bindings
-        run: dart --sound-null-safety run ffigen
-
+        run: dart run ffigen --config ffigen.yaml
 
 
 
