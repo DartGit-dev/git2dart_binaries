@@ -108,5 +108,8 @@ jobs:
           path: .
           retention-days: 1
 
+      - name: Publish - dry run
+        run: dart pub publish --dry-run
+      # Publishing...
       - name: Publish to pub.dev
-        uses: dart-lang/ecosystem/.github/workflows/publish.yaml@main
+        run: dart pub publish -f
