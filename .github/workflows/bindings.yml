@@ -81,7 +81,10 @@ jobs:
           name: cache-${{ matrix.platform.os }}
           path: export/**
           retention-days: 1
-        
+
+      - name : remove export dir
+        run: rm -fr export
+
   generate_bindings:
     needs: [build_git2]
     runs-on: ubuntu-latest
@@ -115,6 +118,13 @@ jobs:
 
       - name: Remove headers folder
         run: rm -fr headers
+
+      - name: export final dir
+        uses: actions/upload-artifact@master
+        with:
+          name: final
+          path: .
+          retention-days: 1
 
       # - name: Publish to pub.dev
       #   uses: dart-lang/setup-dart/.github/workflows/publish.yml
