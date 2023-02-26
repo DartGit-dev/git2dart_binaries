@@ -53,17 +53,17 @@ jobs:
           path: build_libgit2/source
           fetch-depth: 0
       - name: Set up build environment
-        run: build_libgit2/source/ci/setup-${{ matrix.platform.setup-script }}-build.sh
+        run: source/ci/setup-${{ matrix.platform.setup-script }}-build.sh
+        working-directory: ./build_libgit2
         shell: bash
       - name: Build and test
         run: |
-          cd build_libgit2/source
           mkdir build
           cd build
-          ls 
           ../source/ci/build.sh
           ../source/ci/test.sh
         shell: bash
+        working-directory: ./build_libgit2
 
   #  matrix:
   #       # platform: [ubuntu-latest, macos-latest, windows-latest]
