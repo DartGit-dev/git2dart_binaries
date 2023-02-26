@@ -70,7 +70,10 @@ jobs:
         uses: actions/upload-artifact@master
         with:
           name: cache-${{ matrix.platform.os }}
-          path: build_git2/build/Debug/git2.dll
+          path: |
+            build_git2/build/Debug/git2.dll
+            D:\Temp\libssh2\libssh2.dll
+          retention-days: 1
         
   generate_bindings:
     needs: [build_git2]
@@ -79,12 +82,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
     
-      - name: Restore headers
+      - name: Save headers
         uses: actions/download-artifact@master
         with:
           path: ./headers
           name: cache-headers
-      
+
+      - name: Save windows binaries
+        uses: actions/download-artifact@master
+        with:
+          path: ./windows
+          name: cache-windows-2019
+
       - name: Install flutter
         uses: subosito/flutter-action@v2
     
@@ -98,7 +107,7 @@ jobs:
         run: dart run ffigen --config ffigen.yaml
 
       - name: Remove headers folder
-        run: rm -fr headers && r
+        run: rm -fr headers
 
       # - name: Publish to pub.dev
       #   uses: dart-lang/setup-dart/.github/workflows/publish.yml
