@@ -3,7 +3,7 @@ name: Generate bindings
 on:
   push:
     branches:
-      - "*"
+      - '**'
     # tags:
     #   - 'v[0-9]+.[0-9]+.[0-9]+*'
 env:
