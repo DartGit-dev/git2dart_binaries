@@ -109,4 +109,4 @@ jobs:
           retention-days: 1
 
       - name: Publish to pub.dev
-        uses: dart-lang/setup-dart@master/.github/workflows/publish.yml
+        uses: dart-lang/setup-dar/.github/workflows/publish.ymlt@master
