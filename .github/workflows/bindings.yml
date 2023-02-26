@@ -72,7 +72,7 @@ jobs:
           name: cache-${{ matrix.platform.os }}
           path: |
             build_git2/build/Debug/git2.dll
-            D:\Temp\libssh2\libssh2.dll
+            /Temp/libssh2/libssh2.dll
           retention-days: 1
         
   generate_bindings:
