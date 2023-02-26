@@ -91,7 +91,7 @@ jobs:
         run: dart pub get
 
       - name: generate bindings
-        run: dart run --no-sound-null-safety ffigen
+        run: dart --sound-null-safety run ffigen
 
 
 
