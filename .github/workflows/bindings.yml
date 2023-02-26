@@ -55,14 +55,13 @@ jobs:
         run: source/ci/setup-${{ matrix.platform.setup-script }}-build.sh
         working-directory: ./build_git2
         shell: bash
-      - run: ls D:\Temp\libssh2\bin
-      # - name: Build and test
-      #   run: |
-      #     mkdir build
-      #     cd build
-      #     ../source/ci/build.sh
-      #   shell: bash
-      #   working-directory: ./build_git2
+      - name: Build and test
+        run: |
+          mkdir build
+          cd build
+          ../source/ci/build.sh
+        shell: bash
+        working-directory: ./build_git2
 
       - name: Cache headers
         uses: actions/upload-artifact@master
@@ -74,7 +73,7 @@ jobs:
         run: | 
           mkdir export 
           cp build_git2/build/Debug/git2.dll export/git2-1.6.1.dll 
-          cp D:/Temp/libssh2/libssh2.dll export/libssh2.dll
+          cp D:/Temp/libssh2/bin/** export/
 
       - name: Cache git2 library
         uses: actions/upload-artifact@master
