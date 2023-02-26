@@ -85,14 +85,14 @@ jobs:
           path: ./headers
           name: cache-headers
       
-      - name: Install dart
-        uses: dart-lang/setup-dart@v1
+      - name: Install flutter
+        uses: subosito/flutter-action@v2
     
       - name: Install libclang-dev
         run: sudo apt-get install libclang-dev
 
       - name: Install dependencies
-        run: dart pub get
+        run: flutter pub get
 
       - name: Generate bindings
         run: dart run ffigen --config ffigen.yaml
