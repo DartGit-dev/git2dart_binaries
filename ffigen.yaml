@@ -1,0 +1,9 @@
+output: "lib/src/bindings/libgit2_bindings.dart"
+headers:
+  entry-points:
+    - "headers/git2.h"
+name: "Libgit2"
+description: "Bindings to libgit2"
+comments:
+  style: any
+  length: full
