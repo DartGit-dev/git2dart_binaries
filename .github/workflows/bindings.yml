@@ -50,6 +50,8 @@ jobs:
         with:
           repository: libgit2/libgit2
           ref: refs/heads/main
+          path: source
+          fetch-depth: 0
       - name: Build
         run: |
           cd build
