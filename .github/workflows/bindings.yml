@@ -64,9 +64,11 @@ jobs:
       #   working-directory: ./build_git2
       - name: Cache headers
         uses: actions/cache/save@v3
+        id: cache-headers-save
+
         with:
           path: build_git2/source/include
-          key: cache-headers
+          key: ${{cache-headers-restore.outputs.cache-primary-key}}
         
   generate_bindings:
     needs: [build_git2]
@@ -82,6 +84,7 @@ jobs:
       #   run: dart pub get
     
       - name: Restore headers
+        id: cache-headers-restore
         uses: actions/cache/restore@v3
         with:
           path: ./headers
