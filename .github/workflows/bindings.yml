@@ -87,7 +87,7 @@ jobs:
           name: cache-windows-2019
 
       - name: Install dart
-      - uses: dart-lang/setup-dart@a57a6c04cf7d4840e88432aad6281d1e125f0d46
+        uses: dart-lang/setup-dart@a57a6c04cf7d4840e88432aad6281d1e125f0d46
     
       - name: Install libclang-dev
         run: sudo apt-get install libclang-dev
