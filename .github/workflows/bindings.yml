@@ -1,0 +1,41 @@
+name: Generate bindings
+
+# on:
+#   push:
+#     branches: [master]
+  # pull_request:
+  #   branches: [master]
+  workflow_dispatch:
+
+env:
+  PUB_ENVIRONMENT: bot.github
+
+jobs:
+  generate:
+    strategy:
+      fail-fast: false
+      matrix:
+        # platform: [ubuntu-latest, macos-latest, windows-latest]
+        platform: [windows-latest]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Set git to use LF
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          name: libgit2/libgit2
+          ref: refs/heads/main
+      - uses: dart-lang/setup-dart@v1
+        with:
+          channel: stable
+
+      # - name: Install dependencies
+      #   run: dart pub get
+
+      # - name: Run tests
+      #   run: dart test --reporter expanded --exclude-tags "remote_fetch" --platform=vm
