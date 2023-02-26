@@ -67,6 +67,7 @@ jobs:
         uses: actions/cache@v2
         env:
           cache-name: cache-headers
+          key: headers
         with:
          path: build_git2/build/Debug/include
         
