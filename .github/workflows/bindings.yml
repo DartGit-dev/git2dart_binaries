@@ -79,7 +79,7 @@ jobs:
         uses: actions/download-artifact@master
         with:
           path: ./headers
-          key: cache-headers
+          name: cache-headers
       
       - name: Install dart
         uses: dart-lang/setup-dart@v1
