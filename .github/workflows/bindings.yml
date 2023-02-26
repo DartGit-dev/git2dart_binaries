@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/checkout@v3
         with:
-          name: libgit2/libgit2
+          repository: libgit2/libgit2
           ref: refs/heads/main
       - uses: dart-lang/setup-dart@v1
         with:
