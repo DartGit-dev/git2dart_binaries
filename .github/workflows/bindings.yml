@@ -68,7 +68,7 @@ jobs:
 
         with:
           path: build_git2/source/include
-          key: ${{cache-headers-restore.outputs.cache-primary-key}}
+          key: cache-headers
         
   generate_bindings:
     needs: [build_git2]
@@ -88,7 +88,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ./headers
-          key: cache-headers
+          key: ${{cache-headers-save.outputs.cache-primary-key}}
 
 
 
