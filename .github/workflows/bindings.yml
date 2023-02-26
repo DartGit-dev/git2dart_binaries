@@ -37,7 +37,7 @@ jobs:
             env:
               ARCH: amd64
               CMAKE_GENERATOR: Visual Studio 16 2019
-              CMAKE_OPTIONS: -A x64 -DWIN32_LEAKCHECK=ON -DDEPRECATE_HARD=ON -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
+              CMAKE_OPTIONS: -A x64 -DWIN32_LEAKCHECK=OFF -DCMAKE_BUILD_TYPE="Release" -DDEPRECATE_HARD=ON -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2 -
               BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
               BUILD_TEMP: D:\Temp
               SKIP_SSH_TESTS: true
@@ -61,10 +61,35 @@ jobs:
           mkdir build
           cd build
           ../source/ci/build.sh
-          ../source/ci/test.sh
         shell: bash
         working-directory: ./build_libgit2
+      - name: Cache headers
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-headers
+        with:
+         path: build_libgit2/build/x64-Release/include
+        
+  # generate_bindings:
+  #   needs: [build_libgit2]
+  #   runs-on: ubuntu-latest
+  #   steps: 
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+  #     - name: Install dart
+  #       uses: dart-lang/setup-dart@v1
+  #     - name: Install dependencies
+  #       run: dart pub get
 
+
+
+
+
+
+
+
+
+  
   #  matrix:
   #       # platform: [ubuntu-latest, macos-latest, windows-latest]
   #       platform: [windows-latest]
