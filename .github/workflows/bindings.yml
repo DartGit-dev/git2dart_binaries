@@ -1,8 +1,8 @@
 name: Generate bindings
 
-# on:
-#   push:
-#     branches: [master]
+on:
+  push:
+    branches: [feature/windows-support]
   # pull_request:
   #   branches: [master]
   workflow_dispatch:
