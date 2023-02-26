@@ -50,15 +50,15 @@ jobs:
         with:
           repository: libgit2/libgit2
           ref: refs/heads/main
-          path: source
+          path: build_libgit2/source
           fetch-depth: 0
       - name: Build
         run: |
+          cd build_libgit2/source
+          mkdir build
           cd build
-            mkdir build
-            cd build
-            ../source/ci/build.sh
-            ../source/ci/test.sh
+          ../source/ci/build.sh
+          ../source/ci/test.sh
           fi
         shell: bash
 
