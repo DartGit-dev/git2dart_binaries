@@ -90,8 +90,8 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
-      - name: Install dependencies
-        run: dart run ffigen
+      - name: generate bindings
+        run: dart --no-sound-null-safety run ffigen
 
 
 
