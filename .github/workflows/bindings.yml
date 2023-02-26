@@ -64,24 +64,29 @@ jobs:
         shell: bash
         working-directory: ./build_git2
       - name: Cache headers
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-headers
+        uses: actions/cache/save@v3
         with:
           path: build_git2/build/Debug/include
-          key: headers
+          key: cache-headers
         
-  # generate_bindings:
-  #   needs: [build_libgit2]
-  #   runs-on: ubuntu-latest
-  #   steps: 
-  #     - name: Check out repository
-  #       uses: actions/checkout@v3
-  #     - name: Install dart
-  #       uses: dart-lang/setup-dart@v1
-  #     - name: Install dependencies
-  #       run: dart pub get
-
+  generate_bindings:
+    needs: [build_git2]
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Check out repository
+        uses: actions/checkout@v3
+    
+      # - name: Install dart
+      #   uses: dart-lang/setup-dart@v1
+    
+      # - name: Install dependencies
+      #   run: dart pub get
+    
+      - name: Restore headers
+        uses: actions/cache/restore@v3
+        with:
+          path: ./headers
+          key: cache-headers
 
 
 
