@@ -82,9 +82,6 @@ jobs:
           path: export/**
           retention-days: 1
 
-      - name : remove export dir
-        run: rm -fr export
-
   generate_bindings:
     needs: [build_git2]
     runs-on: ubuntu-latest
