@@ -2,10 +2,8 @@ name: Generate bindings
 
 on:
   push:
-    branches: [feature/windows-support]
-  # pull_request:
-  #   branches: [master]
-  workflow_dispatch:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 env:
   PUB_ENVIRONMENT: bot.github
@@ -51,22 +49,27 @@ jobs:
           repository: libgit2/libgit2
           ref: refs/heads/main
           path: build_git2/source
-      # - name: Set up build environment
-      #   run: source/ci/setup-${{ matrix.platform.setup-script }}-build.sh
-      #   working-directory: ./build_git2
-      #   shell: bash
-      # - name: Build and test
-      #   run: |
-      #     mkdir build
-      #     cd build
-      #     ../source/ci/build.sh
-      #   shell: bash
-      #   working-directory: ./build_git2
+      - name: Set up build environment
+        run: source/ci/setup-${{ matrix.platform.setup-script }}-build.sh
+        working-directory: ./build_git2
+        shell: bash
+      - name: Build and test
+        run: |
+          mkdir build
+          cd build
+          ../source/ci/build.sh
+        shell: bash
+        working-directory: ./build_git2
       - name: Cache headers
         uses: actions/upload-artifact@master
         with:
           name: cache-headers
           path: build_git2/source/include
+      - name: Cache git2 library
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-${{ matrix.platform.os }}
+          path: build_git2/build/Debug/git2.dll
         
   generate_bindings:
     needs: [build_git2]
@@ -90,24 +93,11 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
-      - name: ls
-        run: ls headers
-
-      - name: generate bindings
+      - name: Generate bindings
         run: dart run ffigen --config ffigen.yaml
 
+      - name: Remove headers folder
+        run: rm -fr headers && r
 
-
-
-  #  matrix:
-  #       # platform: [ubuntu-latest, macos-latest, windows-latest]
-  #       platform: [windows-latest]
-      # - uses: dart-lang/setup-dart@v1
-      #   with:
-      #     channel: stable
-
-      # - name: Install dependencies
-      #   run: dart pub get
-
-      # - name: Run tests
-      #   run: dart test --reporter expanded --exclude-tags "remote_fetch" --platform=vm
+      # - name: Publish to pub.dev
+      #   uses: dart-lang/setup-dart/.github/workflows/publish.yml

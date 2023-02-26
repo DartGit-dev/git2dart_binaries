@@ -16,13 +16,13 @@
 
 namespace {
 
-class Git2dartPlugin : public flutter::Plugin {
+class Git2DartPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
 
-  Git2dartPlugin();
+  Git2DartPlugin();
 
-  virtual ~Git2dartPlugin();
+  virtual ~Git2DartPlugin();
 
  private:
   // Called when a method is called on this plugin's channel from Dart.
@@ -32,14 +32,14 @@ class Git2dartPlugin : public flutter::Plugin {
 };
 
 // static
-void Git2dartPlugin::RegisterWithRegistrar(
+void Git2DartPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           registrar->messenger(), "git2dart_binaries",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<Git2dartPlugin>();
+  auto plugin = std::make_unique<Git2DartPlugin>();
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
@@ -49,11 +49,11 @@ void Git2dartPlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-Git2dartPlugin::Git2dartPlugin() {}
+Git2DartPlugin::Git2DartPlugin() {}
 
-Git2dartPlugin::~Git2dartPlugin() {}
+Git2DartPlugin::~Git2DartPlugin() {}
 
-void Git2dartPlugin::HandleMethodCall(
+void Git2DartPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name().compare("getPlatformVersion") == 0) {
@@ -74,9 +74,9 @@ void Git2dartPlugin::HandleMethodCall(
 
 }  // namespace
 
-void Git2dartPluginRegisterWithRegistrar(
+void Git2DartPluginRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  Git2dartPlugin::RegisterWithRegistrar(
+  Git2DartPlugin::RegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
 }
