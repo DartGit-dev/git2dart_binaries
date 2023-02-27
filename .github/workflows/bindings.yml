@@ -84,6 +84,12 @@ jobs:
           path: ./windows
           name: cache-windows-2019
 
+      # This action adds a token needed for pub.dev
+      - name: Install Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
       - name: Install flutter
         uses: subosito/flutter-action@v2
     
@@ -99,12 +105,17 @@ jobs:
       - name: Remove headers folder
         run: rm -fr headers
 
-      - name: export final dir
-        uses: actions/upload-artifact@master
+      - name: Publish
+        uses: k-paxian/dart-package-publisher@v1.5.1
         with:
-          name: final
-          path: .
-          retention-days: 1
+          credentialJson: ${{ secrets.CREDENTIALS_JSON }}
+          flutter: true
+          skipTests: true
+          dry_run: true
 
-      - name: Publish to pub.dev
-        uses: dart-lang/setup-dart/.github/workflows/publish.yml
+      # - name: Create release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     name: ${{ github.ref_name }}
+      #     body: '[See changelog on pub.dev](${{ env.RELEASE_NOTES }})'
+      #     prerelease: ${{ env.IS_PRERELEASE }}
