@@ -107,13 +107,13 @@ jobs:
       - name: Remove headers folder
         run: rm -fr headers
 
-      - name: Publish - dry run
-        run: flutter pub publish --dry-run
-        working-directory: ${{ inputs.working-directory }}
-
-      - name: Publish to pub.dev
-        run: flutter pub publish -f
-        working-directory: ${{ inputs.working-directory }}
+      - name: Publish
+        uses: k-paxian/dart-package-publisher@v1.5.1
+        with:
+          credentialJson: ${{ secrets.CREDENTIALS_JSON }}
+          flutter: true
+          skipTests: true
+          dry_run: true
 
       # - name: Create release
       #   uses: softprops/action-gh-release@v1
