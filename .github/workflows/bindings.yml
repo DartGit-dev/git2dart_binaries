@@ -104,8 +104,8 @@ jobs:
       - name: Generate bindings
         run: dart run ffigen --config ffigen.yaml
 
-      - name: Generate bindings
-        run: dart  format --fix .
+      - name: Formatting
+        run: dart format --fix .
 
       - name: Remove headers folder
         run: rm -fr headers
