@@ -13,3 +13,7 @@
 ## 0.0.3
 
 - fix reference
+
+## 0.0.4
+
+- add entry point
