@@ -86,12 +86,6 @@ jobs:
           path: ./windows
           name: cache-windows-2019
 
-      # This action adds a token needed for pub.dev
-      - name: Install Dart
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
-
       - name: Install flutter
         uses: subosito/flutter-action@v2
 
@@ -103,10 +97,6 @@ jobs:
 
       - name: Generate bindings
         run: dart run ffigen --config ffigen.yaml
-
-      - name: Formatting
-        run: dart format --fix .
-
       - name: Remove headers folder
         run: rm -fr headers
 
@@ -114,9 +104,12 @@ jobs:
         uses: k-paxian/dart-package-publisher@v1.5.1
         with:
           credentialJson: ${{ secrets.CREDENTIALS_JSON }}
+          format: true
           flutter: true
           skipTests: true
           dry_run: true
+          force: true
+
 
       # - name: Create release
       #   uses: softprops/action-gh-release@v1

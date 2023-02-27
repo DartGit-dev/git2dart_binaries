@@ -9,3 +9,7 @@
 ## 0.0.2
 
 - Windows bindings with github actions
+
+## 0.0.3
+
+- fix reference
