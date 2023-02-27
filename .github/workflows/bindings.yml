@@ -86,8 +86,8 @@ jobs:
           path: ./windows
           name: cache-windows-2019
 
-      - name: Install dart
-        uses: dart-lang/setup-dart@a57a6c04cf7d4840e88432aad6281d1e125f0d46
+      - name: Install flutter
+        uses: subosito/flutter-action@v2
     
       - name: Install libclang-dev
         run: sudo apt-get install libclang-dev
@@ -101,8 +101,13 @@ jobs:
       - name: Remove headers folder
         run: rm -fr headers
 
+      # Setup Dart SDK with JWT token
+      - uses: dart-lang/setup-dart@a57a6c04cf7d4840e88432aad6281d1e125f0d46
+      
       - name: Publish - dry run
         run: dart pub publish --dry-run
-      
+        working-directory: ${{ inputs.working-directory }}
+
       - name: Publish to pub.dev
         run: dart pub publish -f
+        working-directory: ${{ inputs.working-directory }}
