@@ -1,4 +1,4 @@
-output: "lib/src/bindings/libgit2_bindings.dart"
+output: "lib/git2dart_bindings.dart"
 headers:
   entry-points:
     - "headers/git2.h"
