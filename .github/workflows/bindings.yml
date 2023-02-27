@@ -2,10 +2,10 @@ name: Generate bindings
 
 on:
   push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
-    # branches:
-    #   - "**"
+    # tags:
+    #   - 'v[0-9]+.[0-9]+.[0-9]+*'
+    branches:
+      - "**"
 env:
   PUB_ENVIRONMENT: bot.github
 
