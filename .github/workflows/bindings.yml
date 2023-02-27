@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
+    # branches:
+    #   - "**"
 env:
   PUB_ENVIRONMENT: bot.github
 
@@ -52,8 +54,8 @@ jobs:
           name: cache-headers
           path: build_git2/source/include
 
-      - name : Export git2 library
-        run: | 
+      - name: Export git2 library
+        run: |
           mkdir export 
           cp build_git2/build/Debug/git2.dll export/git2-1.6.1.dll 
           cp D:/Temp/libssh2/bin/** export/
@@ -68,10 +70,10 @@ jobs:
   generate_bindings:
     needs: [build_git2]
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - name: Check out repository
         uses: actions/checkout@v3
-    
+
       - name: Save headers
         uses: actions/download-artifact@master
         with:
@@ -92,7 +94,7 @@ jobs:
 
       - name: Install flutter
         uses: subosito/flutter-action@v2
-    
+
       - name: Install libclang-dev
         run: sudo apt-get install libclang-dev
 
@@ -101,6 +103,9 @@ jobs:
 
       - name: Generate bindings
         run: dart run ffigen --config ffigen.yaml
+
+      - name: Formatting
+        run: dart format --fix .
 
       - name: Remove headers folder
         run: rm -fr headers
