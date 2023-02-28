@@ -18,10 +18,10 @@
 
 - add entry point
 
-## 0.0.5
-
-- add libgit2Opts
-
 ## 0.0.6
 
 - add libgit2Opts
+
+## 0.0.7
+
+- fix libgit2 field

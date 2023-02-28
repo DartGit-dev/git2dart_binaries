@@ -1,6 +1,6 @@
 name: git2dart_binaries
 description: Dart bindings and binaries libgit2 library
-version: 0.0.6
+version: 0.0.7
 repository: https://github.com/DartGit-dev/git2dart_bindings
 
 environment:
