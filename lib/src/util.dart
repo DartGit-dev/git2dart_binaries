@@ -109,5 +109,5 @@ DynamicLibrary _loadLibrary(String name) {
   }
 }
 
-final libgit2Library = Libgit2(_loadLibrary(_getLibName()));
+final libgit2 = Libgit2(_loadLibrary(_getLibName()));
 final libgit2Opts = Libgit2Opts(_loadLibrary(_getLibName()));
