@@ -1,7 +1,7 @@
 // coverage:ignore-file
 
 import 'dart:ffi' as ffi;
-import 'package:libgit2dart_binaries/src/bindings.dart';
+import 'package:git2dart_binaries/src/bindings.dart';
 
 /// Bindings to libgit2 global options
 class Libgit2Opts {
