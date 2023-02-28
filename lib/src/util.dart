@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 
-const libgit2Version = '1.6.1';
+const libgit2Version = '1.6.2';
 final libDir = path.join('.dart_tool', 'git2dart_binaries');
 
 String getLibName() {

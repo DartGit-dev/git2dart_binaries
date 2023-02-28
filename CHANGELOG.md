@@ -17,3 +17,7 @@
 ## 0.0.4
 
 - add entry point
+
+## 0.0.5
+
+- add libgit2Opts

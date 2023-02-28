@@ -5,6 +5,7 @@ import 'package:git2dart_binaries/src/bindings.dart';
 import 'package:git2dart_binaries/src/util.dart';
 
 export libgit2 = Libgit2(loadLibrary(getLibName()));
+export libgit2Opts = Libgit2Opts(loadLibrary(getLibName()));
 
 export 'src/bindings.dart';
 
