@@ -7,7 +7,8 @@ analyzer:
     strict-inference: true
 
   exclude:
-    - lib/git2dart_binaries.dart
+    - lib/src/bindings.dart
+    - lib/src/opts_bindings.dart
 
 linter:
   rules:

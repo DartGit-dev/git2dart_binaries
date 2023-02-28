@@ -21,3 +21,7 @@
 ## 0.0.5
 
 - add libgit2Opts
+
+## 0.0.6
+
+- add libgit2Opts

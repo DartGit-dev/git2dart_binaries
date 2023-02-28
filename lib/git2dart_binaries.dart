@@ -1,11 +1,6 @@
 /// libgit2 binaries.
-library git2dart_bindings;
-
-import 'package:git2dart_binaries/src/bindings.dart';
-import 'package:git2dart_binaries/src/util.dart';
-
-export libgit2 = Libgit2(loadLibrary(getLibName()));
-export libgit2Opts = Libgit2Opts(loadLibrary(getLibName()));
+library git2dart_binaries;
 
 export 'src/bindings.dart';
-
+export 'src/opts_bindings.dart';
+export 'src/util.dart';

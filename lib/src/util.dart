@@ -4,13 +4,15 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:git2dart_binaries/src/bindings.dart';
+import 'package:git2dart_binaries/src/opts_bindings.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 
 const libgit2Version = '1.6.2';
 final libDir = path.join('.dart_tool', 'git2dart_binaries');
 
-String getLibName() {
+String _getLibName() {
   var ext = 'so';
 
   if (Platform.isWindows) {
@@ -26,7 +28,7 @@ String getLibName() {
 
 /// Returns location of the most recent verison of the git2dart package
 /// contained in the cache.
-String? checkCache() {
+String? _checkCache() {
   final cache = json.decode(
     Process.runSync('dart', ['pub', 'cache', 'list']).stdout as String,
   ) as Map<String, dynamic>;
@@ -79,7 +81,7 @@ String? _resolveLibPath(String name) {
   }
 
   // If lib is in '.pub_cache' folder.
-  final cachedLocation = checkCache();
+  final cachedLocation = _checkCache();
   if (cachedLocation != null) {
     libPath = path.join(cachedLocation, Platform.operatingSystem, name);
     if (_doesFileExist(libPath)) return libPath;
@@ -88,7 +90,7 @@ String? _resolveLibPath(String name) {
   return null;
 }
 
-DynamicLibrary loadLibrary(String name) {
+DynamicLibrary _loadLibrary(String name) {
   try {
     final libraryPath = _resolveLibPath(name) ?? name;
 
@@ -106,3 +108,6 @@ DynamicLibrary loadLibrary(String name) {
     rethrow;
   }
 }
+
+final libgit2Library = Libgit2(_loadLibrary(_getLibName()));
+final libgit2Opts = Libgit2Opts(_loadLibrary(_getLibName()));

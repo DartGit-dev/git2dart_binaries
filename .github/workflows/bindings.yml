@@ -3,7 +3,7 @@ name: Generate bindings
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      - "v[0-9]+.[0-9]+.[0-9]+*"
     # branches:
     #   - "**"
 env:
@@ -57,7 +57,7 @@ jobs:
       - name: Export git2 library
         run: |
           mkdir export 
-          cp build_git2/build/Debug/git2.dll export/git2-1.6.1.dll 
+          cp build_git2/build/Debug/libgit2.dll export/libgit2-1.6.2.dll 
           cp D:/Temp/libssh2/bin/** export/
 
       - name: Cache git2 library
