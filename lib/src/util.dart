@@ -98,6 +98,9 @@ DynamicLibrary _loadLibrary(String name) {
       DynamicLibrary.open(
         path.join(path.dirname(libraryPath), "libssh2.dll"),
       );
+      DynamicLibrary.open(
+        path.join(path.dirname(libraryPath), "libcrypto-1_1-x64.dll"),
+      );
     }
     return DynamicLibrary.open(libraryPath);
   } catch (e) {
@@ -109,5 +112,7 @@ DynamicLibrary _loadLibrary(String name) {
   }
 }
 
-final libgit2 = Libgit2(_loadLibrary(_getLibName()));
-final libgit2Opts = Libgit2Opts(_loadLibrary(_getLibName()));
+final _library = _loadLibrary(_getLibName());
+
+final libgit2 = Libgit2(_library);
+final libgit2Opts = Libgit2Opts(_library);

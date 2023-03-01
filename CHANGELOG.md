@@ -25,3 +25,7 @@
 ## 0.0.7
 
 - fix libgit2 field
+
+## 0.0.8
+
+- load on start libcrypto-1_1-x64.dll for windows platform
