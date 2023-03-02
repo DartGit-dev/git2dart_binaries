@@ -43,18 +43,18 @@ jobs:
     runs-on: ubuntu-latest
     name: "Create container: ${{ matrix.container.name }}"
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
+          repository: libgit2/libgit2
+          ref: refs/tags/v1.6.2
           path: source
-          fetch-depth: 0
         if: github.event_name != 'pull_request'
       - name: Setup QEMU
         run: docker run --rm --privileged multiarch/qemu-user-static:register --reset
         if: matrix.container.qemu == true
       - name: Download existing container
         run: |
-          "${{ github.workspace }}/build_git2/source/ci/getcontainer.sh" "${{ matrix.container.name }}" "${{ matrix.container.dockerfile }}"
+          "${{ github.workspace }}/source/ci/getcontainer.sh" "${{ matrix.container.name }}" "${{ matrix.container.dockerfile }}"
         env:
           DOCKER_REGISTRY: ${{ env.docker-registry }}
           GITHUB_TOKEN: ${{ secrets.github_token }}
@@ -113,11 +113,10 @@ jobs:
         with:
           repository: libgit2/libgit2
           ref: refs/tags/v1.6.2
-          path: build_git2/source
+          path: source
 
       - name: Set up build environment
         run: source/ci/setup-${{ matrix.platform.setup-script }}-build.sh
-        working-directory: ./build_git2
         shell: bash
         if: matrix.platform.setup-script != ''
       - name: Build and test
@@ -126,13 +125,12 @@ jobs:
           cd build
           ../source/ci/build.sh
         shell: bash
-        working-directory: ./build_git2
 
       - name: Cache headers
         uses: actions/upload-artifact@master
         with:
           name: cache-headers
-          path: build_git2/source/include
+          path: source/include
 
       - name: Export git2 library
         run: ${{ matrix.platform.copy-artifacts }}
