@@ -54,7 +54,7 @@ jobs:
         if: matrix.container.qemu == true
       - name: Download existing container
         run: |
-          "${{ github.workspace }}build_git2//source/ci/getcontainer.sh" "${{ matrix.container.name }}" "${{ matrix.container.dockerfile }}"
+          "${{ github.workspace }}/build_git2/source/ci/getcontainer.sh" "${{ matrix.container.name }}" "${{ matrix.container.dockerfile }}"
         env:
           DOCKER_REGISTRY: ${{ env.docker-registry }}
           GITHUB_TOKEN: ${{ secrets.github_token }}
@@ -73,6 +73,7 @@ jobs:
         if: github.event_name != 'pull_request' && env.docker-container-exists != 'true'
 
   build_git2:
+    needs: [containers]
     strategy:
       matrix:
         platform:
