@@ -16,13 +16,13 @@
 
 namespace {
 
-class Git2DartPlugin : public flutter::Plugin {
+class Git2DartBinariesPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
 
-  Git2DartPlugin();
+  Git2DartBinariesPlugin();
 
-  virtual ~Git2DartPlugin();
+  virtual ~Git2DartBinariesPlugin();
 
  private:
   // Called when a method is called on this plugin's channel from Dart.
@@ -32,14 +32,14 @@ class Git2DartPlugin : public flutter::Plugin {
 };
 
 // static
-void Git2DartPlugin::RegisterWithRegistrar(
+void Git2DartBinariesPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           registrar->messenger(), "git2dart_binaries",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<Git2DartPlugin>();
+  auto plugin = std::make_unique<Git2DartBinariesPlugin>();
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
@@ -49,11 +49,11 @@ void Git2DartPlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-Git2DartPlugin::Git2DartPlugin() {}
+Git2DartBinariesPlugin::Git2DartBinariesPlugin() {}
 
-Git2DartPlugin::~Git2DartPlugin() {}
+Git2DartBinariesPlugin::~Git2DartBinariesPlugin() {}
 
-void Git2DartPlugin::HandleMethodCall(
+void Git2DartBinariesPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name().compare("getPlatformVersion") == 0) {
@@ -74,9 +74,9 @@ void Git2DartPlugin::HandleMethodCall(
 
 }  // namespace
 
-void Git2DartPluginRegisterWithRegistrar(
+void Git2DartBinariesPluginRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  Git2DartPlugin::RegisterWithRegistrar(
+  Git2DartBinariesPlugin::RegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
 }

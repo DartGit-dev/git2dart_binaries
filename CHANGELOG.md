@@ -29,3 +29,7 @@
 ## 0.0.8
 
 - load on start libcrypto-1_1-x64.dll for windows platform
+
+## 0.0.9
+
+- fix flutter plugin on windows 
