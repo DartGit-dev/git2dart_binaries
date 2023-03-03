@@ -3,10 +3,10 @@
 apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         bzip2 \
-        clang-10 \
+        clang-12 \
         cmake \
         curl \
-        gcc-10 \
+        gcc-12 \
         git \
         krb5-user \
         libcurl4-gnutls-dev \
