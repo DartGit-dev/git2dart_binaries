@@ -11,7 +11,7 @@ env:
 
 jobs:
   build_libgit2_ubuntu:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -20,7 +20,7 @@ jobs:
           path: source
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: bzip2 clang-10 cmake-doc curl gcc-10 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev  zlib1g-dev llvm-10 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python sudo valgrind
+          packages: bzip2 clang-12 cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev  zlib1g-dev llvm-10 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python sudo valgrind
           version: 1.0
       - run: |
           cd /tmp && \
