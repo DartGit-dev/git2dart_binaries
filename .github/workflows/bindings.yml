@@ -34,7 +34,9 @@ jobs:
           ninja install && \
           cd ../build-msan && \
           CC=clang-10 CFLAGS="-fPIC -fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer" LDFLAGS="-fsanitize=memory" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=mbedTLS -DCMAKE_PREFIX_PATH=/usr/local/msan -DCMAKE_INSTALL_PREFIX=/usr/local/msan .. && \
-          ninja install'
+          ninja install && \
+          cd .. && \
+          rm -rf libssh2-1.9.0'
       - name: install mbedtls
         run: |
           sudo -s -- 
