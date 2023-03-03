@@ -36,6 +36,30 @@ jobs:
           sudo ninja install 
           cd .. 
           rm -rf /tmp/libssh2-1.9.0
+      - name: post install
+        run: |
+          if [ "${UID}" != "" ]; then USER_ARG="--uid ${UID}"; fi && \
+          if [ "${GID}" != "" ]; then GROUP_ARG="--gid ${GID}"; fi && \
+          groupadd ${GROUP_ARG} libgit2 && \
+          useradd ${USER_ARG} --gid libgit2 --shell /bin/bash --create-home libgit2
+      - name: set many environment variables
+        uses: allenevans/set-env@v2.0.0
+        with:
+          CC: gcc
+          CMAKE_GENERATOR: Ninja
+          CMAKE_OPTIONS: -DUSE_HTTPS=OpenSSL -DREGEX_BACKEND=builtin -DDEPRECATE_HARD=ON -DUSE_GSSAPI=ON -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON
+      - name: Build and test
+        run: |
+          mkdir build
+          cd build
+          ../source/ci/build.sh
+        shell: bash
+      - name: Cache headers
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-headers
+          path: source/include
+          retention-days: 1
   # build_libgit2_windows:
   #   runs-on: windows-2019
   #   steps:

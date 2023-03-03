@@ -58,15 +58,6 @@ cd /tmp && \
     cd .. && \
     rm -rf libssh2-1.9.0
 
-cd /tmp && \
-    curl --insecure --location --silent --show-error https://sourceware.org/pub/valgrind/valgrind-3.15.0.tar.bz2 | \
-        tar -xj && \
-    cd valgrind-3.15.0 && \
-    CC=clang-10 ./configure && \
-    make MAKEFLAGS="-j -l$(grep -c ^processor /proc/cpuinfo)" && \
-    make install && \
-    cd .. && \
-    rm -rf valgrind-3.15.0
 
 if [ "${UID}" != "" ]; then USER_ARG="--uid ${UID}"; fi && \
     if [ "${GID}" != "" ]; then GROUP_ARG="--gid ${GID}"; fi && \
