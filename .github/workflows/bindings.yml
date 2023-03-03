@@ -31,10 +31,10 @@ jobs:
           scripts/config.pl set MBEDTLS_MD4_C 1 
           mkdir build build-msan 
           cd build 
-          CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=ON -DUSE_STATIC_MBEDTLS_LIBRARY=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local .. 
+          CC=clang-12 CFLAGS="-fPIC" cmake -G Ninja -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=ON -DUSE_STATIC_MBEDTLS_LIBRARY=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local .. 
           sudo ninja install 
           cd ../build-msan 
-          CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=ON -DUSE_STATIC_MBEDTLS_LIBRARY=OFF -DCMAKE_BUILD_TYPE=MemSanDbg -DCMAKE_INSTALL_PREFIX=/usr/local/msan .. 
+          CC=clang-12 CFLAGS="-fPIC" cmake -G Ninja -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=ON -DUSE_STATIC_MBEDTLS_LIBRARY=OFF -DCMAKE_BUILD_TYPE=MemSanDbg -DCMAKE_INSTALL_PREFIX=/usr/local/msan .. 
           sudo ninja install 
           cd .. 
           rm -rf /tmp/libssh2-1.9.0
