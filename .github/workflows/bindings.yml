@@ -47,7 +47,7 @@ jobs:
         with:
           CC: gcc
           CMAKE_GENERATOR: Ninja
-          CMAKE_OPTIONS: -DUSE_HTTPS=OpenSSL -DREGEX_BACKEND=builtin -DDEPRECATE_HARD=ON -DUSE_GSSAPI=ON -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON
+          CMAKE_OPTIONS: -DUSE_HTTPS=OpenSSL -DREGEX_BACKEND=builtin -DDEPRECATE_HARD=ON -DUSE_GSSAPI=ON -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON
       - name: Build and test
         run: |
           mkdir build
