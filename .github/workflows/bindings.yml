@@ -22,7 +22,21 @@ jobs:
         with:
           packages: bzip2 clang-12 cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev  zlib1g-dev llvm-12 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python3 sudo valgrind
           version: 1.0
-      - run: |
+      - name: install libssh2
+        run: |
+          sudo -s -- 
+          'cd /tmp && \
+          curl --location --silent --show-error https://www.libssh2.org/download/libssh2-1.9.0.tar.gz | tar -xz && \
+          cd libssh2-1.9.0 && \
+          mkdir build build-msan && \
+          cd build && \
+          CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=Libgcrypt -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
+          ninja install && \
+          cd ../build-msan && \
+          CC=clang-10 CFLAGS="-fPIC -fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer" LDFLAGS="-fsanitize=memory" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=mbedTLS -DCMAKE_PREFIX_PATH=/usr/local/msan -DCMAKE_INSTALL_PREFIX=/usr/local/msan .. && \
+          ninja install'
+      - name: install mbedtls
+        run: |
           sudo -s -- 
           'cd /tmp && \
           curl --location --silent --show-error https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/mbedtls-2.16.2.tar.gz | \
@@ -36,9 +50,8 @@ jobs:
           ninja install && \
           cd ../build-msan && \
           CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=ON -DUSE_STATIC_MBEDTLS_LIBRARY=OFF -DCMAKE_BUILD_TYPE=MemSanDbg -DCMAKE_INSTALL_PREFIX=/usr/local/msan .. && \
-          ninja install && \
-          cd .. && \
-          rm -rf mbedtls-mbedtls-2.16.2'
+          ninja install '
+
   # build_libgit2_windows:
   #   runs-on: windows-2019
   #   steps:
