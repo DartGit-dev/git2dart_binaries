@@ -20,8 +20,8 @@ jobs:
           path: source
       - name: Update dependencies
         run: |
-          sudo apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends clang-12 cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev  zlib1g-dev llvm-12 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python3 sudo valgrind
+          sudo apt-get update -o Acquire::Retries=3
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang-12 cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev  zlib1g-dev llvm-12 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python3 sudo valgrind
       - name: install libssh2
         run: |
           cd /tmp
