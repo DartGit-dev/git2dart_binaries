@@ -33,3 +33,7 @@
 ## 0.0.9
 
 - fix flutter plugin on windows 
+
+## 0.1.0
+
+- linux bindings
