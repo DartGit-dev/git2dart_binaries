@@ -40,8 +40,8 @@ jobs:
         run: |
           if [ "${UID}" != "" ]; then USER_ARG="--uid ${UID}"; fi && \
           if [ "${GID}" != "" ]; then GROUP_ARG="--gid ${GID}"; fi && \
-          groupadd ${GROUP_ARG} libgit2 && \
-          useradd ${USER_ARG} --gid libgit2 --shell /bin/bash --create-home libgit2
+          sudo groupadd ${GROUP_ARG} libgit2 && \
+          sudo  useradd ${USER_ARG} --gid libgit2 --shell /bin/bash --create-home libgit2
       - name: set many environment variables
         uses: allenevans/set-env@v2.0.0
         with:
