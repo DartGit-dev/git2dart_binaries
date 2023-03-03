@@ -10,103 +10,131 @@ env:
   PUB_ENVIRONMENT: bot.github
 
 jobs:
-  build_git2_windows:
-    runs-on: windows-2019
+  build_git2_ubuntu:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           repository: libgit2/libgit2
           ref: refs/tags/v1.6.2
           path: source
-      - name: set many environment variables
-        uses: allenevans/set-env@v2.0.0
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          ARCH: amd64
-          CMAKE_GENERATOR: Visual Studio 16 2019
-          CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
-          BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
-          BUILD_TEMP: D:\Temp
-          SKIP_SSH_TESTS: true
-          SKIP_NEGOTIATE_TESTS: true
-      - name: Set up build environment
-        run: source/ci/setup-win32-build.sh
-        shell: bash
+          packages: bzip2 clang-10 cmake-doc curl gcc-10 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev libz-dev llvm-10 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python sudo valgrind
+          version: 1.0
+      - run: |
+          cd /tmp && \
+          curl --location --silent --show-error https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/mbedtls-2.16.2.tar.gz | \
+              tar -xz && \
+          cd mbedtls-mbedtls-2.16.2 && \
+          scripts/config.pl unset MBEDTLS_AESNI_C && \
+          scripts/config.pl set MBEDTLS_MD4_C 1 && \
+          mkdir build build-msan && \
+          cd build && \
+          CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=ON -DUSE_STATIC_MBEDTLS_LIBRARY=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
+          ninja install && \
+          cd ../build-msan && \
+          CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=ON -DUSE_STATIC_MBEDTLS_LIBRARY=OFF -DCMAKE_BUILD_TYPE=MemSanDbg -DCMAKE_INSTALL_PREFIX=/usr/local/msan .. && \
+          ninja install && \
+          cd .. && \
+          rm -rf mbedtls-mbedtls-2.16.2
+  # build_git2_windows:
+  #   runs-on: windows-2019
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         repository: libgit2/libgit2
+  #         ref: refs/tags/v1.6.2
+  #         path: source
+  #     - name: set many environment variables
+  #       uses: allenevans/set-env@v2.0.0
+  #       with:
+  #         ARCH: amd64
+  #         CMAKE_GENERATOR: Visual Studio 16 2019
+  #         CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
+  #         BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
+  #         BUILD_TEMP: D:\Temp
+  #         SKIP_SSH_TESTS: true
+  #         SKIP_NEGOTIATE_TESTS: true
+  #     - name: Set up build environment
+  #       run: source/ci/setup-win32-build.sh
+  #       shell: bash
 
-      - name: Build and test
-        run: |
-          mkdir build
-          cd build
-          ../source/ci/build.sh
-        shell: bash
-      - name: Cache headers
-        uses: actions/upload-artifact@master
-        with:
-          name: cache-headers
-          path: source/include
-          retention-days: 1
+  #     - name: Build and test
+  #       run: |
+  #         mkdir build
+  #         cd build
+  #         ../source/ci/build.sh
+  #       shell: bash
+  #     - name: Cache headers
+  #       uses: actions/upload-artifact@master
+  #       with:
+  #         name: cache-headers
+  #         path: source/include
+  #         retention-days: 1
 
-      - name: Export git2 library
-        run: |
-          mkdir export
-          cp build/Debug/git2.dll export/libgit2-1.6.2.dll
-          cp D:/Temp/libssh2/bin/** export/
+  #     - name: Export git2 library
+  #       run: |
+  #         mkdir export
+  #         cp build/Debug/git2.dll export/libgit2-1.6.2.dll
+  #         cp D:/Temp/libssh2/bin/** export/
 
-      - name: Cache git2 library
-        uses: actions/upload-artifact@master
-        with:
-          name: cache-windows
-          path: export/**
-          retention-days: 1
+  #     - name: Cache git2 library
+  #       uses: actions/upload-artifact@master
+  #       with:
+  #         name: cache-windows
+  #         path: export/**
+  #         retention-days: 1
 
-  generate_bindings:
-    needs: [build_git2_windows]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
+  # generate_bindings:
+  #   needs: [build_git2_windows]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
 
-      - name: Save headers
-        uses: actions/download-artifact@master
-        with:
-          path: ./headers
-          name: cache-headers
+  #     - name: Save headers
+  #       uses: actions/download-artifact@master
+  #       with:
+  #         path: ./headers
+  #         name: cache-headers
 
-      - name: Save windows binaries
-        uses: actions/download-artifact@master
-        with:
-          path: ./windows
-          name: cache-windows
+  #     - name: Save windows binaries
+  #       uses: actions/download-artifact@master
+  #       with:
+  #         path: ./windows
+  #         name: cache-windows
 
-      - name: Install flutter
-        uses: subosito/flutter-action@v2
+  #     - name: Install flutter
+  #       uses: subosito/flutter-action@v2
 
-      - name: Install libclang-dev
-        run: sudo apt-get install libclang-dev
+  #     - name: Install libclang-dev
+  #       run: sudo apt-get install libclang-dev
 
-      - name: Install dependencies
-        run: flutter pub get
+  #     - name: Install dependencies
+  #       run: flutter pub get
 
-      - name: Generate bindings
-        run: dart run ffigen --config ffigen.yaml
-      - name: Remove headers folder
-        run: rm -fr headers
+  #     - name: Generate bindings
+  #       run: dart run ffigen --config ffigen.yaml
+  #     - name: Remove headers folder
+  #       run: rm -fr headers
 
-      - name: Publish
-        uses: k-paxian/dart-package-publisher@v1.5.1
-        with:
-          credentialJson: ${{ secrets.CREDENTIALS_JSON }}
-          skipTests: true
-          dry_run: true
-          force: true
-      # - name: Create Release
-      #   id: create_release
-      #   uses: actions/create-release@latest
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      #   with:
-      #     tag_name: ${{ github.ref }}
-      #     release_name: Release ${{ github.ref }}
-      #     body: |
-      #       ${{ steps.Changelog.outputs.changelog }}
-      #     draft: false
-      #     prerelease: false
+  # - name: Publish
+  #   uses: k-paxian/dart-package-publisher@v1.5.1
+  #   with:
+  #     credentialJson: ${{ secrets.CREDENTIALS_JSON }}
+  #     skipTests: true
+  #     dry_run: true
+  #     force: true
+  # - name: Create Release
+  #   id: create_release
+  #   uses: actions/create-release@latest
+  #   env:
+  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+  #   with:
+  #     tag_name: ${{ github.ref }}
+  #     release_name: Release ${{ github.ref }}
+  #     body: |
+  #       ${{ steps.Changelog.outputs.changelog }}
+  #     draft: false
+  #     prerelease: false
