@@ -24,19 +24,18 @@ jobs:
           version: 1.0
       - name: install libssh2
         run: |
-          sudo -s -- 
-          'cd /tmp && \
-          curl --location --silent --show-error https://www.libssh2.org/download/libssh2-1.9.0.tar.gz | tar -xz && \
-          cd libssh2-1.9.0 && \
-          mkdir build build-msan && \
-          cd build && \
-          CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=Libgcrypt -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
-          ninja install && \
-          cd ../build-msan && \
-          CC=clang-10 CFLAGS="-fPIC -fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer" LDFLAGS="-fsanitize=memory" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=mbedTLS -DCMAKE_PREFIX_PATH=/usr/local/msan -DCMAKE_INSTALL_PREFIX=/usr/local/msan .. && \
-          ninja install && \
-          cd .. && \
-          rm -rf /tmp/libssh2-1.9.0'
+          cd /tmp
+          curl --location --silent --show-error https://www.libssh2.org/download/libssh2-1.9.0.tar.gz | tar -xz
+          cd libssh2-1.9.0 
+          mkdir build build-msan 
+          cd build 
+          CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=Libgcrypt -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local ..
+          ninja install 
+          cd ../build-msan
+          CC=clang-10 CFLAGS="-fPIC -fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer" LDFLAGS="-fsanitize=memory" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=mbedTLS -DCMAKE_PREFIX_PATH=/usr/local/msan -DCMAKE_INSTALL_PREFIX=/usr/local/msan ..
+          ninja install 
+          cd .. 
+          rm -rf /tmp/libssh2-1.9.0
       - name: install mbedtls
         run: |
           sudo -s -- 
