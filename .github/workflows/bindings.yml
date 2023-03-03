@@ -62,86 +62,92 @@ jobs:
           path: export/**
           retention-days: 1
 
-  # build_libgit2_windows:
-  #   runs-on: windows-2019
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         repository: libgit2/libgit2
-  #         ref: refs/tags/v1.6.2
-  #         path: source
-  #     - name: set many environment variables
-  #       uses: allenevans/set-env@v2.0.0
-  #       with:
-  #         ARCH: amd64
-  #         CMAKE_GENERATOR: Visual Studio 16 2019
-  #         CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
-  #         BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
-  #         BUILD_TEMP: D:\Temp
-  #         SKIP_SSH_TESTS: true
-  #         SKIP_NEGOTIATE_TESTS: true
-  #     - name: Set up build environment
-  #       run: source/ci/setup-win32-build.sh
-  #       shell: bash
+  build_libgit2_windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: libgit2/libgit2
+          ref: refs/tags/v1.6.2
+          path: source
+      - name: set many environment variables
+        uses: allenevans/set-env@v2.0.0
+        with:
+          ARCH: amd64
+          CMAKE_GENERATOR: Visual Studio 16 2019
+          CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
+          BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
+          BUILD_TEMP: D:\Temp
+          SKIP_SSH_TESTS: true
+          SKIP_NEGOTIATE_TESTS: true
+      - name: Set up build environment
+        run: source/ci/setup-win32-build.sh
+        shell: bash
 
-  #     - name: Build and test
-  #       run: |
-  #         mkdir build
-  #         cd build
-  #         ../source/ci/build.sh
-  #       shell: bash
-  #     - name: Cache headers
-  #       uses: actions/upload-artifact@master
-  #       with:
-  #         name: cache-headers
-  #         path: source/include
-  #         retention-days: 1
+      - name: Build and test
+        run: |
+          mkdir build
+          cd build
+          ../source/ci/build.sh
+        shell: bash
+      - name: Cache headers
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-headers
+          path: source/include
+          retention-days: 1
 
-  #     - name: Export git2 library
-  #       run: |
-  #         mkdir export
-  #         cp build/Debug/git2.dll export/libgit2-1.6.2.dll
-  #         cp D:/Temp/libssh2/bin/** export/
+      - name: Export git2 library
+        run: |
+          mkdir export
+          cp build/Debug/git2.dll export/libgit2-1.6.2.dll
+          cp D:/Temp/libssh2/bin/** export/
 
-  #     - name: Cache git2 library
-  #       uses: actions/upload-artifact@master
-  #       with:
-  #         name: cache-windows
-  #         path: export/**
-  #         retention-days: 1
+      - name: Cache git2 library
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-windows
+          path: export/**
+          retention-days: 1
 
-  # generate_bindings:
-  #   needs: [build_libgit2_windows]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Check out repository
-  #       uses: actions/checkout@v3
+  generate_bindings:
+    needs: [build_libgit2_ubuntu, build_libgit2_windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
 
-  #     - name: Save headers
-  #       uses: actions/download-artifact@master
-  #       with:
-  #         path: ./headers
-  #         name: cache-headers
+      - name: Save headers
+        uses: actions/download-artifact@master
+        with:
+          path: ./headers
+          name: cache-headers
 
-  #     - name: Save windows binaries
-  #       uses: actions/download-artifact@master
-  #       with:
-  #         path: ./windows
-  #         name: cache-windows
+      - name: Save windows binaries
+        uses: actions/download-artifact@master
+        with:
+          path: ./windows
+          name: cache-windows
 
-  #     - name: Install flutter
-  #       uses: subosito/flutter-action@v2
+      - name: Save linux binaries
+        uses: actions/download-artifact@master
+        with:
+          path: ./linux
+          name: cache-linux
 
-  #     - name: Install libclang-dev
-  #       run: sudo apt-get install libclang-dev
+      - name: Install flutter
+        uses: subosito/flutter-action@v2
 
-  #     - name: Install dependencies
-  #       run: flutter pub get
+      - name: Install libclang-dev
+        run: sudo apt-get install libclang-dev
 
-  #     - name: Generate bindings
-  #       run: dart run ffigen --config ffigen.yaml
-  #     - name: Remove headers folder
-  #       run: rm -fr headers
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate bindings
+        run: dart run ffigen --config ffigen.yaml
+      - name: Remove headers folder
+        run: rm -fr headers
 
   # - name: Publish
   #   uses: k-paxian/dart-package-publisher@v1.5.1
@@ -150,6 +156,7 @@ jobs:
   #     skipTests: true
   #     dry_run: true
   #     force: true
+
   # - name: Create Release
   #   id: create_release
   #   uses: actions/create-release@latest
