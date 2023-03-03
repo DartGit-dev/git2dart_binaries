@@ -23,7 +23,8 @@ jobs:
           packages: bzip2 clang-12 cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev  zlib1g-dev llvm-10 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python sudo valgrind
           version: 1.0
       - run: |
-          cd /tmp && \
+          sudo -s -- 
+          'cd /tmp && \
           curl --location --silent --show-error https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/mbedtls-2.16.2.tar.gz | \
               tar -xz && \
           cd mbedtls-mbedtls-2.16.2 && \
@@ -37,7 +38,7 @@ jobs:
           CC=clang-10 CFLAGS="-fPIC" cmake -G Ninja -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_SHARED_MBEDTLS_LIBRARY=ON -DUSE_STATIC_MBEDTLS_LIBRARY=OFF -DCMAKE_BUILD_TYPE=MemSanDbg -DCMAKE_INSTALL_PREFIX=/usr/local/msan .. && \
           ninja install && \
           cd .. && \
-          rm -rf mbedtls-mbedtls-2.16.2
+          rm -rf mbedtls-mbedtls-2.16.2'
   # build_libgit2_windows:
   #   runs-on: windows-2019
   #   steps:
