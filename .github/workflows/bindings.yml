@@ -48,7 +48,7 @@ jobs:
           retention-days: 1
 
   generate_bindings:
-    needs: [build_git2]
+    needs: [build_git2_windows]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
