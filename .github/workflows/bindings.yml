@@ -35,7 +35,7 @@ jobs:
             id: xenial-gcc-openssl
             container:
               name: xenial
-            ci-script: dart2git/ci/ubuntu.sh
+            ci-script: ./dart2git/ci/ubuntu.sh
             copy-artifacts: |
               mkdir export
             env:
