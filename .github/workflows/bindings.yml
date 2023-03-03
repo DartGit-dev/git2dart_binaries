@@ -18,10 +18,7 @@ jobs:
           repository: libgit2/libgit2
           ref: refs/tags/v1.6.2
           path: source
-      - uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: bzip2 clang-12 cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev  zlib1g-dev llvm-12 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python3 sudo valgrind
-          version: 1.0
+      - run: sudo DEBIAN_FRONTEND=noninter active apt-get install -y --no-install-recommends clang-12 cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev  zlib1g-dev llvm-12 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python3 sudo valgrind
       - name: install libssh2
         run: |
           cd /tmp
