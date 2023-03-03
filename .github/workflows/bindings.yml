@@ -36,22 +36,32 @@ jobs:
           sudo ninja install 
           cd .. 
           rm -rf /tmp/libssh2-1.9.0
+
       - name: set many environment variables
         uses: allenevans/set-env@v2.0.0
         with:
           CC: gcc
           CMAKE_GENERATOR: Ninja
           CMAKE_OPTIONS: -DUSE_HTTPS=OpenSSL -DREGEX_BACKEND=builtin -DDEPRECATE_HARD=ON -DUSE_GSSAPI=ON -DBUILD_EXAMPLES=OFF -DUSE_SSH=ON
+
       - name: Build and test
         run: |
           mkdir build
           cd build
           ../source/ci/build.sh
         shell: bash
+
       - name: Export git2 library
         run: |
           mkdir export
           cp build/libgit2.so  export/libgit2-1.6.2.so
+      - name: Cache git2 library
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-linux
+          path: export/**
+          retention-days: 1
+
   # build_libgit2_windows:
   #   runs-on: windows-2019
   #   steps:
