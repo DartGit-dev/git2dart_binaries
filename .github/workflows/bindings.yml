@@ -10,79 +10,40 @@ env:
   PUB_ENVIRONMENT: bot.github
 
 jobs:
-  build_git2:
-    strategy:
-      matrix:
-        platform:
-          - name: "Windows (amd64, Visual Studio)"
-            id: windows-amd64-vs
-            os: windows-2019
-            setup-script: win32
-            copy-artifacts: |
-              mkdir export 
-              cp build_git2/build/Debug/git2.dll export/libgit2-1.6.2.dll 
-              cp D:/Temp/libssh2/bin/** export/
-            env:
-              ARCH: amd64
-              CMAKE_GENERATOR: Visual Studio 16 2019
-              CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
-              BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
-              BUILD_TEMP: D:\Temp
-              SKIP_SSH_TESTS: true
-              SKIP_NEGOTIATE_TESTS: true
-
-          - name: "Linux (Xenial, GCC, OpenSSL)"
-            id: xenial-gcc-openssl
-            container:
-              name: xenial
-            ci-script: ./dart2git/ci/ubuntu.sh
-            copy-artifacts: |
-              mkdir export
-            env:
-              CC: gcc
-              CMAKE_GENERATOR: Ninja
-              CMAKE_OPTIONS: -DUSE_HTTPS=OpenSSL -DREGEX_BACKEND=builtin -DDEPRECATE_HARD=ON -DBUILD_EXAMPLES=OFF -DUSE_GSSAPI=ON -DUSE_SSH=ON -DDEBUG_STRICT_ALLOC=ON -DDEBUG_STRICT_OPEN=ON
-            os: ubuntu-latest
-    name: "Build: ${{ matrix.platform.name }}"
-    env: ${{ matrix.platform.env }}
-    runs-on: ${{ matrix.platform.os }}
+  build_git2_windows:
+    runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v3
-        with:
-          path: dart2git
       - uses: actions/checkout@v3
         with:
           repository: libgit2/libgit2
           ref: refs/tags/v1.6.2
           path: source
-      - name: Set up ci agent
-        run: sudo ${{ matrix.platform.ci-script }}
-        shell: bash
-        if: matrix.platform.ci-script != ''
       - name: Set up build environment
-        run: source/ci/setup-${{ matrix.platform.setup-script }}-build.sh
+        run: source/ci/setup-win32-build.sh
         shell: bash
-        if: matrix.platform.setup-script != ''
       - name: Build and test
         run: |
           mkdir build
           cd build
           ../source/ci/build.sh
         shell: bash
-
       - name: Cache headers
         uses: actions/upload-artifact@master
         with:
           name: cache-headers
           path: source/include
+          retention-days: 1
 
       - name: Export git2 library
-        run: ${{ matrix.platform.copy-artifacts }}
+        run: |
+          mkdir export
+          cp build_git2/build/Debug/git2.dll export/libgit2-1.6.2.dll
+          cp D:/Temp/libssh2/bin/** export/
 
       - name: Cache git2 library
         uses: actions/upload-artifact@master
         with:
-          name: cache-${{ matrix.platform.os }}
+          name: cache-windows
           path: export/**
           retention-days: 1
 
@@ -103,7 +64,7 @@ jobs:
         uses: actions/download-artifact@master
         with:
           path: ./windows
-          name: cache-windows-2019
+          name: cache-windows
 
       - name: Install flutter
         uses: subosito/flutter-action@v2
