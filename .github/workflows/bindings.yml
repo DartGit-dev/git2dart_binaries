@@ -150,7 +150,7 @@ jobs:
         uses: sakebook/actions-flutter-pub-publisher@v1.4.1
         with:
           credential: ${{ secrets.CREDENTIALS_JSON }}
-          skipTests: true
+          skip_test: true
           dry_run: true
 
   # - name: Create Release
