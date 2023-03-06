@@ -141,7 +141,7 @@ jobs:
         run: flutter pub get
 
       - name: Generate bindings
-        run: flutter run ffigen --config ffigen.yaml
+        run: dart run ffigen --config ffigen.yaml
 
       - name: Remove headers folder
         run: rm -fr headers

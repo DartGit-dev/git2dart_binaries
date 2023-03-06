@@ -45,3 +45,7 @@
 ## 0.1.2
 
 - fix windows bindings
+
+## 0.1.3
+
+- fix bindings
