@@ -147,11 +147,12 @@ jobs:
         run: rm -fr headers
 
       - name: Publish
-        uses: sakebook/actions-flutter-pub-publisher@v1.4.1
+        uses: k-paxian/dart-package-publisher@master
         with:
-          credential: ${{ secrets.CREDENTIALS_JSON }}
-          skip_test: true
-          dry_run: true
+          credentialJson: ${{ secrets.CREDENTIALS_JSON }}
+          skipTests: true
+          suppressBuildRunner: true
+          flutter: true
 
   # - name: Create Release
   #   id: create_release

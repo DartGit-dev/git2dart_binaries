@@ -37,10 +37,13 @@ flutter:
     platforms:
       linux:
         pluginClass: Git2dartBinariesPlugin
+        ffiPlugin: true
       macos:
         pluginClass: Git2dartBinariesPlugin
+        ffiPlugin: true
       windows:
         pluginClass: Git2dartBinariesPluginCApi
+        ffiPlugin: true
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
