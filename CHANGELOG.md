@@ -49,3 +49,7 @@
 ## 0.1.3
 
 - fix bindings
+
+## 0.1.4
+
+- fix utils._checkCache call
