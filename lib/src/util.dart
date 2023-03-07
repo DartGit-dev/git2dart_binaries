@@ -29,7 +29,8 @@ String _getLibName() {
 /// contained in the cache.
 String? _checkCache() {
   final cache = json.decode(
-    Process.runSync('flutter', ['pub', 'cache', 'list']).stdout as String,
+    Process.runSync('flutter', ['pub', 'cache', 'list'], runInShell: true)
+        .stdout as String,
   ) as Map<String, dynamic>;
   final packages = cache['packages'] as Map<String, dynamic>;
   final libPackages = packages['git2dart_binaries'] as Map<String, dynamic>?;

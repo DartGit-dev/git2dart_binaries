@@ -53,3 +53,7 @@
 ## 0.1.4
 
 - fix utils._checkCache call
+
+## 0.1.5
+
+- fix utils._checkCache call
