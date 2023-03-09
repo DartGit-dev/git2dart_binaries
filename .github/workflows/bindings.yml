@@ -133,18 +133,17 @@ jobs:
           ../source/ci/build.sh
         shell: bash
 
-      # - name: Export git2 library
-      #   run: |
-      #     mkdir export
-      #     cp build/Debug/git2.dll export/libgit2-1.6.2.dll
-      #     cp D:/Temp/libssh2/bin/** export/
+      - name: Export git2 library
+        run: |
+          mkdir export
+          cp build//libgit2.dylib export/libgit2-1.6.2.dylib
 
-      # - name: Cache git2 library
-      #   uses: actions/upload-artifact@master
-      #   with:
-      #     name: cache-windows
-      #     path: export/**
-      #     retention-days: 1
+      - name: Cache git2 library
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-macos
+          path: export/**
+          retention-days: 1
 
   # generate_bindings:
   #   needs: [build_libgit2_ubuntu, build_libgit2_windows]
