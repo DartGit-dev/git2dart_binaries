@@ -6,6 +6,7 @@ on:
     # - "v[0-9]+.[0-9]+.[0-9]+*"
     branches:
       - "main"
+      # - "**"
 env:
   PUB_ENVIRONMENT: bot.github
 
@@ -30,15 +31,15 @@ jobs:
         run: |
           cd /tmp
           curl --location --silent --show-error https://www.libssh2.org/download/libssh2-1.9.0.tar.gz | tar -xz
-          cd libssh2-1.9.0 
-          mkdir build build-msan 
-          cd build 
+          cd libssh2-1.9.0
+          mkdir build build-msan
+          cd build
           CC=clang-12 CFLAGS="-fPIC" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=Libgcrypt -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local ..
-          sudo ninja install 
+          sudo ninja install
           cd ../build-msan
           CC=clang-12 CFLAGS="-fPIC -fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer" LDFLAGS="-fsanitize=memory" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=mbedTLS -DCMAKE_PREFIX_PATH=/usr/local/msan -DCMAKE_INSTALL_PREFIX=/usr/local/msan ..
-          sudo ninja install 
-          cd .. 
+          sudo ninja install
+          cd ..
           rm -rf /tmp/libssh2-1.9.0
 
       - name: Build and test
@@ -106,8 +107,46 @@ jobs:
           path: export/**
           retention-days: 1
 
+  build_libgit2_macos:
+    runs-on: macos-11
+    env:
+      CC: clang
+      CMAKE_OPTIONS: -DREGEX_BACKEND=regcomp_l -DDEPRECATE_HARD=ON  -DBUILD_EXAMPLES=OFF -DUSE_SSH=ON -DUSE_GSSAPI=ON
+      PKG_CONFIG_PATH: /usr/local/opt/openssl/lib/pkgconfig
+      SKIP_SSH_TESTS: true
+      SKIP_NEGOTIATE_TESTS: true
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: libgit2/libgit2
+          ref: refs/tags/v1.6.2
+          path: source
+
+      - name: Set up build environment
+        run: source/ci/setup-osx-build.sh
+        shell: bash
+
+      - name: Build and test
+        run: |
+          mkdir build
+          cd build
+          ../source/ci/build.sh
+        shell: bash
+
+      - name: Export git2 library
+        run: |
+          mkdir export
+          cp build//libgit2.dylib export/libgit2-1.6.2.dylib
+
+      - name: Cache git2 library
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-macos
+          path: export/**
+          retention-days: 1
+
   generate_bindings:
-    needs: [build_libgit2_ubuntu, build_libgit2_windows]
+    needs: [build_libgit2_ubuntu, build_libgit2_windows, build_libgit2_macos]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -124,6 +163,12 @@ jobs:
         with:
           path: ./windows
           name: cache-windows
+
+      - name: Save macos binaries
+        uses: actions/download-artifact@master
+        with:
+          path: ./macos
+          name: cache-macos
 
       - name: Save linux binaries
         uses: actions/download-artifact@master
