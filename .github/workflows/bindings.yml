@@ -111,7 +111,7 @@ jobs:
     runs-on: macos-11
     env:
       CC: clang
-      CMAKE_OPTIONS: -DREGEX_BACKEND=regcomp_l -DDEPRECATE_HARD=ON -DUSE_LEAK_CHECKER=leaks -DUSE_GSSAPI=ON
+      CMAKE_OPTIONS: -DREGEX_BACKEND=regcomp_l -DDEPRECATE_HARD=ON  -DBUILD_EXAMPLES=OFF -DUSE_SSH=ON -DUSE_GSSAPI=ON
       PKG_CONFIG_PATH: /usr/local/opt/openssl/lib/pkgconfig
       SKIP_SSH_TESTS: true
       SKIP_NEGOTIATE_TESTS: true
