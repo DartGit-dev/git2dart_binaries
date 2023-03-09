@@ -5,107 +5,107 @@ on:
     # tags:
     # - "v[0-9]+.[0-9]+.[0-9]+*"
     branches:
-      # - "main"
-      - "**"
+      - "main"
+      # - "**"
 env:
   PUB_ENVIRONMENT: bot.github
 
 jobs:
-  # build_libgit2_ubuntu:
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     CC: gcc
-  #     CMAKE_GENERATOR: Ninja
-  #     CMAKE_OPTIONS: -DUSE_HTTPS=OpenSSL -DREGEX_BACKEND=builtin -DDEPRECATE_HARD=ON -DUSE_GSSAPI=ON -DBUILD_EXAMPLES=OFF -DUSE_SSH=ON
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         repository: libgit2/libgit2
-  #         ref: refs/tags/v1.6.2
-  #         path: source
-  #     - name: Update dependencies
-  #       run: |
-  #         sudo apt-get update -o Acquire::Retries=3
-  #         sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev libmbedtls-dev zlib1g-dev llvm-12 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python3 sudo valgrind
-  #     - name: install libssh2
-  #       run: |
-  #         cd /tmp
-  #         curl --location --silent --show-error https://www.libssh2.org/download/libssh2-1.9.0.tar.gz | tar -xz
-  #         cd libssh2-1.9.0
-  #         mkdir build build-msan
-  #         cd build
-  #         CC=clang-12 CFLAGS="-fPIC" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=Libgcrypt -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local ..
-  #         sudo ninja install
-  #         cd ../build-msan
-  #         CC=clang-12 CFLAGS="-fPIC -fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer" LDFLAGS="-fsanitize=memory" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=mbedTLS -DCMAKE_PREFIX_PATH=/usr/local/msan -DCMAKE_INSTALL_PREFIX=/usr/local/msan ..
-  #         sudo ninja install
-  #         cd ..
-  #         rm -rf /tmp/libssh2-1.9.0
+  build_libgit2_ubuntu:
+    runs-on: ubuntu-latest
+    env:
+      CC: gcc
+      CMAKE_GENERATOR: Ninja
+      CMAKE_OPTIONS: -DUSE_HTTPS=OpenSSL -DREGEX_BACKEND=builtin -DDEPRECATE_HARD=ON -DUSE_GSSAPI=ON -DBUILD_EXAMPLES=OFF -DUSE_SSH=ON
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: libgit2/libgit2
+          ref: refs/tags/v1.6.2
+          path: source
+      - name: Update dependencies
+        run: |
+          sudo apt-get update -o Acquire::Retries=3
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake-doc curl gcc-12 git krb5-user libcurl4-gnutls-dev libgcrypt20-dev libkrb5-dev libpcre3-dev libssl-dev libmbedtls-dev zlib1g-dev llvm-12 make ninja-build openjdk-8-jre-headless openssh-server openssl pkgconf python3 sudo valgrind
+      - name: install libssh2
+        run: |
+          cd /tmp
+          curl --location --silent --show-error https://www.libssh2.org/download/libssh2-1.9.0.tar.gz | tar -xz
+          cd libssh2-1.9.0
+          mkdir build build-msan
+          cd build
+          CC=clang-12 CFLAGS="-fPIC" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=Libgcrypt -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_INSTALL_PREFIX=/usr/local ..
+          sudo ninja install
+          cd ../build-msan
+          CC=clang-12 CFLAGS="-fPIC -fsanitize=memory -fno-optimize-sibling-calls -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer" LDFLAGS="-fsanitize=memory" cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCRYPTO_BACKEND=mbedTLS -DCMAKE_PREFIX_PATH=/usr/local/msan -DCMAKE_INSTALL_PREFIX=/usr/local/msan ..
+          sudo ninja install
+          cd ..
+          rm -rf /tmp/libssh2-1.9.0
 
-  #     - name: Build and test
-  #       run: |
-  #         mkdir build
-  #         cd build
-  #         ../source/ci/build.sh
-  #       shell: bash
+      - name: Build and test
+        run: |
+          mkdir build
+          cd build
+          ../source/ci/build.sh
+        shell: bash
 
-  #     - name: Export git2 library
-  #       run: |
-  #         mkdir export
-  #         cp build/libgit2.so  export/libgit2-1.6.2.so
-  #     - name: Cache git2 library
-  #       uses: actions/upload-artifact@master
-  #       with:
-  #         name: cache-linux
-  #         path: export/**
-  #         retention-days: 1
+      - name: Export git2 library
+        run: |
+          mkdir export
+          cp build/libgit2.so  export/libgit2-1.6.2.so
+      - name: Cache git2 library
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-linux
+          path: export/**
+          retention-days: 1
 
-  # build_libgit2_windows:
-  #   runs-on: windows-2019
-  #   env:
-  #     ARCH: amd64
-  #     CMAKE_GENERATOR: Visual Studio 16 2019
-  #     CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
-  #     BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
-  #     BUILD_TEMP: D:\Temp
-  #     SKIP_SSH_TESTS: true
-  #     SKIP_NEGOTIATE_TESTS: true
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         repository: libgit2/libgit2
-  #         ref: refs/tags/v1.6.2
-  #         path: source
+  build_libgit2_windows:
+    runs-on: windows-2019
+    env:
+      ARCH: amd64
+      CMAKE_GENERATOR: Visual Studio 16 2019
+      CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
+      BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
+      BUILD_TEMP: D:\Temp
+      SKIP_SSH_TESTS: true
+      SKIP_NEGOTIATE_TESTS: true
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: libgit2/libgit2
+          ref: refs/tags/v1.6.2
+          path: source
 
-  #     - name: Set up build environment
-  #       run: source/ci/setup-win32-build.sh
-  #       shell: bash
+      - name: Set up build environment
+        run: source/ci/setup-win32-build.sh
+        shell: bash
 
-  #     - name: Build and test
-  #       run: |
-  #         mkdir build
-  #         cd build
-  #         ../source/ci/build.sh
-  #       shell: bash
-  #     - name: Cache headers
-  #       uses: actions/upload-artifact@master
-  #       with:
-  #         name: cache-headers
-  #         path: source/include
-  #         retention-days: 1
+      - name: Build and test
+        run: |
+          mkdir build
+          cd build
+          ../source/ci/build.sh
+        shell: bash
+      - name: Cache headers
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-headers
+          path: source/include
+          retention-days: 1
 
-  #     - name: Export git2 library
-  #       run: |
-  #         mkdir export
-  #         cp build/Debug/git2.dll export/libgit2-1.6.2.dll
-  #         cp D:/Temp/libssh2/bin/** export/
+      - name: Export git2 library
+        run: |
+          mkdir export
+          cp build/Debug/git2.dll export/libgit2-1.6.2.dll
+          cp D:/Temp/libssh2/bin/** export/
 
-  #     - name: Cache git2 library
-  #       uses: actions/upload-artifact@master
-  #       with:
-  #         name: cache-windows
-  #         path: export/**
-  #         retention-days: 1
+      - name: Cache git2 library
+        uses: actions/upload-artifact@master
+        with:
+          name: cache-windows
+          path: export/**
+          retention-days: 1
 
   build_libgit2_macos:
     runs-on: macos-11
@@ -145,53 +145,59 @@ jobs:
           path: export/**
           retention-days: 1
 
-  # generate_bindings:
-  #   needs: [build_libgit2_ubuntu, build_libgit2_windows]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Check out repository
-  #       uses: actions/checkout@v3
+  generate_bindings:
+    needs: [build_libgit2_ubuntu, build_libgit2_windows, build_libgit2_macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
 
-  #     - name: Save headers
-  #       uses: actions/download-artifact@master
-  #       with:
-  #         path: ./headers
-  #         name: cache-headers
+      - name: Save headers
+        uses: actions/download-artifact@master
+        with:
+          path: ./headers
+          name: cache-headers
 
-  #     - name: Save windows binaries
-  #       uses: actions/download-artifact@master
-  #       with:
-  #         path: ./windows
-  #         name: cache-windows
+      - name: Save windows binaries
+        uses: actions/download-artifact@master
+        with:
+          path: ./windows
+          name: cache-windows
 
-  #     - name: Save linux binaries
-  #       uses: actions/download-artifact@master
-  #       with:
-  #         path: ./linux
-  #         name: cache-linux
+      - name: Save macos binaries
+        uses: actions/download-artifact@master
+        with:
+          path: ./macos
+          name: cache-macos
 
-  #     - name: Install flutter
-  #       uses: subosito/flutter-action@v2
+      - name: Save linux binaries
+        uses: actions/download-artifact@master
+        with:
+          path: ./linux
+          name: cache-linux
 
-  #     - name: Install libclang-dev
-  #       run: sudo apt-get install libclang-dev
+      - name: Install flutter
+        uses: subosito/flutter-action@v2
 
-  #     - name: Install dependencies
-  #       run: flutter pub get
+      - name: Install libclang-dev
+        run: sudo apt-get install libclang-dev
 
-  #     - name: Generate bindings
-  #       run: dart run ffigen --config ffigen.yaml
+      - name: Install dependencies
+        run: flutter pub get
 
-  #     - name: Remove headers folder
-  #       run: rm -fr headers
+      - name: Generate bindings
+        run: dart run ffigen --config ffigen.yaml
 
-  #     - name: Publish
-  #       uses: k-paxian/dart-package-publisher@master
-  #       with:
-  #         credentialJson: ${{ secrets.CREDENTIALS_JSON }}
-  #         skipTests: true
-  #         suppressBuildRunner: true
-  #         flutter: true
+      - name: Remove headers folder
+        run: rm -fr headers
+
+      - name: Publish
+        uses: k-paxian/dart-package-publisher@master
+        with:
+          credentialJson: ${{ secrets.CREDENTIALS_JSON }}
+          skipTests: true
+          suppressBuildRunner: true
+          flutter: true
 
   # - name: Create Release
   #   id: create_release

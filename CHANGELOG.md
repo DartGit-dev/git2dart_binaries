@@ -32,7 +32,7 @@
 
 ## 0.0.9
 
-- fix flutter plugin on windows 
+- fix flutter plugin on windows
 
 ## 0.1.0
 
@@ -57,3 +57,7 @@
 ## 0.1.5
 
 - fix utils._checkCache call
+
+## 0.2.0
+
+- macos bindings
