@@ -61,3 +61,7 @@
 ## 0.2.0
 
 - macos bindings
+
+## 0.3.0
+
+- dart 3
