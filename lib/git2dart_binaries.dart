@@ -1,5 +1,5 @@
 /// libgit2 binaries.
-library git2dart_binaries;
+library;
 
 export 'src/bindings.dart';
 export 'src/opts_bindings.dart';

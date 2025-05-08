@@ -28,15 +28,22 @@ String _getLibName() {
 /// Returns location of the most recent verison of the git2dart package
 /// contained in the cache.
 String? _checkCache() {
-  final cache = json.decode(
-    Process.runSync('flutter', ['pub', 'cache', 'list'], runInShell: true)
-        .stdout as String,
-  ) as Map<String, dynamic>;
+  final cache =
+      json.decode(
+            Process.runSync('flutter', [
+                  'pub',
+                  'cache',
+                  'list',
+                ], runInShell: true,).stdout
+                as String,
+          )
+          as Map<String, dynamic>;
   final packages = cache['packages'] as Map<String, dynamic>;
   final libPackages = packages['git2dart_binaries'] as Map<String, dynamic>?;
   final versions = libPackages?.keys.map((e) => Version.parse(e)).toList();
-  final latestVersion = libPackages?[Version.primary(versions!).toString()]
-      as Map<String, dynamic>?;
+  final latestVersion =
+      libPackages?[Version.primary(versions!).toString()]
+          as Map<String, dynamic>?;
   return latestVersion?['location'] as String?;
 }
 
@@ -60,7 +67,7 @@ String? _resolveLibPath(String name) {
     final paths = [
       '/usr/local/lib/libgit2.$libgit2Version.dylib',
       '/usr/local/lib/libgit2.so.$libgit2Version',
-      '/usr/lib64/libgit2.so.$libgit2Version'
+      '/usr/lib64/libgit2.so.$libgit2Version',
     ];
     for (final path in paths) {
       if (_doesFileExist(path)) return path;
@@ -82,9 +89,7 @@ DynamicLibrary _loadLibrary(String name) {
     final libraryPath = _resolveLibPath(name) ?? name;
 
     if (Platform.isWindows) {
-      DynamicLibrary.open(
-        path.join(path.dirname(libraryPath), "libssh2.dll"),
-      );
+      DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.dll"));
       DynamicLibrary.open(
         path.join(path.dirname(libraryPath), "libcrypto-1_1-x64.dll"),
       );
