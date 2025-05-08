@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cache-headers
-          path: /tmp/libgit2/source/include
+          path: /tmp/libgit2/include
 
       - name: Export git2 library
         run: |
