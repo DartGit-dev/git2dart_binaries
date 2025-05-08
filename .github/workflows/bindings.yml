@@ -49,92 +49,92 @@ jobs:
           mkdir /tmp/libgit2/export
           cp /tmp/libgit2/build/libgit2.so /tmp/libgit2/export/libgit2-${{ env.LIBGIT2_VERSION }}.so
       - name: Cache git2 library
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: cache-linux
           path: /tmp/libgit2/export/**
 
-  build_libgit2_windows:
-    runs-on: windows-2019
-    env:
-      ARCH: amd64
-      CMAKE_GENERATOR: Visual Studio 16 2019
-      CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
-      BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
-      BUILD_TEMP: D:\Temp
-      SKIP_SSH_TESTS: true
-      SKIP_NEGOTIATE_TESTS: true
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          repository: libgit2/libgit2
-          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-          path: source
+  # build_libgit2_windows:
+  #   runs-on: windows-2019
+  #   env:
+  #     ARCH: amd64
+  #     CMAKE_GENERATOR: Visual Studio 16 2019
+  #     CMAKE_OPTIONS: -A x64 -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF   -DUSE_SSH=ON -DCMAKE_PREFIX_PATH=D:\Temp\libssh2
+  #     BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;D:\Temp\libssh2\bin
+  #     BUILD_TEMP: D:\Temp
+  #     SKIP_SSH_TESTS: true
+  #     SKIP_NEGOTIATE_TESTS: true
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         repository: libgit2/libgit2
+  #         ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
+  #         path: source
 
-      - name: Set up build environment
-        run: source/ci/setup-win32-build.sh
-        shell: bash
+  #     - name: Set up build environment
+  #       run: source/ci/setup-win32-build.sh
+  #       shell: bash
 
-      - name: Build
-        run: |
-          mkdir build
-          cd build
-          ../source/ci/build.sh
-        shell: bash
-      - name: Cache headers
-        uses: actions/upload-artifact@master
-        with:
-          name: cache-headers
-          path: source/include
+  #     - name: Build
+  #       run: |
+  #         mkdir build
+  #         cd build
+  #         ../source/ci/build.sh
+  #       shell: bash
+  #     - name: Cache headers
+  #       uses: actions/upload-artifact@master
+  #       with:
+  #         name: cache-headers
+  #         path: source/include
 
-      - name: Export git2 library
-        run: |
-          mkdir export
-          cp build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
-          cp D:/Temp/libssh2/bin/** export/
+  #     - name: Export git2 library
+  #       run: |
+  #         mkdir export
+  #         cp build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
+  #         cp D:/Temp/libssh2/bin/** export/
 
-      - name: Cache git2 library
-        uses: actions/upload-artifact@master
-        with:
-          name: cache-windows
-          path: export/**
+  #     - name: Cache git2 library
+  #       uses: actions/upload-artifact@master
+  #       with:
+  #         name: cache-windows
+  #         path: export/**
 
-  build_libgit2_macos:
-    runs-on: macos-11
-    env:
-      CC: clang
-      CMAKE_OPTIONS: -DREGEX_BACKEND=regcomp_l -DDEPRECATE_HARD=ON  -DBUILD_EXAMPLES=OFF -DUSE_SSH=ON -DUSE_GSSAPI=ON
-      PKG_CONFIG_PATH: /usr/local/opt/openssl/lib/pkgconfig
-      SKIP_SSH_TESTS: true
-      SKIP_NEGOTIATE_TESTS: true
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          repository: libgit2/libgit2
-          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-          path: source
+  # build_libgit2_macos:
+  #   runs-on: macos-11
+  #   env:
+  #     CC: clang
+  #     CMAKE_OPTIONS: -DREGEX_BACKEND=regcomp_l -DDEPRECATE_HARD=ON  -DBUILD_EXAMPLES=OFF -DUSE_SSH=ON -DUSE_GSSAPI=ON
+  #     PKG_CONFIG_PATH: /usr/local/opt/openssl/lib/pkgconfig
+  #     SKIP_SSH_TESTS: true
+  #     SKIP_NEGOTIATE_TESTS: true
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         repository: libgit2/libgit2
+  #         ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
+  #         path: source
 
-      - name: Set up build environment
-        run: source/ci/setup-osx-build.sh
-        shell: bash
+  #     - name: Set up build environment
+  #       run: source/ci/setup-osx-build.sh
+  #       shell: bash
 
-      - name: Build and test
-        run: |
-          mkdir build
-          cd build
-          ../source/ci/build.sh
-        shell: bash
+  #     - name: Build and test
+  #       run: |
+  #         mkdir build
+  #         cd build
+  #         ../source/ci/build.sh
+  #       shell: bash
 
-      - name: Export git2 library
-        run: |
-          mkdir export
-          cp build//libgit2.dylib export/libgit2-${{ env.LIBGIT2_VERSION }}.dylib
+  #     - name: Export git2 library
+  #       run: |
+  #         mkdir export
+  #         cp build//libgit2.dylib export/libgit2-${{ env.LIBGIT2_VERSION }}.dylib
 
-      - name: Cache git2 library
-        uses: actions/upload-artifact@master
-        with:
-          name: cache-macos
-          path: export/**
+  #     - name: Cache git2 library
+  #       uses: actions/upload-artifact@master
+  #       with:
+  #         name: cache-macos
+  #         path: export/**
 
   generate_bindings:
     needs: [build_libgit2_ubuntu]
@@ -144,7 +144,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Save headers
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v4
         with:
           path: ./headers
           name: cache-headers
@@ -162,7 +162,7 @@ jobs:
       #     name: cache-macos
 
       - name: Save linux binaries
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v4
         with:
           path: ./linux
           name: cache-linux
