@@ -42,7 +42,11 @@ jobs:
           mkdir ./build && cd build
           cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=OFF ..
           cmake --build .
-        shell: bash
+      - name: Cache headers
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-headers
+          path: source/include
 
       - name: Export git2 library
         run: |
@@ -80,24 +84,7 @@ jobs:
   #         mkdir build
   #         cd build
   #         ../source/ci/build.sh
-  #       shell: bash
-  #     - name: Cache headers
-  #       uses: actions/upload-artifact@master
-  #       with:
-  #         name: cache-headers
-  #         path: source/include
 
-  #     - name: Export git2 library
-  #       run: |
-  #         mkdir export
-  #         cp build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
-  #         cp D:/Temp/libssh2/bin/** export/
-
-  #     - name: Cache git2 library
-  #       uses: actions/upload-artifact@master
-  #       with:
-  #         name: cache-windows
-  #         path: export/**
 
   # build_libgit2_macos:
   #   runs-on: macos-11
