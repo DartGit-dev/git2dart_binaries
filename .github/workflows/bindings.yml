@@ -148,7 +148,7 @@ jobs:
       #     path: ./macos
       #     name: cache-macos
       - name: Install libclang
-        run: uname -r && apt-get install libclang-dev
+        run: sudo apt-get install libclang-dev
 
       - name: Install flutter
         uses: subosito/flutter-action@v2
