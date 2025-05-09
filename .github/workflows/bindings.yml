@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Update dependencies
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractiveapt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libgcrypt20-dev
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libgcrypt20-dev
     
       - uses: actions/checkout@v3
         with:
