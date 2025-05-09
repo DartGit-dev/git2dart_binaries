@@ -75,11 +75,16 @@ jobs:
           cmake   ..
           cmake --build .
 
-      - name: Save windows binaries
-        uses: actions/download-artifact@v4
+      - name: Export git2 library
+        run: |
+          mkdir export
+          cp build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
+  
+      - name: Cache git2 library
+        uses: actions/upload-artifact@v4
         with:
-          path: source/windows
           name: cache-windows
+          path: export/**
 
   # build_libgit2_macos:
   #   runs-on: macos-11
