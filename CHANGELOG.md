@@ -5,9 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2025-05-09
+### Added
+- Updated to libgit2 version 1.9.0
+- Added new caching options and controls
+- Added template path configuration options
+- Added SSL certificate-authority location settings
+- Added fsync gitdir control
+- Added strict hash verification options
+- Added unsaved index safety checks
+- Added pack file object limit controls
+
+### Changed
+- Updated Flutter SDK constraint from "^3.29.3" to ">=3.29.3" for better version compatibility
+- Updated Dart SDK requirement to ">=3.7.2 <4.0.0"
+
+### Dependencies
+- Updated ffi to ^2.0.0
+- Updated meta to ^1.16.0
+- Updated path to ^1.8.1
+- Updated plugin_platform_interface to ^2.0.2
+- Updated pub_semver to ^2.1.3
+- Updated dev dependencies:
+  - ffigen to ^18.1.0
+  - lints to ^5.1.1
+  - test to ^1.24.0
+
 ## [1.9.0] - 2025-05-09
 ### Added
-- New features and improvements for libgit2 version 1.9.0
+- Updated to libgit2 version 1.9.0
+- Added new caching options and controls
+- Added template path configuration options
+- Added SSL certificate-authority location settings
+- Added fsync gitdir control
+- Added strict hash verification options
+- Added unsaved index safety checks
+- Added pack file object limit controls
+
+### Changed
+- Updated Flutter SDK constraint from "^3.29.3" to ">=3.29.3" for better version compatibility
+- Updated Dart SDK requirement to ">=3.7.2 <4.0.0"
+
+### Dependencies
+- Updated ffi to ^2.0.0
+- Updated meta to ^1.16.0
+- Updated path to ^1.8.1
+- Updated plugin_platform_interface to ^2.0.2
+- Updated pub_semver to ^2.1.3
+- Updated dev dependencies:
+  - ffigen to ^18.1.0
+  - lints to ^5.1.1
+  - test to ^1.24.0
 
 ## [0.3.0] - 2024-03-19
 ### Changed
