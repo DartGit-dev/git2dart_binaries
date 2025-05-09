@@ -81,10 +81,9 @@ jobs:
 
       - name: Build
         run: |
-          mkdir build
-          cd build
-          ../source/ci/build.sh
-
+          mkdir build && cd build
+          cmake  -DUSE_SSH=libssh2 -DBUILD_TESTS=OFF ..
+          cmake --build .
 
   # build_libgit2_macos:
   #   runs-on: macos-11
