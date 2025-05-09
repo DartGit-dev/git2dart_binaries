@@ -78,7 +78,7 @@ jobs:
       - name: Save windows binaries
         uses: actions/download-artifact@v4
         with:
-          path: ./windows
+          path: source/windows
           name: cache-windows
 
   # build_libgit2_macos:
