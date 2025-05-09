@@ -75,7 +75,7 @@ jobs:
       - name: Export git2 library
         run: |
           mkdir export
-          cp build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
+          cp source/build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
   
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
