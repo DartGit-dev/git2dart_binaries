@@ -40,7 +40,7 @@ jobs:
       - name: Export git2 library
         run: |
           mkdir /tmp/libgit2/export
-          cp /tmp/libgit2/build/libgit2.so /tmp/libgit2/export/libgit2-${{ env.LIBGIT2_VERSION }}.so
+          cp /tmp/libgit2/build/libgit2.so /tmp/libgit2/export/libgit2.so
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
         with:
@@ -75,7 +75,7 @@ jobs:
       - name: Export git2 library
         run: |
           mkdir export
-          cp source/build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
+          cp source/build/Debug/git2.dll export/libgit2.dll
   
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
@@ -111,7 +111,7 @@ jobs:
       - name: Export git2 library
         run: |
           mkdir export
-          cp source/build/libgit2.dylib export/libgit2-${{ env.LIBGIT2_VERSION }}.dylib
+          cp source/build/libgit2.dylib export/libgit2.dylib
 
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
