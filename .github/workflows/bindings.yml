@@ -81,6 +81,7 @@ jobs:
 
       - name: Build
         run: |
+          cd source
           mkdir build && cd build
           cmake  -DUSE_SSH=libssh2 -DBUILD_TESTS=OFF ..
           cmake --build .
