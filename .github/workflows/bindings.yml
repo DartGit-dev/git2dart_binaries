@@ -167,15 +167,11 @@ jobs:
       - name: Remove headers folder
         run: rm -fr headers
 
-      - name: Publish
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
       - name: Publish package
-        run: dart pub publish --force
-        env:
-          PUB_DEV_PUBLISH_ACCESS_TOKEN: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
-          PUB_DEV_PUBLISH_REFRESH_TOKEN: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
+        uses: k-paxian/dart-package-publisher@v1.6.2
+        with:
+          accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
+          refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
 
   # - name: Create Release
   #   id: create_release
