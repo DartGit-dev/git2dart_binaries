@@ -47,11 +47,46 @@ jobs:
   #         name: cache-linux
   #         path: /tmp/libgit2/export/**
 
-  build_libgit2_windows:
-    runs-on: windows-2019
+  # build_libgit2_windows:
+  #   runs-on: windows-2019
+  #   env:
+  #     ARCH: amd64
+  #     CMAKE_OPTIONS: -A x64 
+  #     BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;
+  #     BUILD_TEMP: D:\Temp
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         repository: libgit2/libgit2
+  #         ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
+  #         path: source
+
+  #     - name: Set up build environment
+  #       run: source/ci/setup-win32-build.sh
+  #       shell: bash
+
+  #     - name: Build
+  #       run: |
+  #         cd source
+  #         mkdir build && cd build
+  #         cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF  -DUSE_SSH=exec  ..
+  #         cmake --build .
+
+  #     - name: Export git2 library
+  #       run: |
+  #         mkdir export
+  #         cp source/build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
+  
+  #     - name: Cache git2 library
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: cache-windows
+  #         path: export/**
+
+  build_libgit2_macos:
+    runs-on:  macos-latest
     env:
-      ARCH: amd64
-      CMAKE_OPTIONS: -A x64 
+      CC: clang
       BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;
       BUILD_TEMP: D:\Temp
     steps:
@@ -62,8 +97,9 @@ jobs:
           path: source
 
       - name: Set up build environment
-        run: source/ci/setup-win32-build.sh
+        run: source/ci/setup-osx-build.sh
         shell: bash
+
 
       - name: Build
         run: |
@@ -75,55 +111,19 @@ jobs:
       - name: Export git2 library
         run: |
           mkdir export
-          cp source/build/Debug/git2.dll export/libgit2-${{ env.LIBGIT2_VERSION }}.dll
-  
+          cp source/build/libgit2.dylib export/libgit2-${{ env.LIBGIT2_VERSION }}.dylib
+
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
         with:
-          name: cache-windows
+          name: cache-macos
           path: export/**
-
-  # build_libgit2_macos:
-  #   runs-on: macos-11
-  #   env:
-  #     CC: clang
-  #     CMAKE_OPTIONS: -DREGEX_BACKEND=regcomp_l -DDEPRECATE_HARD=ON  -DBUILD_EXAMPLES=OFF -DUSE_SSH=ON -DUSE_GSSAPI=ON
-  #     PKG_CONFIG_PATH: /usr/local/opt/openssl/lib/pkgconfig
-  #     SKIP_SSH_TESTS: true
-  #     SKIP_NEGOTIATE_TESTS: true
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         repository: libgit2/libgit2
-  #         ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-  #         path: source
-
-  #     - name: Set up build environment
-  #       run: source/ci/setup-osx-build.sh
-  #       shell: bash
-
-  #     - name: Build and test
-  #       run: |
-  #         mkdir build
-  #         cd build
-  #         ../source/ci/build.sh
-  #       shell: bash
-
-  #     - name: Export git2 library
-  #       run: |
-  #         mkdir export
-  #         cp build//libgit2.dylib export/libgit2-${{ env.LIBGIT2_VERSION }}.dylib
-
-  #     - name: Cache git2 library
-  #       uses: actions/upload-artifact@master
-  #       with:
-  #         name: cache-macos
-  #         path: export/**
 
   generate_bindings:
     # needs: [build_libgit2_ubuntu, build_libgit2_windows]
     # needs: [build_libgit2_ubuntu]
-    needs: [build_libgit2_windows]
+    # needs: [build_libgit2_windows]
+    needs: [build_libgit2_macos]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -135,17 +135,17 @@ jobs:
       #     path: ./headers
       #     name: cache-headers
 
-      - name: Save windows binaries
-        uses: actions/download-artifact@master
-        with:
-          path: ./windows
-          name: cache-windows
-
-      # - name: Save macos binaries
+      # - name: Save windows binaries
       #   uses: actions/download-artifact@master
       #   with:
-      #     path: ./macos
-      #     name: cache-macos
+      #     path: ./windows
+      #     name: cache-windows
+
+      - name: Save macos binaries
+        uses: actions/download-artifact@master
+        with:
+          path: ./macos
+          name: cache-macos
 
       # - name: Install libclang
       #   run: |
