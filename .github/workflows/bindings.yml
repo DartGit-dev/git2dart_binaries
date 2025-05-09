@@ -144,25 +144,21 @@ jobs:
           path: ./macos
           name: cache-macos
 
-      - name: Install libclang
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
-
-      - name: Install flutter
-        uses: subosito/flutter-action@v2
-
-      - name: Install dependencies
-        run:  flutter pub get
-        
       - name: Save linux binaries
         uses: actions/download-artifact@v4
         with:
           path: ./linux
           name: cache-linux
 
-      - name: Generate bindings
-        run: 
-          dart run ffigen --config ffigen.yaml
+      - name: Install libclang
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
+
+      - name: Install flutter
+        uses: subosito/flutter-action@v2
+      - run:  flutter pub get
+      - run:  dart run ffigen --config ffigen.yaml
+      - run:  flutter test
 
       - name: Remove headers folder
         run: rm -fr headers

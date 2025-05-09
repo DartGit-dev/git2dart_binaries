@@ -1,5 +1,3 @@
-// coverage:ignore-file
-
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -34,7 +32,7 @@ String? _checkCache() {
                   'pub',
                   'cache',
                   'list',
-                ], runInShell: true,).stdout
+                ], runInShell: true).stdout
                 as String,
           )
           as Map<String, dynamic>;
