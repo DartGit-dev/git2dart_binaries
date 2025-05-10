@@ -61,7 +61,8 @@ extension IsValidGitObjectType on int {
   /// - [GIT_OBJECT_OFS_DELTA]
   /// - [GIT_OBJECT_REF_DELTA]
   ///
-  /// Returns `true` if the integer represents a valid Git object type, `false` otherwise.
+  /// Returns `true` if the integer represents a valid Git object type,
+  /// `false` otherwise.
   bool isValidGitObjectType() {
     return this >= GIT_OBJECT_COMMIT && this <= GIT_OBJECT_REF_DELTA;
   }
@@ -74,7 +75,8 @@ extension IsValidRefName on String {
   /// A valid reference name must:
   /// - Not be empty
   /// - Not contain control characters
-  /// - Not contain spaces, tilde (~), caret (^), colon (:), question mark (?), asterisk (*), or open bracket ([)
+  /// - Not contain spaces, tilde (~), caret (^), colon (:), question mark (?),
+  /// asterisk (*), or open bracket ([)
   /// - Not end with a dot (.), slash (/), or dot followed by slash (./)
   /// - Not contain two consecutive dots (..)
   /// - Not contain a sequence of dots and slashes (./)
