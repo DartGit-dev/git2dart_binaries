@@ -1,5 +1,7 @@
 import 'dart:ffi';
 
+// ignore: unused_import
+import 'package:git2dart_binaries/src/extensions.dart';
 import 'package:git2dart_binaries/src/bindings.dart';
 
 /// Represents an error that occurred in libgit2.
