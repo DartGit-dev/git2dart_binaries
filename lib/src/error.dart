@@ -13,7 +13,6 @@ class LibGit2Error {
   /// Creates a new instance of [LibGit2Error] from a native error pointer.
   ///
   /// Note: This constructor is for internal use only.
-  @internal
   LibGit2Error(this._errorPointer);
 
   final Pointer<git_error> _errorPointer;

@@ -7,8 +7,6 @@ import 'package:git2dart_binaries/src/opts_bindings.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 
-const libgit2Version = '1.6.2';
-
 String _getLibName() {
   var ext = 'so';
 
@@ -20,7 +18,7 @@ String _getLibName() {
     throw Exception('Unsupported platform.');
   }
 
-  return 'libgit2-$libgit2Version.$ext';
+  return 'libgit2.$ext';
 }
 
 /// Returns location of the most recent verison of the git2dart package
@@ -63,9 +61,9 @@ String? _resolveLibPath(String name) {
   // If lib is installed in system dir.
   if (Platform.isMacOS || Platform.isLinux) {
     final paths = [
-      '/usr/local/lib/libgit2.$libgit2Version.dylib',
-      '/usr/local/lib/libgit2.so.$libgit2Version',
-      '/usr/lib64/libgit2.so.$libgit2Version',
+      '/usr/local/lib/libgit2.dylib',
+      '/usr/local/lib/libgit2.so',
+      '/usr/lib64/libgit2.so',
     ];
     for (final path in paths) {
       if (_doesFileExist(path)) return path;
