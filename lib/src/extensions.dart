@@ -28,7 +28,7 @@ extension IsValidSHA on String {
   }
 }
 
-/// Extension methods for C char pointer to Dart String conversion.
+/// Extension methods for converting C char pointer to Dart String.
 extension ToDartString on Pointer<Char> {
   /// Converts a UTF-8 encoded C string to a Dart String.
   ///
@@ -46,7 +46,7 @@ extension ToDartString on Pointer<Char> {
   ///
   /// Returns a Dart [String] containing the decoded UTF-8 characters.
   String toDartString({int? length}) =>
-      cast<Utf8>().toDartString(length: length);
+      this == nullptr ? '' : cast<Utf8>().toDartString(length: length);
 }
 
 /// Extension methods for Git object type validation.
