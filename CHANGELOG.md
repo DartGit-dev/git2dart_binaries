@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.4] - 2025-05-11
+### Fixed
+- Fixed library name resolution on Windows platform
+- Fixed export errors in platform-specific extensions
+- Fixed internal error handling in LibGit2Error
+
+### Changed
+- Improved library name resolution mechanism
+- Enhanced platform-specific extension handling
+- Removed redundant version checks in library loading
+
+### Dependencies
+- Updated ffi to ^2.1.0
+- Updated meta to ^1.17.0
+- Updated path to ^1.8.3
+
 ## [1.9.3] - 2025-05-09
 ### Changed
 - Removed hardcoded libgit2 version from library name resolution
