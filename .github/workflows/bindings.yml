@@ -11,14 +11,27 @@ env:
   PUB_ENVIRONMENT: bot.github
   LIBGIT2_VERSION: "1.9.0"
   # GLIB_VERSION: "2.38"
+  LIBSSH2_VERSION: "1.11.1"
 
 jobs:
   build_libgit2_ubuntu:
     runs-on: ubuntu-22.04
     steps:
-      - name: Update dependencies
+      - name: Run prerequistes
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libgcrypt20-dev
+          mkdir /tmp/export
+
+      - name: install libssh2
+        run: |
+          mkdir /tmp/libssh2 && cd /tmp/libssh2
+          curl --location --silent --show-error https://www.libssh2.org/download/libssh2-${{ env.LIBSSH2_VERSION }}.tar.gz | tar -xz
+          cd libssh2-${{ env.LIBSSH2_VERSION }}
+          mkdir bld && cd bld
+          cmake -DCRYPTO_BACKEND=Libgcrypt -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr/local ..
+          cmake --build .
+          sudo cmake --install .
+          cp /usr/local/lib/libssh2.so /tmp/export/libssh2.so
 
       # - name: install glib
       #   run: |
@@ -47,7 +60,7 @@ jobs:
           mv libgit2 /tmp/libgit2
           cd /tmp/libgit2
           mkdir ./build && cd build
-          cmake -DUSE_SSH=exec -DBUILD_TESTS=OFF ..
+          cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=OFF ..
           cmake --build .
       - name: Cache headers
         uses: actions/upload-artifact@v4
@@ -57,13 +70,12 @@ jobs:
 
       - name: Export git2 library
         run: |
-          mkdir /tmp/libgit2/export
-          cp /tmp/libgit2/build/libgit2.so /tmp/libgit2/export/libgit2.so
+          cp /tmp/libgit2/build/libgit2.so /tmp/export/libgit2.so
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
         with:
           name: cache-linux
-          path: /tmp/libgit2/export/**
+          path: /tmp/export/**
 
   build_libgit2_windows:
     runs-on: windows-2019
@@ -188,15 +200,15 @@ jobs:
           refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
           skipTests: true
 
-  # - name: Create Release
-  #   id: create_release
-  #   uses: actions/create-release@latest
-  #   env:
-  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-  #   with:
-  #     tag_name: ${{ github.ref }}
-  #     release_name: Release ${{ github.ref }}
-  #     body: |
-  #       ${{ steps.Changelog.outputs.changelog }}
-  #     draft: false
-  #     prerelease: false
+  - name: Create Release
+    id: create_release
+    uses: actions/create-release@latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+    with:
+      tag_name: ${{ github.ref }}
+      release_name: Release ${{ github.ref }}
+      body: |
+        ${{ steps.Changelog.outputs.changelog }}
+      draft: false
+      prerelease: false
