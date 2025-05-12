@@ -10,15 +10,33 @@ on:
 env:
   PUB_ENVIRONMENT: bot.github
   LIBGIT2_VERSION: "1.9.0"
+  # GLIB_VERSION: "2.38"
 
 jobs:
   build_libgit2_ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Update dependencies
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libgcrypt20-dev
-    
+
+      # - name: install glib
+      #   run: |
+
+      #     mkdir /tmp/glibc
+      #     cd /tmp/glibc
+
+
+      #     wget https://ftp.gnu.org/gnu/glibc/glibc-$GLIB_VERSION.tar.gz
+      #     tar -xf glibc-$GLIB_VERSION.tar.gz 
+
+      #     cd glibc-$GLIB_VERSION
+
+      #     mkdir install && cd install
+      #     ../configure --prefix=/tmp/glibc/install
+      #     make
+      #     make install
+
       - uses: actions/checkout@v3
         with:
           repository: libgit2/libgit2
