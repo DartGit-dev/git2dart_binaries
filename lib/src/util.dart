@@ -84,6 +84,10 @@ DynamicLibrary _loadLibrary(String name) {
   try {
     final libraryPath = _resolveLibPath(name) ?? name;
 
+    if (Platform.isLinux) {
+      DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.so"));
+    }
+
     if (Platform.isWindows) {
       DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.dll"));
       DynamicLibrary.open(
