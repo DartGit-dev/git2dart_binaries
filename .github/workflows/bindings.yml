@@ -63,7 +63,7 @@ jobs:
         run: |
           mv ./libgit2 /tmp/libgit2
           cd /tmp/libgit2
-          cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON  -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIRS=/tmp/libssh2/install/lib/
+          cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON  -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
           cmake --build bld --target install
           ./bld/libgit2_tests
       - name: Cache headers
