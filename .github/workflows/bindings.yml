@@ -33,7 +33,7 @@ jobs:
           mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
           mkdir -p /usr/local/share/doc
 
-          cmake -B bld -DCRYPTO_BACKEND=OpenSSL
+          cmake -B bld -DCRYPTO_BACKEND=OpenSSL  -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
           cmake --build bld --target install
           cp /usr/local/lib/libssh2.so /tmp/export/libssh2.so
 
