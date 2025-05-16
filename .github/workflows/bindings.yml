@@ -19,18 +19,21 @@ jobs:
     steps:
       - name: Run prerequistes
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libgcrypt20-dev
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
           mkdir /tmp/export
+
+      - uses: actions/checkout@v3
+        with:
+          repository: libssh2/libssh2
+          ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
+          path: ./libssh2
 
       - name: install libssh2
         run: |
-          mkdir /tmp/libssh2 && cd /tmp/libssh2
-          curl --location --silent --show-error https://www.libssh2.org/download/libssh2-${{ env.LIBSSH2_VERSION }}.tar.gz | tar -xz
-          cd libssh2-${{ env.LIBSSH2_VERSION }}
-          mkdir bld && cd bld
-          cmake -DCRYPTO_BACKEND=Libgcrypt -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr/local ..
-          cmake --build .
-          sudo cmake --install .
+          mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
+
+          cmake -B bld -DCRYPTO_BACKEND=OpenSSL
+          cmake --build bld --target install
           cp /usr/local/lib/libssh2.so /tmp/export/libssh2.so
 
       # - name: install glib
@@ -57,11 +60,11 @@ jobs:
           path: ./libgit2
       - name: Build and test
         run: |
-          mv libgit2 /tmp/libgit2
+          mv ./libgit2 /tmp/libgit2
           cd /tmp/libgit2
-          mkdir ./build && cd build
-          cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=OFF ..
-          cmake --build .
+          cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON 
+          cmake --build bld --target install
+          ./bld/libgit2_tests
       - name: Cache headers
         uses: actions/upload-artifact@v4
         with:
@@ -190,15 +193,12 @@ jobs:
       - run:  dart run ffigen --config ffigen.yaml
       - run:  flutter test
 
-      - name: Remove headers folder
-        run: rm -fr headers
-
-      - name: Publish package
-        uses: k-paxian/dart-package-publisher@master
-        with:
-          accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
-          refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
-          skipTests: true
+      # - name: Publish package
+      #   uses: k-paxian/dart-package-publisher@master
+      #   with:
+      #     accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
+      #     refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
+      #     skipTests: true
 
     # - name: Create Release
     #   id: create_release

@@ -5,10 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.8] - 2025-05-17
+### Fixed 
+- Switch cripto provider to OpenSSL
+
 ## [1.9.7] - 2025-05-12
 ### Fixed 
 - Implemented conditional loading of the libssh2 shared library on Linux using DynamicLibrary.
-
 
 ## [1.9.6] - 2025-05-12
 ### Changed
