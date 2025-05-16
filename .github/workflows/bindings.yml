@@ -35,7 +35,7 @@ jobs:
 
           cmake -B bld -DCRYPTO_BACKEND=OpenSSL  -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
           cmake --build bld --target install
-          cp /usr/local/lib/libssh2.so /tmp/export/libssh2.so
+          cp  /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
 
       # - name: install glib
       #   run: |
