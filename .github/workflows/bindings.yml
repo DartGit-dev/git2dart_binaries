@@ -194,12 +194,12 @@ jobs:
       - run:  dart run ffigen --config ffigen.yaml
       - run:  flutter test
 
-      # - name: Publish package
-      #   uses: k-paxian/dart-package-publisher@master
-      #   with:
-      #     accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
-      #     refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
-      #     skipTests: true
+      - name: Publish package
+        uses: k-paxian/dart-package-publisher@master
+        with:
+          accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
+          refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
+          skipTests: true
 
     # - name: Create Release
     #   id: create_release
