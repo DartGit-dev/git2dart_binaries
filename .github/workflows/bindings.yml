@@ -74,7 +74,7 @@ jobs:
 
       - name: Export git2 library
         run: |
-          cp /tmp/libgit2/build/libgit2.so /tmp/export/libgit2.so
+          cp /tmp/libgit2/install/lib/libgit2.so /tmp/export/libgit2.so
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
         with:
