@@ -187,10 +187,12 @@ jobs:
       - name: Install libclang
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
+     
 
-      - name: Install flutter
+      - name: Run ffigen
         uses: subosito/flutter-action@v2
       - run:  flutter pub get
+      - run:  rm headers/git2/deprecated.h
       - run:  dart run ffigen --config ffigen.yaml --ignore-source-errors
       - run:  flutter test
 
