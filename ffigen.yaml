@@ -4,6 +4,8 @@ headers:
     - "headers/git2/**.h"
 compiler-opts:
   - '-I./headers'
+  - '-DGIT_EXPERIMENTAL_SHA256=ON'
+
 name: "Libgit2"
 description: "Bindings to libgit2"
 comments:

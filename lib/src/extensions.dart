@@ -2,15 +2,6 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 import 'package:git2dart_binaries/git2dart_binaries.dart';
-import 'package:git2dart_binaries/src/error.dart';
-
-/// Git object type constants
-const int GIT_OBJECT_COMMIT = 1;
-const int GIT_OBJECT_TREE = 2;
-const int GIT_OBJECT_BLOB = 3;
-const int GIT_OBJECT_TAG = 4;
-const int GIT_OBJECT_OFS_DELTA = 6;
-const int GIT_OBJECT_REF_DELTA = 7;
 
 /// Extension methods for String validation and conversion.
 extension IsValidSHA on String {
@@ -64,7 +55,8 @@ extension IsValidGitObjectType on int {
   /// Returns `true` if the integer represents a valid Git object type,
   /// `false` otherwise.
   bool isValidGitObjectType() {
-    return this >= GIT_OBJECT_COMMIT && this <= GIT_OBJECT_REF_DELTA;
+    return this >= git_object_t.GIT_OBJECT_COMMIT.value &&
+        this <= git_object_t.GIT_OBJECT_REF_DELTA.value;
   }
 }
 
