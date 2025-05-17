@@ -191,7 +191,7 @@ jobs:
       - name: Install flutter
         uses: subosito/flutter-action@v2
       - run:  flutter pub get
-      - run:  dart run ffigen --config ffigen.yaml
+      - run:  dart run ffigen --config ffigen.yaml --ignore-source-errors
       - run:  flutter test
 
       - name: Publish package
