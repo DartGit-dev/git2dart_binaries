@@ -24,7 +24,7 @@ extension IsValidSHA on String {
   bool isValidSHA() {
     final hexRegExp = RegExp(r'^[0-9a-fA-F]+$');
     return hexRegExp.hasMatch(this) &&
-        (GIT_OID_MINPREFIXLEN <= length && GIT_OID_HEXSZ >= length);
+        (GIT_OID_MINPREFIXLEN <= length && GIT_OID_SHA256_HEXSIZE >= length);
   }
 }
 

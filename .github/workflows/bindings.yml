@@ -63,7 +63,7 @@ jobs:
         run: |
           mv ./libgit2 /tmp/libgit2
           cd /tmp/libgit2
-          cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON  -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
+          cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON  -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
           cmake --build bld --target install
           ./bld/libgit2_tests
       - name: Cache headers
@@ -103,7 +103,7 @@ jobs:
         run: |
           cd source
           mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF  -DUSE_SSH=exec  ..
+          cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DEXPERIMENTAL_SHA256=ON -DUSE_SSH=exec  ..
           cmake --build .
 
       - name: Export git2 library
@@ -139,7 +139,7 @@ jobs:
         run: |
           cd source
           mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF  -DUSE_SSH=exec  ..
+          cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DEXPERIMENTAL_SHA256=ON -DUSE_SSH=exec  ..
           cmake --build .
 
       - name: Export git2 library
