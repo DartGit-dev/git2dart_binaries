@@ -12,10 +12,10 @@ extension IsValidSHA on String {
   /// - Have a length between [GIT_OID_MINPREFIXLEN] and [GIT_OID_HEXSZ]
   ///
   /// Returns `true` if the string is a valid SHA-1 hash, `false` otherwise.
-  bool isValidSHA() {
+  bool isValidSHA1() {
     final hexRegExp = RegExp(r'^[0-9a-fA-F]+$');
     return hexRegExp.hasMatch(this) &&
-        (GIT_OID_MINPREFIXLEN <= length && GIT_OID_SHA256_HEXSIZE >= length);
+        (GIT_OID_MINPREFIXLEN <= length && GIT_OID_SHA1_HEXSIZE >= length);
   }
 }
 
