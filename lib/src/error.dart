@@ -21,8 +21,8 @@ class LibGit2Error {
   String get message => _errorPointer.ref.message.toDartString();
 
   /// Gets the error class associated with this error.
-  int get errorClass => _errorPointer.ref.klass;
+  git_error_t get errorClass => git_error_t.fromValue(_errorPointer.ref.klass);
 
   @override
-  String toString() => message;
+  String toString() => "error: $errorClass: $message";
 }
