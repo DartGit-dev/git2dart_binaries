@@ -110,6 +110,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew install openssl cmake
+          brew uninstall libssh2
 
       - name: Checkout libssh2
         uses: actions/checkout@v3
