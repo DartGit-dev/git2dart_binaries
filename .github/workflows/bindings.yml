@@ -201,7 +201,7 @@ jobs:
       - name: Run ffigen
         uses: subosito/flutter-action@v2
       - run:  flutter pub get
-      - run:  flutter test
+      - run:  flutter test -r expanded
 
   # build_libgit2_windows:
   #   runs-on: windows-2019
