@@ -343,7 +343,7 @@ void main() {
 
   group('Extensions Integration Tests', () {
     test('get extensions', () {
-      final extensions = malloc<git_strarray>();
+      final extensions = calloc<git_strarray>();
 
       // Get supported extensions
       expect(
