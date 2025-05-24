@@ -138,6 +138,10 @@ jobs:
           ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
           path: ./libgit2
 
+      - name: Install dependencies
+        run: |
+            brew uninstall --ignore-dependencies libssh2
+
       - name: Build libgit2
         run: |
           cd libgit2
