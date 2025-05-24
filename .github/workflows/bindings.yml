@@ -120,7 +120,7 @@ jobs:
           cd libgit2
           mkdir build
           cd build
-          cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.dll ..
+          cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/bin/libssh2.dll ..
           cmake --build . --config Release --target install
           .\libgit2_tests.exe
 
@@ -204,7 +204,7 @@ jobs:
 
   generate_bindings:
     # needs: [build_libgit2_ubuntu, build_libgit2_windows, build_libgit2_macos]
-    # needs: [build_libgit2_windows]
+    needs: [build_libgit2_windows]
     runs-on: ubuntu-22.04
     steps:
       - name: Check out repository
