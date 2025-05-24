@@ -116,7 +116,7 @@ jobs:
       - name: download bindings
         uses: actions/download-artifact@v4
         with:
-          path: ./lib/src/bindings.dart
+          path: ./lib/src/
           name: cache-bindings
 
       - name: download linux deps
