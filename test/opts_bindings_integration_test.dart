@@ -6,6 +6,7 @@ import 'package:git2dart_binaries/src/bindings.dart';
 import 'package:git2dart_binaries/src/extensions.dart';
 import 'package:git2dart_binaries/src/opts_bindings.dart';
 import 'package:test/test.dart';
+import 'package:git2dart_binaries/src/util.dart' show _resolveLibPath;
 
 void main() {
   late Libgit2Opts opts;
@@ -13,14 +14,23 @@ void main() {
   late Libgit2 libgit2;
 
   setUp(() {
-    // Load the real libgit2 library based on the platform
-    if (Platform.isWindows) {
-      library = ffi.DynamicLibrary.open('windows/libgit2.dll');
-    } else if (Platform.isMacOS) {
-      library = ffi.DynamicLibrary.open('macos/libgit2.dylib');
-    } else {
-      library = ffi.DynamicLibrary.open('linux/libgit2.so');
+    // Load dependencies first
+    if (Platform.isMacOS) {
+      ffi.DynamicLibrary.open('macos/libssh2.dylib');
+    } else if (Platform.isLinux) {
+      ffi.DynamicLibrary.open('linux/libssh2.so');
+    } else if (Platform.isWindows) {
+      ffi.DynamicLibrary.open('windows/libssh2.dll');
     }
+
+    // Then load the main library
+    final libPath = _resolveLibPath(Platform.isMacOS ? 'libgit2.dylib' : 
+                                  Platform.isWindows ? 'libgit2.dll' : 
+                                  'libgit2.so');
+    if (libPath == null) {
+      throw Exception('Could not find libgit2 library');
+    }
+    library = ffi.DynamicLibrary.open(libPath);
 
     libgit2 = Libgit2(library);
     libgit2.git_libgit2_init();
@@ -30,42 +40,44 @@ void main() {
   group('Memory Window Integration Tests', () {
     test('get and set mwindow size', () {
       final size = calloc<ffi.Int>();
+      try {
+        // Get initial size
+        expect(
+          opts.git_libgit2_opts_get_mwindow_size(size),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        final initialSize = size.value;
 
-      // Get initial size
-      expect(
-        opts.git_libgit2_opts_get_mwindow_size(size),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-      final initialSize = size.value;
+        // Set new size
+        final newSize = initialSize + 1024;
+        expect(
+          opts.git_libgit2_opts_set_mwindow_size(newSize),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
 
-      // Set new size
-      final newSize = initialSize + 1024;
-      expect(
-        opts.git_libgit2_opts_set_mwindow_size(newSize),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
+        // Verify size was changed
+        expect(
+          opts.git_libgit2_opts_get_mwindow_size(size),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        expect(
+          size.value,
+          equals(newSize),
+          reason: libgit2.getLastError()?.toString(),
+        );
 
-      // Verify size was changed
-      expect(
-        opts.git_libgit2_opts_get_mwindow_size(size),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-      expect(
-        size.value,
-        equals(newSize),
-        reason: libgit2.getLastError()?.toString(),
-      );
-
-      // Restore original size
-      expect(
-        opts.git_libgit2_opts_set_mwindow_size(initialSize),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-      calloc.free(size);
+        // Restore original size
+        expect(
+          opts.git_libgit2_opts_set_mwindow_size(initialSize),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+      } finally {
+        calloc.free(size);
+      }
     });
 
     test('get and set mwindow mapped limit', () {
