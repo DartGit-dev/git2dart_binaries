@@ -10,7 +10,6 @@ on:
 env:
   PUB_ENVIRONMENT: bot.github
   LIBGIT2_VERSION: "1.9.0"
-  # GLIB_VERSION: "2.38"
   LIBSSH2_VERSION: "1.11.1"
 
 jobs:
@@ -146,6 +145,8 @@ jobs:
                 -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include \
                 -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.dylib \
                 -DCMAKE_INSTALL_RPATH="@loader_path" \
+                -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE \
+                -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE \
                 ..
           cmake --build . --target install
           ./libgit2_tests
