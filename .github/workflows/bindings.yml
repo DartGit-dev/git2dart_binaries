@@ -106,7 +106,7 @@ jobs:
           cmake -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=D:/libssh2/install ..
           cmake --build . --config Release --target install
           mkdir -p D:/export
-          copy D:\libssh2\install\lib\libssh2.dll D:\export\libssh2.dll
+          copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
 
       - name: Checkout libgit2
         uses: actions/checkout@v3
