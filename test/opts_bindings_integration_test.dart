@@ -17,7 +17,7 @@ void main() {
     if (Platform.isWindows) {
       library = ffi.DynamicLibrary.open('windows/libgit2.dll');
     } else if (Platform.isMacOS) {
-      library = ffi.DynamicLibrary.open('linux//libgit2.dylib');
+      library = ffi.DynamicLibrary.open('macos/libgit2.dylib');
     } else {
       library = ffi.DynamicLibrary.open('linux/libgit2.so');
     }
