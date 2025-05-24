@@ -167,8 +167,8 @@ jobs:
           path: export/**
 
   run_tests:
-    needs: [generate_bindings, build_libgit2_ubuntu]
-    runs-on: [ubuntu-latest]
+    needs: [generate_bindings, build_libgit2_ubuntu, build_libgit2_macos]
+    runs-on: [ubuntu-latest, macos-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
