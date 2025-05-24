@@ -148,13 +148,6 @@ jobs:
                 ..
           cmake --build . --target install
           ./libgit2_tests
-
-      - name: Cache headers
-        uses: actions/upload-artifact@v4
-        with:
-          name: cache-headers
-          path: /tmp/libgit2/include
-
       - name: Export git2 library
         run: |
           mkdir -p export
@@ -181,22 +174,22 @@ jobs:
 
       - name: download linux deps
         uses: actions/download-artifact@v4
-        if: ${{ runner.os == 'Linux' }}
+        if: ${{ runner.os == 'ubuntu-latest' }}
         with:
           path: ./linux
           name: cache-linux
       - name: Install linux dependencies
-        if: ${{ runner.os == 'Linux' }}
+        if: ${{ runner.os == 'ubuntu-latest' }}
         run: |
             sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends openssl
          
       - name: Install macos dependencies
-        if: ${{ runner.os == 'macOS' }}
+        if: ${{ runner.os == 'macos-latest' }}
         run: |
           brew install openssl
       - name: download macos deps
         uses: actions/download-artifact@v4
-        if: ${{ runner.os == 'macOS' }}
+        if: ${{ runner.os == 'macos-latest' }}
         with:
           path: ./macos
           name: cache-macos
