@@ -14,65 +14,123 @@ env:
   LIBSSH2_VERSION: "1.11.1"
 
 jobs:
-  # build_libgit2_ubuntu:
-  #   runs-on: ubuntu-22.04
-  #   steps:
-  #     - name: Run prerequistes
-  #       run: |
-  #         sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
-  #         mkdir /tmp/export
 
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         repository: libssh2/libssh2
-  #         ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
-  #         path: ./libssh2
-  #     - run: |
-  #         mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
-  #         mkdir -p /usr/local/share/doc
+  generate_bindings:
+    # needs: [build_libgit2_ubuntu, build_libgit2_windows, build_libgit2_macos]
+    # needs: [build_libgit2_windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
 
-  #         cmake -B bld -DCRYPTO_BACKEND=OpenSSL  -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
-  #         cmake --build bld --target install
-  #         cp  /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
+      - uses: actions/checkout@v3
+        with:
+          repository: libgit2/libgit2
+          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
+          path: ./libgit2
+      - run: mv ./libgit2/include ./headers && rm -fR ./libgit2
 
-  #     # - name: install glib
-  #     #   run: |
+      - name: Install libclang
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
+      - name: Run ffigen
+        uses: subosito/flutter-action@v2
+      - run:  flutter pub get
+      - run:  rm headers/git2/deprecated.h
+      - run:  dart run ffigen --config ffigen.yaml --ignore-source-errors
+    # - run:  flutter test
+      - name: Cache git2 library
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-bindings
+          path: src/bindings.dart
 
-  #     #     mkdir /tmp/glibc
-  #     #     cd /tmp/glibc
+      # - name: Save windows binaries
+      #   uses: actions/download-artifact@master
+      #   with:
+      #     path: ./windows
+      #     name: cache-windows
 
+      # - name: Save macos binaries
+      #   uses: actions/download-artifact@master
+      #   with:
+      #     path: ./macos
+      #     name: cache-macos
 
-  #     #     wget https://ftp.gnu.org/gnu/glibc/glibc-$GLIB_VERSION.tar.gz
-  #     #     tar -xf glibc-$GLIB_VERSION.tar.gz 
+      # - name: Save linux binaries
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     path: ./linux
+      #     name: cache-linux
 
-  #     #     cd glibc-$GLIB_VERSION
+      
+  build_libgit2_ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run prerequistes
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
+          mkdir /tmp/export
 
-  #     #     mkdir install && cd install
-  #     #     ../configure --prefix=/tmp/glibc/install
-  #     #     make
-  #     #     make install
+      - uses: actions/checkout@v3
+        with:
+          repository: libssh2/libssh2
+          ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
+          path: ./libssh2
+      - run: |
+          mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
+          mkdir -p /usr/local/share/doc
 
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         repository: libgit2/libgit2
-  #         ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-  #         path: ./libgit2
-  #     - name: Build and test
-  #       run: |
-  #         mv ./libgit2 /tmp/libgit2
-  #         cd /tmp/libgit2
-  #         cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON  -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
-  #         cmake --build bld --target install
-  #         ./bld/libgit2_tests
+          cmake -B bld -DCRYPTO_BACKEND=OpenSSL  -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
+          cmake --build bld --target install
+          cp  /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
+      - uses: actions/checkout@v3
+        with:
+          repository: libgit2/libgit2
+          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
+          path: ./libgit2
+      - name: Build and test
+        run: |
+          mv ./libgit2 /tmp/libgit2
+          cd /tmp/libgit2
+          cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON  -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
+          cmake --build bld --target install
+          ./bld/libgit2_tests
 
-  #     - name: Export git2 library
-  #       run: |
-  #         cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
-  #     - name: Cache git2 library
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: cache-linux
-  #         path: /tmp/export/**
+      - name: Export git2 library
+        run: |
+          cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
+      - name: Cache git2 library
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-linux
+          path: /tmp/export/**
+
+  test_ubuntu:
+    needs: [generate_bindings, build_libgit2_ubuntu]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: download bindings
+        uses: actions/download-artifact@v4
+        with:
+          path: ./src/bindings.dart
+          name: cache-bindings
+
+      - name: download linux deps
+        uses: actions/download-artifact@v4
+        with:
+          path: ./linux
+          name: cache-linux
+      - name: Install dependencies
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends openssl
+      - name: Run ffigen
+        uses: subosito/flutter-action@v2
+      - run:  flutter pub get
+      - run:  flutter test
 
   # build_libgit2_windows:
   #   runs-on: windows-2019
@@ -197,67 +255,23 @@ jobs:
   #         name: cache-macos
   #         path: export/**
 
-  generate_bindings:
-    # needs: [build_libgit2_ubuntu, build_libgit2_windows, build_libgit2_macos]
-    # needs: [build_libgit2_windows]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
 
-      - uses: actions/checkout@v3
-        with:
-          repository: libgit2/libgit2
-          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-          path: ./libgit2
-      - run: mv ./libgit2/include ./headers && rm -fR ./libgit2
+    #   - name: Publish package
+    #     uses: k-paxian/dart-package-publisher@master
+    #     with:
+    #       accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
+    #       refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
+    #       skipTests: true
 
-      - name: Install libclang
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
-      - name: Run ffigen
-        uses: subosito/flutter-action@v2
-      - run:  flutter pub get
-      - run:  rm headers/git2/deprecated.h
-      - run:  dart run ffigen --config ffigen.yaml --ignore-source-errors
-      - run:  flutter test
-
-      # - name: Save windows binaries
-      #   uses: actions/download-artifact@master
-      #   with:
-      #     path: ./windows
-      #     name: cache-windows
-
-      # - name: Save macos binaries
-      #   uses: actions/download-artifact@master
-      #   with:
-      #     path: ./macos
-      #     name: cache-macos
-
-      # - name: Save linux binaries
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     path: ./linux
-      #     name: cache-linux
-
-
-
-      - name: Publish package
-        uses: k-paxian/dart-package-publisher@master
-        with:
-          accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
-          refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
-          skipTests: true
-
-    # - name: Create Release
-    #   id: create_release
-    #   uses: actions/create-release@latest
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-    #   with:
-    #     tag_name: ${{ github.ref }}
-    #     release_name: Release ${{ github.ref }}
-    #     body: |
-    #       ${{ steps.Changelog.outputs.changelog }}
-    #     draft: false
-    #     prerelease: false
+    # # - name: Create Release
+    # #   id: create_release
+    # #   uses: actions/create-release@latest
+    # #   env:
+    # #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+    # #   with:
+    # #     tag_name: ${{ github.ref }}
+    # #     release_name: Release ${{ github.ref }}
+    # #     body: |
+    # #       ${{ steps.Changelog.outputs.changelog }}
+    # #     draft: false
+    # #     prerelease: false
