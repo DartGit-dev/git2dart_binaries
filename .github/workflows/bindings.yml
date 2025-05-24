@@ -106,9 +106,9 @@ jobs:
           name: cache-linux
           path: /tmp/export/**
 
-  test_ubuntu:
+  run_tests:
     needs: [generate_bindings, build_libgit2_ubuntu]
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -116,11 +116,12 @@ jobs:
       - name: download bindings
         uses: actions/download-artifact@v4
         with:
-          path: ./src/bindings.dart
+          path: ./lib/src/bindings.dart
           name: cache-bindings
 
       - name: download linux deps
         uses: actions/download-artifact@v4
+        if: ${{ runner.os == 'Linux' }}
         with:
           path: ./linux
           name: cache-linux
