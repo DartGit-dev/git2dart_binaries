@@ -357,12 +357,12 @@ void main() {
         for (var i = 0; i < extensions.ref.count; i++) {
           final strPtr = extensions.ref.strings.elementAt(i);
           if (strPtr.value != ffi.nullptr) {
-            malloc.free(strPtr.value);
+            calloc.free(strPtr.value);
           }
         }
-        malloc.free(extensions.ref.strings);
+        calloc.free(extensions.ref.strings);
       }
-      malloc.free(extensions);
+      calloc.free(extensions);
     });
   });
 }
