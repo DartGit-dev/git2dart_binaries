@@ -122,7 +122,7 @@ jobs:
           cd build
           cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.lib ..
           cmake --build . --config Release --target install
-          .\libgit2_tests.exe
+          .\Release\libgit2_tests.exe
 
       - name: Cache headers
         uses: actions/upload-artifact@v4
