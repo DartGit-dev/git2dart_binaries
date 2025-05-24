@@ -123,10 +123,14 @@ jobs:
         run: |
           cd libssh2
           mkdir -p build && cd build
-          cmake -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install ..
+          cmake -DCRYPTO_BACKEND=OpenSSL \
+                -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install \
+                -DCMAKE_INSTALL_NAME_DIR="@rpath" \
+                -DCMAKE_INSTALL_RPATH="@loader_path" \
+                ..
           cmake --build . --target install
           mkdir -p /tmp/export
-          cp /tmp/libssh2/install/lib/libssh2.dylib /tmp/export/libssh2.dylib
+          cp /tmp/libssh2/install/lib/libssh2.dylib /tmp/export/libssh2.1.dylib
 
       - name: Checkout libgit2
         uses: actions/checkout@v3
@@ -155,7 +159,7 @@ jobs:
         run: |
           mkdir -p export
           cp /tmp/libgit2/install/lib/libgit2-experimental.dylib export/libgit2.dylib
-          cp /tmp/libssh2/install/lib/libssh2.dylib export/libssh2.dylib
+          cp /tmp/libssh2/install/lib/libssh2.dylib export/libssh2.1.dylib
 
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
