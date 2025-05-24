@@ -29,7 +29,7 @@ void main() {
 
   group('Memory Window Integration Tests', () {
     test('get and set mwindow size', () {
-      final size = malloc<ffi.Int>();
+      final size = calloc<ffi.Int>();
 
       // Get initial size
       expect(
@@ -65,11 +65,11 @@ void main() {
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
-      malloc.free(size);
+      calloc.free(size);
     });
 
     test('get and set mwindow mapped limit', () {
-      final limit = malloc<ffi.Int>();
+      final limit = calloc<ffi.Int>();
 
       // Get initial limit
       expect(
@@ -105,14 +105,14 @@ void main() {
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
-      malloc.free(limit);
+      calloc.free(limit);
     });
   });
 
   group('Cache Integration Tests', () {
     test('get and set cache memory limits', () {
-      final current = malloc<ffi.Int>();
-      final allowed = malloc<ffi.Int>();
+      final current = calloc<ffi.Int>();
+      final allowed = calloc<ffi.Int>();
 
       // Get initial values
       expect(
@@ -149,8 +149,8 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
 
-      malloc.free(current);
-      malloc.free(allowed);
+      calloc.free(current);
+      calloc.free(allowed);
     });
 
     test('enable and disable caching', () {
@@ -179,7 +179,7 @@ void main() {
 
   group('Search Path Integration Tests', () {
     test('get and set search path', () {
-      final buf = malloc<git_buf>();
+      final buf = calloc<git_buf>();
       buf.ref.ptr = ffi.nullptr;
       buf.ref.size = 0;
       buf.ref.reserved = 0;
@@ -210,16 +210,16 @@ void main() {
 
       // Cleanup
       if (buf.ref.ptr != ffi.nullptr) {
-        malloc.free(buf.ref.ptr);
+        calloc.free(buf.ref.ptr);
       }
-      malloc.free(buf);
-      malloc.free(testPath);
+      calloc.free(buf);
+      calloc.free(testPath);
     });
   });
 
   group('User Agent Integration Tests', () {
     test('get and set user agent', () {
-      final buf = malloc<git_buf>();
+      final buf = calloc<git_buf>();
       buf.ref.ptr = ffi.nullptr;
       buf.ref.size = 0;
       buf.ref.reserved = 0;
@@ -232,7 +232,7 @@ void main() {
       );
 
       // Set new user agent
-      final newAgent = malloc<ffi.Char>();
+      final newAgent = calloc<ffi.Char>();
       final agentStr = 'git2dart-test/1.0';
       newAgent.value = agentStr.codeUnitAt(0);
 
@@ -251,16 +251,16 @@ void main() {
 
       // Cleanup
       if (buf.ref.ptr != ffi.nullptr) {
-        malloc.free(buf.ref.ptr);
+        calloc.free(buf.ref.ptr);
       }
-      malloc.free(buf);
-      malloc.free(newAgent);
+      calloc.free(buf);
+      calloc.free(newAgent);
     });
   });
 
   group('Pack File Integration Tests', () {
     test('get and set pack max objects', () {
-      final maxObjects = malloc<ffi.Int>();
+      final maxObjects = calloc<ffi.Int>();
 
       // Get initial value
       expect(
@@ -296,13 +296,13 @@ void main() {
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
-      malloc.free(maxObjects);
+      calloc.free(maxObjects);
     });
   });
 
   group('Owner Validation Integration Tests', () {
     test('get and set owner validation', () {
-      final enabled = malloc<ffi.Int>();
+      final enabled = calloc<ffi.Int>();
 
       // Get initial state
       expect(
@@ -337,7 +337,7 @@ void main() {
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
-      malloc.free(enabled);
+      calloc.free(enabled);
     });
   });
 
