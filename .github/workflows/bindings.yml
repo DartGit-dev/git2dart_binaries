@@ -161,7 +161,7 @@ jobs:
 
   run_tests:
     needs: [generate_bindings, build_libgit2_ubuntu, build_libgit2_macos]
-    runs-on: [ubuntu-latest, macos-latest]
+    runs-on: [ubuntu-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
