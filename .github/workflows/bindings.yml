@@ -116,40 +116,59 @@ jobs:
   #         path: export/**
 
   build_libgit2_macos:
-    runs-on:  macos-latest
+    runs-on: macos-latest
     steps:
+      - name: Install dependencies
+        run: |
+          brew install openssl cmake
 
-      - run: |
-          brew install openssl
-      - uses: actions/checkout@v3
+      - name: Checkout libssh2
+        uses: actions/checkout@v3
+        with:
+          repository: libssh2/libssh2
+          ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
+          path: ./libssh2
+
+      - name: Build libssh2
+        run: |
+          cd libssh2
+          mkdir -p build && cd build
+          cmake -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install ..
+          cmake --build . --target install
+          mkdir -p /tmp/export
+          cp /tmp/libssh2/install/lib/libssh2.dylib /tmp/export/libssh2.dylib
+
+      - name: Checkout libgit2
+        uses: actions/checkout@v3
         with:
           repository: libgit2/libgit2
           ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-          path: source
+          path: ./libgit2
 
-      - run: |
-          mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
-          mkdir -p /usr/local/share/doc
+      - name: Build libgit2
+        run: |
+          cd libgit2
+          mkdir -p build && cd build
+          cmake -DUSE_SSH=libssh2 \
+                -DBUILD_TESTS=ON \
+                -DEXPERIMENTAL_SHA256=ON \
+                -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install \
+                -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include \
+                -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.dylib \
+                ..
+          cmake --build . --target install
+          ./libgit2_tests
 
-          cmake -B bld -DCRYPTO_BACKEND=OpenSSL  -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
-          cmake --build bld --target install
-          cp  /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
-      # - name: Set up build environment
-      #   run: source/ci/setup-osx-build.sh
-      #   shell: bash
-
-
-      # - name: Build
-      #   run: |
-      #     cd source
-      #     mkdir build && cd build
-      #     cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DEXPERIMENTAL_SHA256=ON -DUSE_SSH=exec  ..
-      #     cmake --build .
+      - name: Cache headers
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-headers
+          path: /tmp/libgit2/include
 
       - name: Export git2 library
         run: |
-          mkdir export
-          cp source/build/libgit2-experimental.dylib export/libgit2.dylib
+          mkdir -p export
+          cp /tmp/libgit2/install/lib/libgit2-experimental.dylib export/libgit2.dylib
 
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
