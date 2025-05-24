@@ -120,13 +120,7 @@ jobs:
           cd libgit2
           mkdir build
           cd build
-          cmake -DUSE_SSH=libssh2 ^
-                -DBUILD_TESTS=ON ^
-                -DEXPERIMENTAL_SHA256=ON ^
-                -DCMAKE_INSTALL_PREFIX=D:/libgit2/install ^
-                -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include ^
-                -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.dll ^
-                ..
+          cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.dll ..
           cmake --build . --config Release --target install
           .\libgit2_tests.exe
 
