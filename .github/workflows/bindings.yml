@@ -152,6 +152,7 @@ jobs:
         run: |
           mkdir -p export
           cp /tmp/libgit2/install/lib/libgit2-experimental.dylib export/libgit2.dylib
+          cp /tmp/libssh2/install/lib/libssh2.dylib export/libssh2.dylib
 
       - name: Cache git2 library
         uses: actions/upload-artifact@v4

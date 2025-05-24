@@ -88,6 +88,10 @@ DynamicLibrary _loadLibrary(String name) {
       DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.so"));
     }
 
+    if (Platform.isMacOS) {
+      DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.dylib"));
+    }
+
     if (Platform.isWindows) {
       DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.dll"));
       DynamicLibrary.open(
