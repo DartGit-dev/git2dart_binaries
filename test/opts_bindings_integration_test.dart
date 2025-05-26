@@ -19,12 +19,12 @@ void main() {
     } else if (Platform.isLinux) {
       ffi.DynamicLibrary.open('linux/libssh2.so');
     } else if (Platform.isWindows) {
-      ffi.DynamicLibrary.open('windows/libssh2.dll');
+      ffi.DynamicLibrary.open('windows/libssh2.lib');
     }
 
     // Then load the main library
     if (Platform.isWindows) {
-      library = ffi.DynamicLibrary.open('windows/libgit2.dll');
+      library = ffi.DynamicLibrary.open('windows/libgit2.lib');
     } else if (Platform.isMacOS) {
       library = ffi.DynamicLibrary.open('macos/libgit2.dylib');
     } else {
