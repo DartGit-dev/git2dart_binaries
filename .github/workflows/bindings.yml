@@ -258,12 +258,12 @@ jobs:
           path: ./macos
           name: cache-macos
       
-      - name: Install macos dependencies
+      - name: Install windows dependencies
         if: ${{ runner.os == 'Windows' }}
         run: |
           choco install openssl -y
 
-      - name: download macos deps
+      - name: download windows deps
         uses: actions/download-artifact@v4
         if: ${{ runner.os == 'Windows' }}
         with:
