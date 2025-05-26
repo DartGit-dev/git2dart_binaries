@@ -221,11 +221,11 @@ jobs:
           path: export/**
 
   run_tests:
-    needs: [generate_bindings, build_libgit2_ubuntu, build_libgit2_macos]
+    needs: [generate_bindings, build_libgit2_ubuntu, build_libgit2_macos, build_libgit2_windows]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-2019]
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
