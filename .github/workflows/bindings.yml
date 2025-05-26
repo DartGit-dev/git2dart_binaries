@@ -17,7 +17,7 @@ jobs:
   generate_bindings:
     # needs: [build_libgit2_ubuntu, build_libgit2_windows, build_libgit2_macos]
     # needs: [build_libgit2_windows]
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -30,7 +30,6 @@ jobs:
       - run: mv ./libgit2/include ./headers && rm -fR ./libgit2
 
       - name: Install libclang
-        if: ${{ runner.os == 'Linux' }}
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
       - name: Run ffigen

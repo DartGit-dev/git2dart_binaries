@@ -501,35 +501,35 @@ class Libgit2Opts {
 
   // FFI function declarations
   late final _git_libgit2_opts_get_intPtr = _lookup<
-    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Pointer<ffi.Int>)>
+    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<ffi.Int>,)>)>
   >('git_libgit2_opts');
   late final _git_libgit2_opts_get_int =
       _git_libgit2_opts_get_intPtr
           .asFunction<int Function(int, ffi.Pointer<ffi.Int>)>();
 
   late final _git_libgit2_opts_set_intPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Int,)>)>>(
         'git_libgit2_opts',
       );
   late final _git_libgit2_opts_set_int =
       _git_libgit2_opts_set_intPtr.asFunction<int Function(int, int)>();
 
   late final _git_libgit2_opts_get_bufPtr = _lookup<
-    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Pointer<git_buf>)>
+    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<git_buf>,)>)>
   >('git_libgit2_opts');
   late final _git_libgit2_opts_get_buf =
       _git_libgit2_opts_get_bufPtr
           .asFunction<int Function(int, ffi.Pointer<git_buf>)>();
 
   late final _git_libgit2_opts_set_charPtr = _lookup<
-    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Pointer<ffi.Char>)>
+    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<ffi.Char>,)>)>
   >('git_libgit2_opts');
   late final _git_libgit2_opts_set_char =
       _git_libgit2_opts_set_charPtr
           .asFunction<int Function(int, ffi.Pointer<ffi.Char>)>();
 
   late final _git_libgit2_opts_get_search_pathPtr = _lookup<
-    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int, ffi.Pointer<git_buf>)>
+    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Int, ffi.Pointer<git_buf>)>)>
   >('git_libgit2_opts');
   late final _git_libgit2_opts_get_search_path =
       _git_libgit2_opts_get_search_pathPtr
@@ -537,7 +537,7 @@ class Libgit2Opts {
 
   late final _git_libgit2_opts_set_search_pathPtr = _lookup<
     ffi.NativeFunction<
-      ffi.Int Function(ffi.Int, ffi.Int, ffi.Pointer<ffi.Char>)
+      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Int, ffi.Pointer<ffi.Char>)>)
     >
   >('git_libgit2_opts');
   late final _git_libgit2_opts_set_search_path =
@@ -545,7 +545,7 @@ class Libgit2Opts {
           .asFunction<int Function(int, int, ffi.Pointer<ffi.Char>)>();
 
   late final _git_libgit2_opts_set_cache_object_limitPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int, ffi.Int)>>(
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Int, ffi.Int)>)>>(
         'git_libgit2_opts',
       );
   late final _git_libgit2_opts_set_cache_object_limit =
@@ -554,7 +554,7 @@ class Libgit2Opts {
 
   late final _git_libgit2_opts_get_cached_memoryPtr = _lookup<
     ffi.NativeFunction<
-      ffi.Int Function(ffi.Int, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)
+      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>)
     >
   >('git_libgit2_opts');
   late final _git_libgit2_opts_get_cached_memory =
@@ -565,7 +565,7 @@ class Libgit2Opts {
 
   late final _git_libgit2_opts_set_ssl_cert_locationsPtr = _lookup<
     ffi.NativeFunction<
-      ffi.Int Function(ffi.Int, ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
+      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>)
     >
   >('git_libgit2_opts');
   late final _git_libgit2_opts_set_ssl_cert_locations =
@@ -575,7 +575,7 @@ class Libgit2Opts {
           >();
 
   late final _git_libgit2_opts_get_extensionsPtr = _lookup<
-    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Pointer<git_strarray>)>
+    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<git_strarray>,)>)>
   >('git_libgit2_opts');
   late final _git_libgit2_opts_get_extensions =
       _git_libgit2_opts_get_extensionsPtr
@@ -583,7 +583,7 @@ class Libgit2Opts {
 
   late final _git_libgit2_opts_set_extensionsPtr = _lookup<
     ffi.NativeFunction<
-      ffi.Int Function(ffi.Int, ffi.Pointer<ffi.Pointer<ffi.Char>>, ffi.Int)
+      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<ffi.Pointer<ffi.Char>>, ffi.Int)>)
     >
   >('git_libgit2_opts');
   late final _git_libgit2_opts_set_extensions =

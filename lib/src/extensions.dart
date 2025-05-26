@@ -50,13 +50,11 @@ extension IsValidGitObjectType on int {
   /// - [GIT_OBJECT_BLOB]
   /// - [GIT_OBJECT_TAG]
   /// - [GIT_OBJECT_OFS_DELTA]
-  /// - [GIT_OBJECT_REF_DELTA]
   ///
   /// Returns `true` if the integer represents a valid Git object type,
   /// `false` otherwise.
   bool isValidGitObjectType() {
-    return this >= git_object_t.GIT_OBJECT_COMMIT.value &&
-        this <= git_object_t.GIT_OBJECT_REF_DELTA.value;
+    return this >= git_object_t.GIT_OBJECT_COMMIT.value;
   }
 }
 
