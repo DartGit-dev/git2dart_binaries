@@ -18,9 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: libgit2/libgit2
           ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
@@ -69,7 +69,7 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
           mkdir /tmp/export
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: libssh2/libssh2
           ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
@@ -81,7 +81,7 @@ jobs:
           cmake -B bld -DCRYPTO_BACKEND=OpenSSL  -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
           cmake --build bld --target install
           cp  /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: libgit2/libgit2
           ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
@@ -110,7 +110,7 @@ jobs:
           brew install openssl cmake
 
       - name: Checkout libssh2
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: libssh2/libssh2
           ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
@@ -130,7 +130,7 @@ jobs:
           cp /tmp/libssh2/install/lib/libssh2.dylib /tmp/export/libssh2.1.dylib
 
       - name: Checkout libgit2
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: libgit2/libgit2
           ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
@@ -177,7 +177,7 @@ jobs:
           choco install openssl cmake -y
 
       - name: Checkout libssh2
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: libssh2/libssh2
           ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
@@ -194,7 +194,7 @@ jobs:
           copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
 
       - name: Checkout libgit2
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: libgit2/libgit2
           ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
@@ -227,7 +227,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: download bindings
         uses: actions/download-artifact@v4
@@ -278,6 +278,8 @@ jobs:
     needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
       - name: download bindings
         uses: actions/download-artifact@v4
         with:
