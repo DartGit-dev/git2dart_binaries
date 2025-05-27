@@ -211,14 +211,13 @@ jobs:
 
       - name: Export git2 library
         run: |
-          mkdir export
-          copy D:/libgit2/install/bin/git2-experimental.dll export/libgit2.dll
+          copy D:/libgit2/install/bin/git2-experimental.dll  D:/export/libgit2.dll
 
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
         with:
           name: cache-windows
-          path: export/**
+          path:  D:/export/**
 
   run_tests:
     needs: [generate_bindings, build_libgit2_ubuntu, build_libgit2_macos, build_libgit2_windows]
