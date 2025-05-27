@@ -212,7 +212,7 @@ jobs:
       - name: Export git2 library
         run: |
           mkdir export
-          copy D:\libgit2\install\lib\git2-experimental.dll export\libgit2.dll
+          copy D:/libgit2/install/bin/git2-experimental.dll export/libgit2.dll
 
       - name: Cache git2 library
         uses: actions/upload-artifact@v4
