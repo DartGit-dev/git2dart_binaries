@@ -274,27 +274,33 @@ jobs:
       - run:  flutter pub get
       - run:  flutter test -r expanded
 
-  
-
-
-
-
-    #   - name: Publish package
-    #     uses: k-paxian/dart-package-publisher@master
-    #     with:
-    #       accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
-    #       refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
-    #       skipTests: true
-
-    # # - name: Create Release
-    # #   id: create_release
-    # #   uses: actions/create-release@latest
-    # #   env:
-    # #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-    # #   with:
-    # #     tag_name: ${{ github.ref }}
-    # #     release_name: Release ${{ github.ref }}
-    # #     body: |
-    # #       ${{ steps.Changelog.outputs.changelog }}
-    # #     draft: false
-    # #     prerelease: false
+  publish_package:
+    needs: [run_tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: download bindings
+        uses: actions/download-artifact@v4
+        with:
+          path: ./lib/src/
+          name: cache-bindings
+      - name: download macos binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: ./macos
+          name: cache-macos
+      - name: download windows binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: ./windows
+          name: cache-windows
+      - name: download linux binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: ./linux
+          name: cache-linux
+      - name: Publish package
+        uses: k-paxian/dart-package-publisher@master
+        with:
+          accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
+          refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
+          skipTests: true
