@@ -5,8 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.12] - 2025-05-27
+### Changed
+- Updated GitHub Actions checkout action to v4 for all repository checkouts
+- Improved CI workflow stability and reliability
+
+## [1.9.11] - 2025-05-27
+### Fixed 
+- Fixed Windows library path handling using forward slashes
+- Fixed export path in bindings.yml to use absolute directory for git2 library on Windows
+- Updated library loading to properly handle .dll and .lib files on Windows
+
+### Changed
+- Updated CI workflow to include Windows build steps for libgit2 and libssh2
+- Improved library installation process in CI workflow
+- Updated dependency installation steps for Windows platform
+- Enhanced FFI function signatures for varargs support
+
 ## [1.9.10] - 2025-05-17
-### Fixed 6
+### Fixed 
 - Validation SHA1
 
 
