@@ -89,14 +89,13 @@ DynamicLibrary _loadLibrary(String name) {
     }
 
     if (Platform.isMacOS) {
-      DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.dylib"));
+      DynamicLibrary.open(
+        path.join(path.dirname(libraryPath), "libssh2.1.dylib"),
+      );
     }
 
     if (Platform.isWindows) {
       DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.dll"));
-      DynamicLibrary.open(
-        path.join(path.dirname(libraryPath), "libcrypto-1_1-x64.dll"),
-      );
     }
     return DynamicLibrary.open(libraryPath);
   } catch (e) {
