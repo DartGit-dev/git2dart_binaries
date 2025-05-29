@@ -11,7 +11,7 @@ env:
   PUB_ENVIRONMENT: bot.github
   LIBGIT2_VERSION: "1.9.0"
   LIBSSH2_VERSION: "1.11.1"
-
+  NDK_VERSION: "r26c"
 jobs:
 
   generate_bindings:
@@ -42,267 +42,101 @@ jobs:
           name: cache-bindings
           path: lib/src/bindings.dart
 
-      # - name: Save windows binaries
-      #   uses: actions/download-artifact@master
-      #   with:
-      #     path: ./windows
-      #     name: cache-windows
-
-      # - name: Save macos binaries
-      #   uses: actions/download-artifact@master
-      #   with:
-      #     path: ./macos
-      #     name: cache-macos
-
-      # - name: Save linux binaries
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     path: ./linux
-      #     name: cache-linux
-
-      
-  build_libgit2_ubuntu:
+   
+  build_libgit2_android:
     runs-on: ubuntu-latest
-    steps:
-      - name: Run prerequistes
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
-          mkdir /tmp/export
 
-      - uses: actions/checkout@v4
-        with:
-          repository: libssh2/libssh2
-          ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
-          path: ./libssh2
-      - run: |
-          mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
-          mkdir -p /usr/local/share/doc
-
-          cmake -B bld -DCRYPTO_BACKEND=OpenSSL  -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
-          cmake --build bld --target install
-          cp  /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
-      - uses: actions/checkout@v4
-        with:
-          repository: libgit2/libgit2
-          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-          path: ./libgit2
-      - name: Build and test
-        run: |
-          mv ./libgit2 /tmp/libgit2
-          cd /tmp/libgit2
-          cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON  -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
-          cmake --build bld --target install
-          ./bld/libgit2_tests
-
-      - name: Export git2 library
-        run: |
-          cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
-      - name: Cache git2 library
-        uses: actions/upload-artifact@v4
-        with:
-          name: cache-linux
-          path: /tmp/export/**
-  build_libgit2_macos:
-    runs-on: macos-latest
-    steps:
-      - name: Install dependencies
-        run: |
-          brew install openssl cmake
-
-      - name: Checkout libssh2
-        uses: actions/checkout@v4
-        with:
-          repository: libssh2/libssh2
-          ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
-          path: ./libssh2
-
-      - name: Build libssh2
-        run: |
-          cd libssh2
-          mkdir -p build && cd build
-          cmake -DCRYPTO_BACKEND=OpenSSL \
-                -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install \
-                -DCMAKE_INSTALL_NAME_DIR="@rpath" \
-                -DCMAKE_INSTALL_RPATH="@loader_path" \
-                ..
-          cmake --build . --target install
-          mkdir -p /tmp/export
-          cp /tmp/libssh2/install/lib/libssh2.dylib /tmp/export/libssh2.1.dylib
-
-      - name: Checkout libgit2
-        uses: actions/checkout@v4
-        with:
-          repository: libgit2/libgit2
-          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-          path: ./libgit2
-
-      - name: uninstall briw
-        run: |
-            brew uninstall --ignore-dependencies libssh2
-
-      - name: Build libgit2
-        run: |
-          cd libgit2
-          mkdir -p build && cd build
-          cmake -DUSE_SSH=libssh2 \
-                -DBUILD_TESTS=ON \
-                -DEXPERIMENTAL_SHA256=ON \
-                -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include \
-                -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.dylib \
-                -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install \
-                ..
-          cmake --build . --target install
-          ./libgit2_tests
-      - name: Export git2 library
-        run: |
-          mkdir -p export
-          cp /tmp/libgit2/install/lib/libgit2-experimental.dylib export/libgit2.dylib
-          cp /tmp/libssh2/install/lib/libssh2.dylib export/libssh2.1.dylib
-
-      - name: Cache git2 library
-        uses: actions/upload-artifact@v4
-        with:
-          name: cache-macos
-          path: export/**
-  build_libgit2_windows:
-    runs-on: windows-latest
-    env:
-      ARCH: amd64
-      CMAKE_OPTIONS: -A x64 
-      BUILD_PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Program Files (x86)\CMake\bin;
-      BUILD_TEMP: D:\Temp
-    steps:
-      - name: Install dependencies
-        run: |
-          choco install openssl cmake -y
-
-      - name: Checkout libssh2
-        uses: actions/checkout@v4
-        with:
-          repository: libssh2/libssh2
-          ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
-          path: ./libssh2
-
-      - name: Build libssh2
-        run: |
-          cd libssh2
-          mkdir build
-          cd build
-          cmake -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=D:/libssh2/install ..
-          cmake --build . --config Release --target install
-          mkdir -p D:/export
-          copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
-
-      - name: Checkout libgit2
-        uses: actions/checkout@v4
-        with:
-          repository: libgit2/libgit2
-          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-          path: ./libgit2
-
-      - name: Build libgit2
-        run: |
-          cd libgit2
-          mkdir build
-          cd build
-          cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.lib ..
-          cmake --build . --config Release --target install
-          .\Release\libgit2_tests.exe
-
-      - name: Export git2 library
-        run: |
-          copy D:/libgit2/install/bin/git2-experimental.dll  D:/export/libgit2.dll
-
-      - name: Cache git2 library
-        uses: actions/upload-artifact@v4
-        with:
-          name: cache-windows
-          path:  D:/export/**
-
-  run_tests:
-    needs: [generate_bindings, build_libgit2_ubuntu, build_libgit2_macos, build_libgit2_windows]
-    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        abi: [ "armeabi-v7a", "arm64-v8a", "x86_64" ]
+        api: [ "21" ] # минимальный уровень API
+
     steps:
-      - name: Check out repository
+      - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: download bindings
-        uses: actions/download-artifact@v4
+      - name: Set up Android NDK ${{ env.NDK_VERSION }}
+        uses: nttld/setup-ndk@v1
         with:
-          path: ./lib/src/
-          name: cache-bindings
+          ndk-version: ${{ env.NDK_VERSION }}
 
-      - name: download linux deps
-        uses: actions/download-artifact@v4
-        if: ${{ runner.os == 'Linux' }}
-        with:
-          path: ./linux
-          name: cache-linux
-      - name: Install linux dependencies
-        if: ${{ runner.os == 'Linux' }}
+      - name: Add NDK toolchain to PATH
         run: |
-            sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends openssl
-         
-      - name: Install macos dependencies
-        if: ${{ runner.os == 'macOS' }}
-        run: |
-          brew install openssl
-      - name: download macos deps
-        uses: actions/download-artifact@v4
-        if: ${{ runner.os == 'macOS' }}
-        with:
-          path: ./macos
-          name: cache-macos
-      
-      - name: Install windows dependencies
-        if: ${{ runner.os == 'Windows' }}
-        run: |
-          choco install openssl -y
+          echo "$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
 
-      - name: download windows deps
-        uses: actions/download-artifact@v4
-        if: ${{ runner.os == 'Windows' }}
-        with:
-          path: ./windows
-          name: cache-windows
-     
-      - name: Run ffigen
-        uses: subosito/flutter-action@v2
-      - run:  flutter pub get
-      - run:  flutter test -r expanded
+      - name: Set cross‑compile variables
+        id: vars
+        run: |
+          case "${{ matrix.abi }}" in
+            "armeabi-v7a")   triplet="armv7a-linux-androideabi" ;;
+            "arm64-v8a")    triplet="aarch64-linux-android" ;;
+            "x86_64")       triplet="x86_64-linux-android" ;;
+          esac
+          echo "triplet=$triplet" >> "$GITHUB_OUTPUT"
+          echo "cc=$triplet${{ matrix.api }}-clang" >> "$GITHUB_OUTPUT"
 
-  publish_package:
-    needs: [run_tests]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: download bindings
-        uses: actions/download-artifact@v4
+      - name: Configure
+        working-directory: openssh2
+        run: |
+          ./configure \
+            --host=${{ steps.vars.outputs.triplet }} \
+            CC=${{ steps.vars.outputs.cc }} \
+            --disable-strip \
+            --with-ssl-dir=$GITHUB_WORKSPACE/openssl-android \
+            --prefix=/opt/openssh2/${{ matrix.abi }}
+
+      - name: Build
+        working-directory: openssh2
+        run: |
+          make -j$(nproc)
+
+      - name: Install to staging
+        working-directory: openssh2
+        run: |
+          make DESTDIR=$PWD/../out install
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: ./lib/src/
-          name: cache-bindings
-      - name: download macos binaries
-        uses: actions/download-artifact@v4
-        with:
-          path: ./macos
-          name: cache-macos
-      - name: download windows binaries
-        uses: actions/download-artifact@v4
-        with:
-          path: ./windows
-          name: cache-windows
-      - name: download linux binaries
-        uses: actions/download-artifact@v4
-        with:
-          path: ./linux
-          name: cache-linux
-      - name: Publish package
-        uses: k-paxian/dart-package-publisher@master
-        with:
-          accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
-          refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
-          skipTests: true
+          name: openssh2-${{ matrix.abi }}
+          path: openssh2/out/opt/openssh2/${{ matrix.abi }}
+    # steps:
+    #   - name: Run prerequistes
+    #     run: |
+    #       sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
+    #       mkdir /tmp/export
+
+    #   - uses: actions/checkout@v4
+    #     with:
+    #       repository: libssh2/libssh2
+    #       ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
+    #       path: ./libssh2
+    #   - run: |
+    #       mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
+    #       mkdir -p /usr/local/share/doc
+
+    #       cmake -B bld -DCRYPTO_BACKEND=OpenSSL  -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
+    #       cmake --build bld --target install
+    #       cp  /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
+    #   - uses: actions/checkout@v4
+    #     with:
+    #       repository: libgit2/libgit2
+    #       ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
+    #       path: ./libgit2
+    #   - name: Build and test
+    #     run: |
+    #       mv ./libgit2 /tmp/libgit2
+    #       cd /tmp/libgit2
+    #       cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON  -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
+    #       cmake --build bld --target install
+    #       ./bld/libgit2_tests
+
+    #   - name: Export git2 library
+    #     run: |
+    #       cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
+    #   - name: Cache git2 library
+    #     uses: actions/upload-artifact@v4
+    #     with:
+    #       name: cache-linux
+    #       path: /tmp/export/**
