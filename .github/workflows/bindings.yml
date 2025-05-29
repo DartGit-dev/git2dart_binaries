@@ -60,6 +60,9 @@ jobs:
   # --- Подготовка среды --------------------------------------------------
     - name: Checkout sources
       uses: actions/checkout@v4
+      with:
+        repository: libssh2/libssh2
+        ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
 
     - name: Install build deps (perl, make, etc.)
       run: sudo apt-get update && sudo apt-get install -y perl build-essential
