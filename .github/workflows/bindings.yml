@@ -12,6 +12,9 @@ env:
   LIBGIT2_VERSION: "1.9.0"
   LIBSSH2_VERSION: "1.11.1"
   NDK_VERSION: "r26c"
+  OPENSSL_VERSION: 3.2.0
+  BUILD_DIR: ${{ github.workspace }}/build
+  PREFIX_ROOT: ${{ github.workspace }}/prefix
 jobs:
 
   # generate_bindings:
@@ -49,10 +52,108 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: [ "armeabi-v7a", "arm64-v8a", "x86_64" ]
-        api: [ "21" ] # минимальный уровень API
+        abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
+        api: [21]
+
 
     steps:
+  # --- Подготовка среды --------------------------------------------------
+    - name: Checkout sources
+      uses: actions/checkout@v4
+
+    - name: Install build deps (perl, make, etc.)
+      run: sudo apt-get update && sudo apt-get install -y perl build-essential
+
+    - name: Set up Android NDK
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r26c
+        add-to-path: true
+
+    # Кэширование OpenSSL и CMake артефактов ускоряет повторные сборки
+    - name: Cache build outputs
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ env.BUILD_DIR }}
+          ${{ env.PREFIX_ROOT }}
+        key: ${{ runner.os }}-${{ matrix.abi }}-openssl${{ env.OPENSSL_VERSION }}-${{ hashFiles('**/CMakeLists.txt') }}
+
+    # --- Сборка OpenSSL ----------------------------------------------------
+    - name: Build & install OpenSSL (${{ matrix.abi }})
+      run: |
+        set -e
+        mkdir -p $PREFIX_ROOT/${{ matrix.abi }}
+        cd $BUILD_DIR
+        # Загружаем исходники только один раз
+        if [ ! -d "openssl-${OPENSSL_VERSION}" ]; then
+          curl -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+          tar xzf openssl-${OPENSSL_VERSION}.tar.gz
+        fi
+        cd openssl-${OPENSSL_VERSION}
+
+        # Определяем TARGET для конфигуратора
+        case "${{ matrix.abi }}" in
+          arm64-v8a)  TARGET=android-arm64;;
+          armeabi-v7a) TARGET=android-arm;;
+          x86)         TARGET=android-x86;;
+          x86_64)      TARGET=android-x86_64;;
+        esac
+
+        ./Configure $TARGET no-shared no-tests --prefix=$PREFIX_ROOT/${{ matrix.abi }}
+        make -j$(nproc)
+        make install_sw
+
+    # --- Сборка libssh2 ----------------------------------------------------
+    - name: Configure & build libssh2 (${{ matrix.abi }})
+      run: |
+        cmake -S libssh2 -B $BUILD_DIR/libssh2/${{ matrix.abi }} \
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=${{ matrix.abi }} \
+          -DANDROID_PLATFORM=android-${{ matrix.api }} \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_SHARED_LIBS=OFF \
+          -DENABLE_ZLIB_COMPRESSION=ON \
+          -DBUILD_EXAMPLES=OFF \
+          -DBUILD_TESTING=OFF \
+          -DLIBSSH2_WITH_OPENSSL=ON \
+          -DOPENSSL_ROOT_DIR=$PREFIX_ROOT/${{ matrix.abi }} \
+          -DOPENSSL_INCLUDE_DIR=$PREFIX_ROOT/${{ matrix.abi }}/include \
+          -DOPENSSL_SSL_LIBRARY=$PREFIX_ROOT/${{ matrix.abi }}/lib/libssl.a \
+          -DOPENSSL_CRYPTO_LIBRARY=$PREFIX_ROOT/${{ matrix.abi }}/lib/libcrypto.a
+
+        cmake --build $BUILD_DIR/libssh2/${{ matrix.abi }} --config Release -j$(nproc)
+
+    # --- Публикация артефактов --------------------------------------------
+    - name: Upload artifact (libssh2 + OpenSSL ${{ matrix.abi }})
+      uses: actions/upload-artifact@v4
+      with:
+        name: libssh2-openssl-${{ matrix.abi }}
+        path: |
+          $BUILD_DIR/libssh2/${{ matrix.abi }}/src/libssh2.a
+          $PREFIX_ROOT/${{ matrix.abi }}/lib/libssl.a
+          $PREFIX_ROOT/${{ matrix.abi }}/lib/libcrypto.a
+          $PREFIX_ROOT/${{ matrix.abi }}/include
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       - name: Checkout sources
         uses: actions/checkout@v4
         with:
@@ -64,47 +165,25 @@ jobs:
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: ${{ env.NDK_VERSION }}
+          add-to-path: true
 
-      - name: Add NDK toolchain to PATH
+                # Конфигурация и сборка
+      - name: Configure & Build libssh2 (${{ matrix.abi }})
         run: |
-          echo "$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+          cd libssh2
+          mkdir -p build/${{ matrix.abi }}
+          cmake -S . -B build/${{ matrix.abi }} \
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=${{ matrix.abi }} \
+          -DANDROID_PLATFORM=android-${{ matrix.api }} \
+          -DBUILD_SHARED_LIBS=OFF \
+          -DENABLE_ZLIB_COMPRESSION=ON \
+          -DBUILD_EXAMPLES=OFF \
+          -DBUILD_TESTING=OFF \
+          -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/${{ matrix.abi }} --config Release -j$(nproc)
 
-      - name: Set cross‑compile variables
-        id: vars
-        run: |
-          case "${{ matrix.abi }}" in
-            "armeabi-v7a")   triplet="armv7a-linux-androideabi" ;;
-            "arm64-v8a")    triplet="aarch64-linux-android" ;;
-            "x86_64")       triplet="x86_64-linux-android" ;;
-          esac
-          echo "triplet=$triplet" >> "$GITHUB_OUTPUT"
-          echo "cc=$triplet${{ matrix.api }}-clang" >> "$GITHUB_OUTPUT"
-
-      - name: Configure
-        working-directory: openssh2
-        run: |
-          ./configure \
-            --host=${{ steps.vars.outputs.triplet }} \
-            CC=${{ steps.vars.outputs.cc }} \
-            --disable-strip \
-            --with-ssl-dir=$GITHUB_WORKSPACE/openssl-android \
-            --prefix=/opt/openssh2/${{ matrix.abi }}
-
-      - name: Build
-        working-directory: openssh2
-        run: |
-          make -j$(nproc)
-
-      - name: Install to staging
-        working-directory: openssh2
-        run: |
-          make DESTDIR=$PWD/../out install
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: openssh2-${{ matrix.abi }}
-          path: openssh2/out/opt/openssh2/${{ matrix.abi }}
+   
     # steps:
     #   - name: Run prerequistes
     #     run: |
