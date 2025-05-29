@@ -14,33 +14,33 @@ env:
   NDK_VERSION: "r26c"
 jobs:
 
-  generate_bindings:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+  # generate_bindings:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
-        with:
-          repository: libgit2/libgit2
-          ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
-          path: ./libgit2
-      - run: mv ./libgit2/include ./headers && rm -fR ./libgit2
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         repository: libgit2/libgit2
+  #         ref: refs/tags/v${{ env.LIBGIT2_VERSION }}
+  #         path: ./libgit2
+  #     - run: mv ./libgit2/include ./headers && rm -fR ./libgit2
 
-      - name: Install libclang
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
-      - name: Run ffigen
-        uses: subosito/flutter-action@v2
-      - run:  flutter pub get
-      - run:  rm headers/git2/deprecated.h
-      - run:  dart run ffigen --config ffigen.yaml --ignore-source-errors
-    # - run:  flutter test
-      - name: Cache git2 library
-        uses: actions/upload-artifact@v4
-        with:
-          name: cache-bindings
-          path: lib/src/bindings.dart
+  #     - name: Install libclang
+  #       run: |
+  #         sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
+  #     - name: Run ffigen
+  #       uses: subosito/flutter-action@v2
+  #     - run:  flutter pub get
+  #     - run:  rm headers/git2/deprecated.h
+  #     - run:  dart run ffigen --config ffigen.yaml --ignore-source-errors
+  #   # - run:  flutter test
+  #     - name: Cache git2 library
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: cache-bindings
+  #         path: lib/src/bindings.dart
 
    
   build_libgit2_android:
@@ -55,6 +55,10 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
+        with:
+          repository: libssh2/libssh2
+          ref: refs/tags/libssh2-${{ env.LIBSSH2_VERSION }}
+          path: ./libssh2
 
       - name: Set up Android NDK ${{ env.NDK_VERSION }}
         uses: nttld/setup-ndk@v1
