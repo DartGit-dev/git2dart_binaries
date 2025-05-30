@@ -85,22 +85,22 @@ jobs:
         case "${{ matrix.abi }}" in
           arm64-v8a)
             TARGET=android-arm64
-            CROSS_COMPILE=aarch64-linux-android-
+            ARCH=aarch64
             ANDROID_API=${{ matrix.api }}
             ;;
           armeabi-v7a)
             TARGET=android-arm
-            CROSS_COMPILE=arm-linux-androideabi-
+            ARCH=arm
             ANDROID_API=${{ matrix.api }}
             ;;
           x86)
             TARGET=android-x86
-            CROSS_COMPILE=i686-linux-android-
+            ARCH=i686
             ANDROID_API=${{ matrix.api }}
             ;;
           x86_64)
             TARGET=android-x86_64
-            CROSS_COMPILE=x86_64-linux-android-
+            ARCH=x86_64
             ANDROID_API=${{ matrix.api }}
             ;;
         esac
@@ -130,11 +130,17 @@ jobs:
         # Configure OpenSSL with proper cross-compilation settings
         export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
         export CROSS_SYSROOT=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/sysroot
-        export CC=$CROSS_COMPILE$ANDROID_API-clang
-        export CXX=$CROSS_COMPILE$ANDROID_API-clang++
-        export AR=$CROSS_COMPILE-ar
-        export RANLIB=$CROSS_COMPILE-ranlib
-        export STRIP=$CROSS_COMPILE-strip
+        export CC=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/$ARCH-linux-android$ANDROID_API-clang
+        export CXX=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/$ARCH-linux-android$ANDROID_API-clang++
+        export AR=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        export RANLIB=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        export STRIP=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
+
+        # Verify compiler exists
+        if [ ! -f "$CC" ]; then
+          echo "Compiler not found: $CC"
+          exit 1
+        fi
 
         ./Configure $TARGET \
           no-shared \
@@ -144,7 +150,7 @@ jobs:
           no-engine \
           no-asm \
           --prefix=$PREFIX_ROOT/${{ matrix.abi }} \
-          --cross-compile-prefix=$CROSS_COMPILE
+          --cross-compile-prefix=$ARCH-linux-android-
 
         make -j$(nproc)
         make install_sw
