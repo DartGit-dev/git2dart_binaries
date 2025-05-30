@@ -13,8 +13,6 @@ env:
   LIBSSH2_VERSION: "1.11.1"
   NDK_VERSION: "r26c"
   OPENSSL_VERSION: 3.2.0
-  BUILD_DIR: ${{ github.workspace }}/build
-  PREFIX_ROOT: ${{ github.workspace }}/prefix
 jobs:
 
   # generate_bindings:
@@ -52,7 +50,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
+        abi: [armeabi-v7a]
+        # abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
         api: [21]
 
 
@@ -73,21 +72,12 @@ jobs:
         ndk-version: r26c
         add-to-path: true
 
-    # Кэширование OpenSSL и CMake артефактов ускоряет повторные сборки
-    - name: Cache build outputs
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ env.BUILD_DIR }}
-          ${{ env.PREFIX_ROOT }}
-        key: ${{ runner.os }}-${{ matrix.abi }}-openssl${{ env.OPENSSL_VERSION }}-${{ hashFiles('**/CMakeLists.txt') }}
-
     # --- Сборка OpenSSL ----------------------------------------------------
     - name: Build & install OpenSSL (${{ matrix.abi }})
       run: |
         set -e
-        mkdir -p $PREFIX_ROOT/${{ matrix.abi }}
-        cd $BUILD_DIR
+        mkdir -p openssl/${{ matrix.abi }}
+        cd openssl/${{ matrix.abi }}
         # Загружаем исходники только один раз
         if [ ! -d "openssl-${OPENSSL_VERSION}" ]; then
           curl -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
