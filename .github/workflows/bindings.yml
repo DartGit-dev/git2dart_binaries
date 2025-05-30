@@ -150,6 +150,7 @@ jobs:
           exit 1
         fi
 
+        # Configure OpenSSL with clang-specific settings
         ./Configure $TARGET \
           no-shared \
           no-tests \
@@ -159,7 +160,15 @@ jobs:
           no-asm \
           --prefix=$PREFIX_ROOT/${{ matrix.abi }} \
           --cross-compile-prefix=$ARCH-linux-android- \
-          -D__ANDROID_API__=$ANDROID_API
+          -D__ANDROID_API__=$ANDROID_API \
+          CC="$CC" \
+          CXX="$CXX" \
+          AR="$AR" \
+          RANLIB="$RANLIB" \
+          STRIP="$STRIP" \
+          CFLAGS="$CFLAGS" \
+          LDFLAGS="$LDFLAGS" \
+          android-clang
 
         make -j$(nproc)
         make install_sw
