@@ -131,22 +131,16 @@ jobs:
         export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
         export CROSS_SYSROOT=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/sysroot
         
-        # Set compiler paths based on NDK version
-        if [ -d "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin" ]; then
-          # NDK r26c and newer
-          export CC=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/$ARCH-linux-android$ANDROID_API-clang
-          export CXX=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/$ARCH-linux-android$ANDROID_API-clang++
-          export AR=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
-          export RANLIB=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
-          export STRIP=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
-        else
-          # Older NDK versions
-          export CC=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/clang
-          export CXX=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++
-          export AR=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
-          export RANLIB=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
-          export STRIP=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
-        fi
+        # Set compiler paths for NDK 27.2.12479018
+        export CC=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/clang
+        export CXX=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++
+        export AR=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        export RANLIB=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib
+        export STRIP=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
+
+        # Set target-specific flags
+        export CFLAGS="-target $ARCH-linux-android$ANDROID_API -D__ANDROID_API__=$ANDROID_API"
+        export LDFLAGS="-target $ARCH-linux-android$ANDROID_API"
 
         # Verify compiler exists
         if [ ! -f "$CC" ]; then
@@ -168,7 +162,7 @@ jobs:
 
         make -j$(nproc)
         make install_sw
-
+        
     # --- Сборка libssh2 ----------------------------------------------------
     - name: Configure & build libssh2 (${{ matrix.abi }})
       run: |
