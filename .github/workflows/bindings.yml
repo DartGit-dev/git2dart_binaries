@@ -151,7 +151,7 @@ jobs:
         fi
 
         # Configure OpenSSL with clang-specific settings
-        ./Configure $TARGET \
+        ./Configure \
           no-shared \
           no-tests \
           no-comp \
