@@ -141,6 +141,7 @@ jobs:
         # Set target-specific flags
         export CFLAGS="--target=$ARCH-linux-android$ANDROID_API -D__ANDROID_API__=$ANDROID_API --sysroot=$CROSS_SYSROOT"
         export LDFLAGS="--target=$ARCH-linux-android$ANDROID_API --sysroot=$CROSS_SYSROOT"
+        export CPPFLAGS="-D__ANDROID_API__=$ANDROID_API"
 
         # Verify compiler exists
         if [ ! -f "$CC" ]; then
@@ -155,19 +156,10 @@ jobs:
           no-shared \
           no-tests \
           no-comp \
-          no-hw \
           no-engine \
           no-asm \
           --prefix=$PREFIX_ROOT/${{ matrix.abi }} \
           --cross-compile-prefix=$ARCH-linux-android- \
-          -D__ANDROID_API__=$ANDROID_API \
-          CC="$CC" \
-          CXX="$CXX" \
-          AR="$AR" \
-          RANLIB="$RANLIB" \
-          STRIP="$STRIP" \
-          CFLAGS="$CFLAGS" \
-          LDFLAGS="$LDFLAGS" \
           android-clang
 
         make -j$(nproc)
