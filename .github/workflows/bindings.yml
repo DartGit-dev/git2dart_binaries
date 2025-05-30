@@ -75,14 +75,10 @@ jobs:
     # --- Сборка OpenSSL ----------------------------------------------------
     - name: Build & install OpenSSL (${{ matrix.abi }})
       run: |
-        set -e
-        mkdir -p openssl/${{ matrix.abi }}
-        cd openssl/${{ matrix.abi }}
-        # Загружаем исходники только один раз
-        if [ ! -d "openssl-${OPENSSL_VERSION}" ]; then
-          curl -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
-          tar xzf openssl-${OPENSSL_VERSION}.tar.gz
-        fi
+        mkdir  openssl && cd openssl
+
+        curl -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+        tar xzf openssl-${OPENSSL_VERSION}.tar.gz
         cd openssl-${OPENSSL_VERSION}
 
         # Определяем TARGET для конфигуратора
