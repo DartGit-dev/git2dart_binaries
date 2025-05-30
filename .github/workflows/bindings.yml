@@ -75,10 +75,28 @@ jobs:
     # --- Сборка OpenSSL ----------------------------------------------------
     - name: Build & install OpenSSL (${{ matrix.abi }})
       run: |
-        mkdir  openssl && cd openssl  
+        mkdir -p openssl && cd openssl  
 
-        curl -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+        # Download OpenSSL with verification
+        curl -L -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+        if [ ! -f openssl-${OPENSSL_VERSION}.tar.gz ]; then
+          echo "Failed to download OpenSSL source"
+          exit 1
+        fi
+
+        # Verify the archive
+        if ! tar -tzf openssl-${OPENSSL_VERSION}.tar.gz > /dev/null; then
+          echo "Invalid OpenSSL archive"
+          exit 1
+        fi
+
+        # Extract with verbose output
         tar xzf openssl-${OPENSSL_VERSION}.tar.gz
+        if [ ! -d openssl-${OPENSSL_VERSION} ]; then
+          echo "Failed to extract OpenSSL source"
+          exit 1
+        fi
+
         cd openssl-${OPENSSL_VERSION}
 
         # Определяем TARGET для конфигуратора
