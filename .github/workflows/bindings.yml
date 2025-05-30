@@ -77,6 +77,34 @@ jobs:
       run: |
         mkdir -p openssl && cd openssl  
 
+        # Set up Android NDK environment
+        export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
+        export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+        
+        # Set up target-specific variables
+        case "${{ matrix.abi }}" in
+          arm64-v8a)
+            TARGET=android-arm64
+            CROSS_COMPILE=aarch64-linux-android-
+            ANDROID_API=${{ matrix.api }}
+            ;;
+          armeabi-v7a)
+            TARGET=android-arm
+            CROSS_COMPILE=arm-linux-androideabi-
+            ANDROID_API=${{ matrix.api }}
+            ;;
+          x86)
+            TARGET=android-x86
+            CROSS_COMPILE=i686-linux-android-
+            ANDROID_API=${{ matrix.api }}
+            ;;
+          x86_64)
+            TARGET=android-x86_64
+            CROSS_COMPILE=x86_64-linux-android-
+            ANDROID_API=${{ matrix.api }}
+            ;;
+        esac
+
         # Download OpenSSL with verification
         curl -L -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
         if [ ! -f openssl-${OPENSSL_VERSION}.tar.gz ]; then
@@ -99,15 +127,25 @@ jobs:
 
         cd openssl-${OPENSSL_VERSION}
 
-        # Определяем TARGET для конфигуратора
-        case "${{ matrix.abi }}" in
-          arm64-v8a)  TARGET=android-arm64;;
-          armeabi-v7a) TARGET=android-arm;;
-          x86)         TARGET=android-x86;;
-          x86_64)      TARGET=android-x86_64;;
-        esac
+        # Configure OpenSSL with proper cross-compilation settings
+        export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
+        export CROSS_SYSROOT=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+        export CC=$CROSS_COMPILE$ANDROID_API-clang
+        export CXX=$CROSS_COMPILE$ANDROID_API-clang++
+        export AR=$CROSS_COMPILE-ar
+        export RANLIB=$CROSS_COMPILE-ranlib
+        export STRIP=$CROSS_COMPILE-strip
 
-        ./Configure $TARGET no-shared no-tests --prefix=$PREFIX_ROOT/${{ matrix.abi }}
+        ./Configure $TARGET \
+          no-shared \
+          no-tests \
+          no-comp \
+          no-hw \
+          no-engine \
+          no-asm \
+          --prefix=$PREFIX_ROOT/${{ matrix.abi }} \
+          --cross-compile-prefix=$CROSS_COMPILE
+
         make -j$(nproc)
         make install_sw
 
