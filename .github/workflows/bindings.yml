@@ -160,7 +160,7 @@ jobs:
           no-asm \
           --prefix=$PREFIX_ROOT/${{ matrix.abi }} \
           --cross-compile-prefix=$ARCH-linux-android- \
-          android-clang
+          $TARGET
 
         make -j$(nproc)
         make install_sw
