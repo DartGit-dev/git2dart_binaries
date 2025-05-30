@@ -139,8 +139,8 @@ jobs:
         export STRIP=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
 
         # Set target-specific flags
-        export CFLAGS="-target $ARCH-linux-android$ANDROID_API -D__ANDROID_API__=$ANDROID_API"
-        export LDFLAGS="-target $ARCH-linux-android$ANDROID_API"
+        export CFLAGS="--target=$ARCH-linux-android$ANDROID_API -D__ANDROID_API__=$ANDROID_API --sysroot=$CROSS_SYSROOT"
+        export LDFLAGS="--target=$ARCH-linux-android$ANDROID_API --sysroot=$CROSS_SYSROOT"
 
         # Verify compiler exists
         if [ ! -f "$CC" ]; then
@@ -158,7 +158,8 @@ jobs:
           no-engine \
           no-asm \
           --prefix=$PREFIX_ROOT/${{ matrix.abi }} \
-          --cross-compile-prefix=$ARCH-linux-android-
+          --cross-compile-prefix=$ARCH-linux-android- \
+          -D__ANDROID_API__=$ANDROID_API
 
         make -j$(nproc)
         make install_sw
