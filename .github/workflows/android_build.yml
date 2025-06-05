@@ -86,6 +86,7 @@ jobs:
             -DANDROID_PLATFORM=android-${{ matrix.api }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_TESTS=OFF \
             -DUSE_SSH=ON \
             -DOPENSSL_ROOT_DIR=$PWD/deps/prefix/${{ matrix.abi }} \
             -DOPENSSL_SSL_LIBRARY=$PWD/deps/prefix/${{ matrix.abi }}/lib/libssl.a \
