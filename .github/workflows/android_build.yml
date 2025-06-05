@@ -82,6 +82,7 @@ jobs:
       - name: Build libgit2 (${{ matrix.abi }})
         run: |
           git clone --depth 1 --branch v${{ env.LIBGIT2_VERSION }} https://github.com/libgit2/libgit2.git
+          export PKG_CONFIG_PATH=$PWD/deps/prefix/${{ matrix.abi }}/lib/pkgconfig
           cmake -S libgit2 -B build/libgit2/${{ matrix.abi }} \
             -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
             -DANDROID_ABI=${{ matrix.abi }} \
