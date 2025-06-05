@@ -90,7 +90,9 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTS=OFF \
-            -DUSE_SSH=ON \
+            -DUSE_SSH=libssh2 \
+            -DLIBSSH2_LIBRARY=$PWD/deps/prefix/${{ matrix.abi }}/lib/libssh2.a \
+            -DLIBSSH2_INCLUDE_DIR=$PWD/deps/prefix/${{ matrix.abi }}/include \
             -DOPENSSL_ROOT_DIR=$PWD/deps/prefix/${{ matrix.abi }} \
             -DOPENSSL_SSL_LIBRARY=$PWD/deps/prefix/${{ matrix.abi }}/lib/libssl.a \
             -DOPENSSL_CRYPTO_LIBRARY=$PWD/deps/prefix/${{ matrix.abi }}/lib/libcrypto.a \
