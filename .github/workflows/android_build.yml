@@ -96,7 +96,12 @@ jobs:
             -DOPENSSL_INCLUDE_DIR=$PWD/deps/prefix/${{ matrix.abi }}/include \
             -DLIBSSH2_FOUND=ON \
             -DLIBSSH2_LIBRARY=$PWD/deps/prefix/${{ matrix.abi }}/lib/libssh2.a \
+            -DLIBSSH2_LIBRARIES=$PWD/deps/prefix/${{ matrix.abi }}/lib/libssh2.a \
+            -DLIBSSH2_LIBRARY_DIRS=$PWD/deps/prefix/${{ matrix.abi }}/lib \
             -DLIBSSH2_INCLUDE_DIR=$PWD/deps/prefix/${{ matrix.abi }}/include \
+            -DLIBSSH2_INCLUDE_DIRS=$PWD/deps/prefix/${{ matrix.abi }}/include \
+            -DCMAKE_PREFIX_PATH=$PWD/deps/prefix/${{ matrix.abi }} \
+            -DBUILD_CLI=OFF \
             -DBUILD_CLAR=OFF
           cmake --build build/libgit2/${{ matrix.abi }} --config Release -j$(nproc)
           cmake --install build/libgit2/${{ matrix.abi }} --prefix $PWD/output/${{ matrix.abi }}
