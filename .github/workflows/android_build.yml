@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: ["android", "main"]
+  pull_request:
+    branches: ["android", "main"]
 
 env:
   LIBGIT2_VERSION: "1.9.0"
