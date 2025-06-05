@@ -56,7 +56,6 @@ jobs:
               ARCH=x86_64
               ;;
           esac
-          export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
           ./Configure no-shared no-tests --prefix=$PWD/../prefix/${{ matrix.abi }} --cross-compile-prefix=$ARCH-linux-android- $TARGET
           make -j$(nproc)
