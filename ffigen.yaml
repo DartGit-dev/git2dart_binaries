@@ -2,6 +2,7 @@ output: "lib/src/bindings.dart"
 headers:
   entry-points:
     - "headers/git2.h"
+    - "headers/git2/sys/*.h"
 compiler-opts:
   - '-I./headers'
   - '-DGIT_EXPERIMENTAL_SHA256=ON'
