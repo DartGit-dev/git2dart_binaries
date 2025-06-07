@@ -9,7 +9,7 @@ on:
       # - "**"
 env:
   PUB_ENVIRONMENT: bot.github
-  LIBGIT2_VERSION: "1.9.0"
+  LIBGIT2_VERSION: "1.9.1"
   LIBSSH2_VERSION: "1.11.1"
 
 jobs:
@@ -42,25 +42,6 @@ jobs:
           name: cache-bindings
           path: lib/src/bindings.dart
 
-      # - name: Save windows binaries
-      #   uses: actions/download-artifact@master
-      #   with:
-      #     path: ./windows
-      #     name: cache-windows
-
-      # - name: Save macos binaries
-      #   uses: actions/download-artifact@master
-      #   with:
-      #     path: ./macos
-      #     name: cache-macos
-
-      # - name: Save linux binaries
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     path: ./linux
-      #     name: cache-linux
-
-      
   build_libgit2_ubuntu:
     runs-on: ubuntu-latest
     steps:
