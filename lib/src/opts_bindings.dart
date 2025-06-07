@@ -1,4 +1,5 @@
 import 'dart:ffi' as ffi;
+import 'package:ffi/ffi.dart' as ffi;
 import 'package:git2dart_binaries/src/bindings.dart';
 
 /// Bindings to libgit2 global options.
@@ -583,7 +584,7 @@ class Libgit2Opts {
 
   late final _git_libgit2_opts_set_extensionsPtr = _lookup<
     ffi.NativeFunction<
-      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<ffi.Pointer<ffi.Char>>, ffi.Int)>)
+      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<ffi.Pointer<ffi.Char>>, ffi.Size)>)
     >
   >('git_libgit2_opts');
   late final _git_libgit2_opts_set_extensions =

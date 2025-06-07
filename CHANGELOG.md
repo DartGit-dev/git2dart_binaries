@@ -5,9 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.13] - 2025-06-07
+## [1.9.14] - 2025-06-07
 ### Changed
 - Upgraded version libgit2 to 1.9.1
+
+## [1.9.13] - 2025-05-28
+### Fixed
+- Fixed FFI function signature for better compatibility
+- Fixed macOS library path handling for libssh2
+- Removed obsolete integration tests for library loading
+
+### Changed
+- Updated macOS library loading to reference correct libssh2 version
+- Enhanced Windows compatibility in bindings.yml
+- Improved library loading mechanism across platforms
 
 ## [1.9.12] - 2025-05-27
 ### Changed
