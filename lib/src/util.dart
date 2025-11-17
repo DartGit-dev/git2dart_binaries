@@ -14,7 +14,7 @@ String _getLibName() {
     ext = 'dll';
   } else if (Platform.isMacOS) {
     ext = 'dylib';
-  } else if (!Platform.isLinux) {
+  } else if (!Platform.isLinux && !Platform.isAndroid) {
     throw Exception('Unsupported platform.');
   }
 
