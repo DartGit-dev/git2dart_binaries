@@ -1,6 +1,7 @@
 /// libgit2 binaries.
 library;
 
+export 'src/android_ssl_helper.dart';
 export 'src/bindings.dart';
 export 'src/error.dart';
 export 'src/extensions.dart';
