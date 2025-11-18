@@ -1,0 +1,60 @@
+name: Build libgit2 Windows
+description: Build libgit2 and libssh2 on Windows with OpenSSL
+inputs:
+  libgit2_version:
+    description: Version of libgit2 to build
+    required: true
+  libssh2_version:
+    description: Version of libssh2 to build
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install dependencies
+      shell: pwsh
+      run: choco install openssl cmake -y
+
+    - name: Checkout libssh2
+      uses: actions/checkout@v4
+      with:
+        repository: libssh2/libssh2
+        ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
+        path: ./libssh2
+
+    - name: Build libssh2
+      shell: pwsh
+      run: |
+        cd libssh2
+        mkdir build
+        cd build
+        cmake -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=D:/libssh2/install ..
+        cmake --build . --config Release --target install
+        mkdir -p D:/export
+        copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
+
+    - name: Checkout libgit2
+      uses: actions/checkout@v4
+      with:
+        repository: libgit2/libgit2
+        ref: refs/tags/v${{ inputs.libgit2_version }}
+        path: ./libgit2
+
+    - name: Build libgit2
+      shell: pwsh
+      run: |
+        cd libgit2
+        mkdir build
+        cd build
+        cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.lib ..
+        cmake --build . --config Release --target install
+        .\Release\libgit2_tests.exe
+
+    - name: Export git2 library
+      shell: pwsh
+      run: copy D:/libgit2/install/bin/git2-experimental.dll D:/export/libgit2.dll
+
+    - name: Cache git2 library
+      uses: actions/upload-artifact@v4
+      with:
+        name: cache-windows
+        path: D:/export/**

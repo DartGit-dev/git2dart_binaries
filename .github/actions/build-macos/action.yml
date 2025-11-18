@@ -1,0 +1,75 @@
+name: Build libgit2 macOS
+description: Build libgit2 and libssh2 on macOS with OpenSSL
+inputs:
+  libgit2_version:
+    description: Version of libgit2 to build
+    required: true
+  libssh2_version:
+    description: Version of libssh2 to build
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: brew install openssl cmake
+
+    - name: Checkout libssh2
+      uses: actions/checkout@v4
+      with:
+        repository: libssh2/libssh2
+        ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
+        path: ./libssh2
+
+    - name: Build libssh2
+      shell: bash
+      run: |
+        cd libssh2
+        mkdir -p build && cd build
+        cmake -DCRYPTO_BACKEND=OpenSSL \
+              -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install \
+              -DCMAKE_INSTALL_NAME_DIR="@rpath" \
+              -DCMAKE_INSTALL_RPATH="@loader_path" \
+              ..
+        cmake --build . --target install
+        mkdir -p /tmp/export
+        cp /tmp/libssh2/install/lib/libssh2.dylib /tmp/export/libssh2.1.dylib
+
+    - name: Checkout libgit2
+      uses: actions/checkout@v4
+      with:
+        repository: libgit2/libgit2
+        ref: refs/tags/v${{ inputs.libgit2_version }}
+        path: ./libgit2
+
+    - name: Uninstall brew libssh2
+      shell: bash
+      run: brew uninstall --ignore-dependencies libssh2
+
+    - name: Build libgit2
+      shell: bash
+      run: |
+        cd libgit2
+        mkdir -p build && cd build
+        cmake -DUSE_SSH=libssh2 \
+              -DBUILD_TESTS=ON \
+              -DEXPERIMENTAL_SHA256=ON \
+              -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include \
+              -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.dylib \
+              -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install \
+              ..
+        cmake --build . --target install
+        ./libgit2_tests
+
+    - name: Export git2 library
+      shell: bash
+      run: |
+        mkdir -p export
+        cp /tmp/libgit2/install/lib/libgit2-experimental.dylib export/libgit2.dylib
+        cp /tmp/libssh2/install/lib/libssh2.dylib export/libssh2.1.dylib
+
+    - name: Cache git2 library
+      uses: actions/upload-artifact@v4
+      with:
+        name: cache-macos
+        path: export/**

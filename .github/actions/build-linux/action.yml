@@ -1,0 +1,60 @@
+name: Build libgit2 Linux
+description: Build libgit2 and libssh2 on Linux with OpenSSL
+inputs:
+  libgit2_version:
+    description: Version of libgit2 to build
+    required: true
+  libssh2_version:
+    description: Version of libssh2 to build
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Run prerequisites
+      shell: bash
+      run: |
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
+        mkdir /tmp/export
+
+    - name: Checkout libssh2
+      uses: actions/checkout@v4
+      with:
+        repository: libssh2/libssh2
+        ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
+        path: ./libssh2
+
+    - name: Build libssh2
+      shell: bash
+      run: |
+        mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
+        mkdir -p /usr/local/share/doc
+
+        cmake -B bld -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
+        cmake --build bld --target install
+        cp /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
+
+    - name: Checkout libgit2
+      uses: actions/checkout@v4
+      with:
+        repository: libgit2/libgit2
+        ref: refs/tags/v${{ inputs.libgit2_version }}
+        path: ./libgit2
+
+    - name: Build libgit2
+      shell: bash
+      run: |
+        mv ./libgit2 /tmp/libgit2
+        cd /tmp/libgit2
+        cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
+        cmake --build bld --target install
+        ./bld/libgit2_tests
+
+    - name: Export git2 library
+      shell: bash
+      run: cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
+
+    - name: Cache git2 library
+      uses: actions/upload-artifact@v4
+      with:
+        name: cache-linux
+        path: /tmp/export/**
