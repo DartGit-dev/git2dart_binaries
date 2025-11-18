@@ -168,6 +168,10 @@ cmake \
     -DOPENSSL_INCLUDE_DIR="$OPENSSL_INSTALL/include" \
     -DOPENSSL_SSL_LIBRARY="$OPENSSL_INSTALL/lib/libssl.a" \
     -DOPENSSL_CRYPTO_LIBRARY="$OPENSSL_INSTALL/lib/libcrypto.a" \
+    -DTHREADSAFE=ON \
+    -DUSE_SSH=OFF \
+    -DREGEX_BACKEND=builtin \
+    -DUSE_BUNDLED_ZLIB=ON \
     "$LIBGIT2_SRC"
 
 # Step 4: Build libgit2
