@@ -66,6 +66,9 @@ jobs:
 
   build_libgit2_android:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [arm64-v8a, x86_64]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -73,7 +76,7 @@ jobs:
       - name: Build Android artifacts
         uses: ./.github/actions/build-android
         with:
-          architecture: arm64-v8a
+          architecture: ${{ matrix.os }}
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
@@ -146,22 +149,32 @@ jobs:
         with:
           path: ./lib/src/
           name: cache-bindings
+          
       - name: download macos binaries
         uses: actions/download-artifact@v4
         with:
           path: ./macos
           name: cache-macos
+
       - name: download windows binaries
         uses: actions/download-artifact@v4
         with:
           path: ./windows
           name: cache-windows
+
       - name: download linux binaries
         uses: actions/download-artifact@v4
         with:
           path: ./linux
           name: cache-linux
-      - name: download android binaries
+
+      - name: download android binaries x86_64
+        uses: actions/download-artifact@v4
+        with:
+          path: ./android/src/main/jniLibs/x86_64
+          name: cache-android-x86_64
+
+      - name: download android binaries arm64-v8a
         uses: actions/download-artifact@v4
         with:
           path: ./android/src/main/jniLibs/arm64-v8a
