@@ -12,7 +12,11 @@ runs:
         repository: libgit2/libgit2
         ref: refs/tags/v${{ inputs.libgit2_version }}
         path: ./libgit2
-    - run: mv ./libgit2/include ./headers && rm -fR ./libgit2
+    
+    - name: Move include to dir
+      shell: bash
+      run: |
+        mv ./libgit2/include ./headers && rm -fR ./libgit2
 
     - name: Install libclang
       shell: bash
@@ -20,15 +24,14 @@ runs:
         sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
     
     - name: Run ffigen
-      shell: bash
       uses: subosito/flutter-action@v2
     
     - name: generate bindings
       shell: bash
     - run: |
-      flutter pub get
-      rm headers/git2/deprecated.h
-      dart run ffigen --config ffigen.yaml --ignore-source-errors
+        flutter pub get
+        rm headers/git2/deprecated.h
+        dart run ffigen --config ffigen.yaml --ignore-source-errors
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v4
