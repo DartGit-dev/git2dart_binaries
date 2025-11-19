@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:ffi/ffi.dart';
 import 'package:git2dart_binaries/git2dart_binaries.dart';
 
 DynamicLibrary _loadLibrary() {
