@@ -109,10 +109,6 @@ jobs:
         run: |
             sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends openssl
          
-      # - name: Install macos dependencies
-      #   if: ${{ runner.os == 'macOS' }}
-      #   run: |
-      #     brew install openssl
       - name: download macos deps
         uses: actions/download-artifact@v4
         if: ${{ runner.os == 'macOS' }}

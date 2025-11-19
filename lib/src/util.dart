@@ -1,120 +1,9 @@
-import 'dart:convert';
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:git2dart_binaries/src/bindings.dart';
-import 'package:git2dart_binaries/src/opts_bindings.dart';
-import 'package:path/path.dart' as path;
-import 'package:pub_semver/pub_semver.dart';
-
-// String _getLibName() {
-//   var ext = 'so';
-
-//   if (Platform.isWindows) {
-//     ext = 'dll';
-//   } else if (Platform.isMacOS) {
-//     ext = 'dylib';
-//   } else if (!Platform.isLinux && !Platform.isAndroid) {
-//     throw Exception('Unsupported platform.');
-//   }
-
-//   return 'libgit2.$ext';
-// }
-
-// /// Returns location of the most recent verison of the git2dart package
-// /// contained in the cache.
-// String? _checkCache() {
-//   // Skip cache check on Android - flutter command not available at runtime
-//   if (Platform.isAndroid) {
-//     return null;
-//   }
-
-//   try {
-//     final cache =
-//         json.decode(
-//               Process.runSync('flutter', [
-//                     'pub',
-//                     'cache',
-//                     'list',
-//                   ], runInShell: true).stdout
-//                   as String,
-//             )
-//             as Map<String, dynamic>;
-//     final packages = cache['packages'] as Map<String, dynamic>;
-//     final libPackages = packages['git2dart_binaries'] as Map<String, dynamic>?;
-//     final versions = libPackages?.keys.map((e) => Version.parse(e)).toList();
-//     final latestVersion =
-//         libPackages?[Version.primary(versions!).toString()]
-//             as Map<String, dynamic>?;
-//     return latestVersion?['location'] as String?;
-//   } catch (e) {
-//     return null;
-//   }
-// }
-
-// /// Checks if [File]/[Link] exists for [path].
-// bool _doesFileExist(String path) {
-//   return File(path).existsSync() || Link(path).existsSync();
-// }
-
-// /// Returns path to dynamic library if found.
-// String? _resolveLibPath(String name) {
-//   // If lib is in executable's folder.
-//   var libPath = path.join(path.dirname(Platform.resolvedExecutable), name);
-//   if (_doesFileExist(libPath)) return libPath;
-
-//   // If lib is in executable's bundled 'lib' folder.
-//   libPath = path.join(path.dirname(Platform.resolvedExecutable), 'lib', name);
-//   if (_doesFileExist(libPath)) return libPath;
-
-//   // If lib is installed in system dir.
-//   if (Platform.isMacOS || Platform.isLinux) {
-//     final paths = [
-//       '/usr/local/lib/libgit2.dylib',
-//       '/usr/local/lib/libgit2.so',
-//       '/usr/lib64/libgit2.so',
-//     ];
-//     for (final path in paths) {
-//       if (_doesFileExist(path)) return path;
-//     }
-//   }
-
-//   // If lib is in '.pub_cache' folder.
-//   final cachedLocation = _checkCache();
-//   if (cachedLocation != null) {
-//     libPath = path.join(cachedLocation, Platform.operatingSystem, name);
-//     if (_doesFileExist(libPath)) return libPath;
-//   }
-
-//   return null;
-// }
-
-// DynamicLibrary _loadLibrary(String name) {
-//   try {
-//     final libraryPath = _resolveLibPath(name) ?? name;
-
-//     if (Platform.isLinux) {
-//       DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.so"));
-//     }
-
-//     if (Platform.isMacOS) {
-//       DynamicLibrary.open(
-//         path.join(path.dirname(libraryPath), "libssh2.1.dylib"),
-//       );
-//     }
-
-//     if (Platform.isWindows) {
-//       DynamicLibrary.open(path.join(path.dirname(libraryPath), "libssh2.dll"));
-//     }
-//     return DynamicLibrary.open(libraryPath);
-//   } catch (e) {
-//     stderr.writeln(
-//       'Failed to open the library. Make sure that libgit2 library is bundled '
-//       'with the application.',
-//     );
-//     rethrow;
-//   }
-// }
+import 'package:ffi/ffi.dart';
+import 'package:git2dart_binaries/git2dart_binaries.dart';
 
 DynamicLibrary _loadLibrary() {
   try {
@@ -135,7 +24,36 @@ DynamicLibrary _loadLibrary() {
   }
 }
 
-final _library = _loadLibrary();
+Libgit2 _initLibrary(DynamicLibrary library) {
+  final libgit2 = Libgit2(library);
 
-final libgit2 = Libgit2(_library);
+  libgit2.git_libgit2_init();
+
+  if (Platform.isAndroid) {
+    unawaited(_configureAndroidSSL());
+  }
+
+  return libgit2;
+}
+
+Future<void> _configureAndroidSSL() async {
+  try {
+    final certPath = await AndroidSSLHelper.initialize();
+    using((arena) {
+      final certPathC = certPath.toNativeUtf8(allocator: arena);
+      libgit2Opts.git_libgit2_opts_set_ssl_cert_locations(
+        certPathC.cast<Char>(),
+        nullptr,
+      );
+    });
+  } catch (error, stackTrace) {
+    stderr.writeln(
+      'Failed to configure Android SSL certificates: $error\n$stackTrace',
+    );
+  }
+}
+
+final _library = _loadLibrary();
 final libgit2Opts = Libgit2Opts(_library);
+
+final Libgit2 libgit2 = _initLibrary(_library);

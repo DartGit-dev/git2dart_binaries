@@ -67,39 +67,28 @@ class AndroidSSLHelper {
   /// Returns the path to the extracted certificate file.
   static Future<String> initialize() async {
     if (_initialized && _certPath != null) {
-      print('[AndroidSSLHelper] Already initialized: $_certPath');
       return _certPath!;
     }
-
-    print('[AndroidSSLHelper] Starting initialization...');
 
     // Get the app's cache directory
     final cacheDir = await getTemporaryDirectory();
     final certFile = File('${cacheDir.path}/cacert.pem');
-    print('[AndroidSSLHelper] Target cert path: ${certFile.path}');
 
     try {
       // Extract the CA bundle from assets
-      print('[AndroidSSLHelper] Loading cert from assets...');
       final certData = await rootBundle.load(
         'packages/git2dart_binaries/assets/certs/cacert.pem',
       );
-      print('[AndroidSSLHelper] Loaded ${certData.lengthInBytes} bytes');
 
       // Write to cache directory
       await certFile.writeAsBytes(certData.buffer.asUint8List(), flush: true);
-      print('[AndroidSSLHelper] Written to ${certFile.path}');
-      print('[AndroidSSLHelper] File exists: ${certFile.existsSync()}');
-      print('[AndroidSSLHelper] File size: ${certFile.lengthSync()} bytes');
 
       _certPath = certFile.path;
       _initialized = true;
 
-      print('[AndroidSSLHelper] ✓ Initialization complete: $_certPath');
       return _certPath!;
-    } catch (e, stack) {
-      print('[AndroidSSLHelper] ✗ Initialization failed: $e');
-      print('[AndroidSSLHelper] Stack trace: $stack');
+    } catch (e) {
+       stderr.write('Android cert initialization failed.')
       rethrow;
     }
   }
