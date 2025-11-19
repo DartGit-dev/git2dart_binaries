@@ -88,7 +88,7 @@ class AndroidSSLHelper {
 
       return _certPath!;
     } catch (e) {
-       stderr.write('Android cert initialization failed.')
+      stderr.write('Android cert initialization failed.');
       rethrow;
     }
   }
