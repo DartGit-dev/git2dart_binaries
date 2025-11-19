@@ -1,3 +1,19 @@
+## [1.10.0] - 2025-11-20
+
+### Added
+- Official Android FFI plugin packaging with Gradle/CMake scaffolding, JNI stubs, and GitHub Actions jobs that build libgit2 + OpenSSL artifacts for arm64-v8a and x86_64
+- Bundled Mozilla CA certificates as package assets together with the new AndroidSSLHelper utility for extracting them and configuring libgit2 on Android
+- `path_provider` dependency and asset wiring that allow Flutter apps to access the packaged CA bundle at runtime
+- Composite GitHub Actions for Linux, macOS, Windows, and Android builds that can be reused across workflows
+
+### Changed
+- Reworked `lib/src/util.dart` to initialize libgit2 once, automatically kick off Android SSL configuration, and simplify dynamic library loading across platforms
+- Consolidated CI into `.github/workflows/build_package.yml`, removing the legacy `bindings.yml`, and introduced configurable versions for libgit2/libssh2/OpenSSL
+- Exported the Android SSL helper from `git2dart_binaries.dart` so downstream apps can invoke it directly
+
+### Fixed
+- Corrected the Android SSL initialization error logging so failures surface cleanly in stderr output
+
 ## [1.9.17] - 2025-11-17
 
 ### Added
