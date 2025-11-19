@@ -1,0 +1,40 @@
+name: Generate libgit2 dart bindings
+description: Generate libgit2 dart bindings
+inputs:
+  libgit2_version:
+    description: Version of libgit2 to build
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: libgit2/libgit2
+        ref: refs/tags/v${{ inputs.libgit2_version }}
+        path: ./libgit2
+    
+    - name: Move include to dir
+      shell: bash
+      run: |
+        mv ./libgit2/include ./headers && rm -fR ./libgit2
+
+    - name: Install libclang
+      shell: bash
+      run: |
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
+    
+    - name: Run ffigen
+      uses: subosito/flutter-action@v2
+    
+    - name: generate bindings
+      shell: bash
+      run: |
+        flutter pub get
+        rm headers/git2/deprecated.h
+        dart run ffigen --config ffigen.yaml --ignore-source-errors
+
+    - name: Cache git2 library
+      uses: actions/upload-artifact@v4
+      with:
+        name: cache-bindings
+        path: lib/src/bindings.dart

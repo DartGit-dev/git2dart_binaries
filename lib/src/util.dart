@@ -14,7 +14,7 @@ String _getLibName() {
     ext = 'dll';
   } else if (Platform.isMacOS) {
     ext = 'dylib';
-  } else if (!Platform.isLinux) {
+  } else if (!Platform.isLinux && !Platform.isAndroid) {
     throw Exception('Unsupported platform.');
   }
 
@@ -24,23 +24,32 @@ String _getLibName() {
 /// Returns location of the most recent verison of the git2dart package
 /// contained in the cache.
 String? _checkCache() {
-  final cache =
-      json.decode(
-            Process.runSync('flutter', [
-                  'pub',
-                  'cache',
-                  'list',
-                ], runInShell: true).stdout
-                as String,
-          )
-          as Map<String, dynamic>;
-  final packages = cache['packages'] as Map<String, dynamic>;
-  final libPackages = packages['git2dart_binaries'] as Map<String, dynamic>?;
-  final versions = libPackages?.keys.map((e) => Version.parse(e)).toList();
-  final latestVersion =
-      libPackages?[Version.primary(versions!).toString()]
-          as Map<String, dynamic>?;
-  return latestVersion?['location'] as String?;
+  // Skip cache check on Android - flutter command not available at runtime
+  if (Platform.isAndroid) {
+    return null;
+  }
+  
+  try {
+    final cache =
+        json.decode(
+              Process.runSync('flutter', [
+                    'pub',
+                    'cache',
+                    'list',
+                  ], runInShell: true).stdout
+                  as String,
+            )
+            as Map<String, dynamic>;
+    final packages = cache['packages'] as Map<String, dynamic>;
+    final libPackages = packages['git2dart_binaries'] as Map<String, dynamic>?;
+    final versions = libPackages?.keys.map((e) => Version.parse(e)).toList();
+    final latestVersion =
+        libPackages?[Version.primary(versions!).toString()]
+            as Map<String, dynamic>?;
+    return latestVersion?['location'] as String?;
+  } catch (e) {
+    return null;
+  }
 }
 
 /// Checks if [File]/[Link] exists for [path].
@@ -50,6 +59,11 @@ bool _doesFileExist(String path) {
 
 /// Returns path to dynamic library if found.
 String? _resolveLibPath(String name) {
+  // Android: library is bundled with the app and loaded automatically
+  if (Platform.isAndroid) {
+    return null; // Use DynamicLibrary.open with just the name
+  }
+  
   // If lib is in executable's folder.
   var libPath = path.join(path.dirname(Platform.resolvedExecutable), name);
   if (_doesFileExist(libPath)) return libPath;

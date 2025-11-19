@@ -1,3 +1,14 @@
+## [1.9.17] - 2025-11-17
+
+### Added
+- Android platform support with OpenSSL 3.0.15 backend
+- AndroidSSLHelper for SSL certificate configuration on Android
+- Build script for Android (arm64-v8a architecture)
+- Bundled Mozilla CA certificates for Android HTTPS operations
+
+### Changed
+- Added path_provider dependency for Android SSL certificate extraction
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
