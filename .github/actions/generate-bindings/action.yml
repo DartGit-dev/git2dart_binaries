@@ -28,7 +28,7 @@ runs:
     
     - name: generate bindings
       shell: bash
-    - run: |
+      run: |
         flutter pub get
         rm headers/git2/deprecated.h
         dart run ffigen --config ffigen.yaml --ignore-source-errors
