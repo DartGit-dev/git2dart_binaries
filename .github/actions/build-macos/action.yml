@@ -10,9 +10,9 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install dependencies
-      shell: bash
-      run: brew install openssl cmake
+    # - name: Install dependencies
+    #   shell: bash
+    #   run: brew install openssl cmake
 
     - name: Checkout libssh2
       uses: actions/checkout@v4

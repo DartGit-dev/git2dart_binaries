@@ -203,4 +203,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: cache-android-${{ inputs.architecture }}
-        path: $OUTPUT_DIR/**
+        path: /tmp/export/**
