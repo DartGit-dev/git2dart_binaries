@@ -15,13 +15,20 @@ runs:
     - run: mv ./libgit2/include ./headers && rm -fR ./libgit2
 
     - name: Install libclang
+      shell: bash
       run: |
         sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends libclang-dev
+    
     - name: Run ffigen
+      shell: bash
       uses: subosito/flutter-action@v2
-    - run:  flutter pub get
-    - run:  rm headers/git2/deprecated.h
-    - run:  dart run ffigen --config ffigen.yaml --ignore-source-errors
+    
+    - name: generate bindings
+      shell: bash
+    - run: |
+      flutter pub get
+      rm headers/git2/deprecated.h
+      dart run ffigen --config ffigen.yaml --ignore-source-errors
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v4
