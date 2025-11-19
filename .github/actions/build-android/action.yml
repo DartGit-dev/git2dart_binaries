@@ -1,0 +1,206 @@
+name: Build libgit2 Android OpenSSL
+description: Build libgit2 with OpenSSL for Android
+inputs:
+  libgit2_version:
+    description: Version of libgit2 to build
+    required: true
+  libssh2_version:
+    description: Version of libssh2 to build
+    required: true
+  openssl_version:
+    description: Version of OpenSSL to build
+    required: true
+  architecture:
+    description: Android ABI to build (armeabi-v7a, arm64-v8a, x86, x86_64)
+    required: true
+  android_api_level:
+    description: Minimum Android API level to target
+    required: false
+    default: "21"
+
+runs:
+  using: composite
+  steps:
+    - name: Install prerequisites
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends \
+          build-essential ca-certificates cmake git ninja-build perl pkg-config python3 unzip
+
+    - name: Set up Android NDK
+      id: setup-ndk
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r26d
+        add-to-path: false
+
+    - name: Prepare environment
+      shell: bash
+      env:
+        ARCHITECTURE: ${{ inputs.architecture }}
+        ANDROID_API_LEVEL: ${{ inputs.android_api_level }}
+        ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+      run: |
+        set -euo pipefail
+
+        if [ -z "${ANDROID_NDK_ROOT:-}" ] || [ ! -d "$ANDROID_NDK_ROOT" ]; then
+          echo "::error::Android NDK path is invalid: ${ANDROID_NDK_ROOT:-unset}"
+          exit 1
+        fi
+
+        case "$ARCHITECTURE" in
+          armeabi-v7a)
+            OPENSSL_ARCH="android-arm"
+            ;;
+          arm64-v8a)
+            OPENSSL_ARCH="android-arm64"
+            ;;
+          x86)
+            OPENSSL_ARCH="android-x86"
+            ;;
+          x86_64)
+            OPENSSL_ARCH="android-x86_64"
+            ;;
+          *)
+            echo "::error::Unsupported architecture: $ARCHITECTURE"
+            exit 1
+            ;;
+        esac
+
+        HOST_UNAME=$(uname -s)
+        case "$HOST_UNAME" in
+          Darwin*)
+            HOST_TAG="darwin-x86_64"
+            NCPU=$(sysctl -n hw.ncpu)
+            ;;
+          Linux*)
+            HOST_TAG="linux-x86_64"
+            NCPU=$(nproc)
+            ;;
+          *)
+            echo "::error::Unsupported host: $HOST_UNAME"
+            exit 1
+            ;;
+        esac
+
+        ANDROID_LLVM_BIN="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/$HOST_TAG/bin"
+        if [ ! -d "$ANDROID_LLVM_BIN" ]; then
+          echo "::error::NDK LLVM toolchain not found: $ANDROID_LLVM_BIN"
+          exit 1
+        fi
+
+        BUILD_ROOT="/tmp"
+        OPENSSL_INSTALL="$BUILD_ROOT/openssl_install"
+        LIBSSH2_INSTALL="$BUILD_ROOT/libssh2_install"
+        LIBGIT2_INSTALL="$BUILD_ROOT/libgit2_install"
+        OUTPUT_DIR="$BUILD_ROOT/export"
+
+        mkdir -p "$BUILD_ROOT" "$OPENSSL_INSTALL" "$LIBSSH2_INSTALL" "$LIBGIT2_INSTALL" "$OUTPUT_DIR"
+
+        {
+          echo "ARCHITECTURE=$ARCHITECTURE"
+          echo "ANDROID_ABI=$ARCHITECTURE"
+          echo "OPENSSL_ARCH=$OPENSSL_ARCH"
+          echo "ANDROID_API_LEVEL=$ANDROID_API_LEVEL"
+          echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
+          echo "ANDROID_LLVM_BIN=$ANDROID_LLVM_BIN"
+          echo "HOST_TAG=$HOST_TAG"
+          echo "NCPU=$NCPU"
+          echo "BUILD_ROOT=$BUILD_ROOT"
+          echo "OPENSSL_INSTALL=$OPENSSL_INSTALL"
+          echo "LIBSSH2_INSTALL=$LIBSSH2_INSTALL"
+          echo "LIBGIT2_INSTALL=$LIBGIT2_INSTALL"
+          echo "OUTPUT_DIR=$OUTPUT_DIR"
+        } >> "$GITHUB_ENV"
+
+    - name: Checkout OpenSSL
+      uses: actions/checkout@v4
+      with:
+        repository: openssl/openssl
+        ref: refs/tags/openssl-${{ inputs.openssl_version }}
+        path: ./openssl
+
+    - name: Build OpenSSL
+      shell: bash
+      run: |
+        set -euo pipefail
+        mv ./openssl /tmp/openssl && cd /tmp/openssl
+        export PATH="$ANDROID_LLVM_BIN:$PATH"
+        ./Configure "$OPENSSL_ARCH" -D__ANDROID_API__=$ANDROID_API_LEVEL --prefix="$OPENSSL_INSTALL" no-tests shared
+        make clean || true
+        make -j"$(nproc)"
+        make install_sw
+
+    - name: Checkout libssh2
+      uses: actions/checkout@v4
+      with:
+        repository: libssh2/libssh2
+        ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
+        path: ./libssh2
+
+    - name: Build libssh2
+      shell: bash
+      run: |
+        set -euo pipefail
+        mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
+        cmake -B bld \
+          -G "Unix Makefiles" \
+          -DBUILD_SHARED_LIBS=ON \
+          -DCRYPTO_BACKEND=OpenSSL \
+          -DOPENSSL_ROOT_DIR="$OPENSSL_INSTALL" \
+          -DOPENSSL_INCLUDE_DIR="$OPENSSL_INSTALL/include" \
+          -DOPENSSL_SSL_LIBRARY="$OPENSSL_INSTALL/lib/libssl.so" \
+          -DOPENSSL_CRYPTO_LIBRARY="$OPENSSL_INSTALL/lib/libcrypto.so" \
+          -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+          -DANDROID_ABI="$ANDROID_ABI" \
+          -DANDROID_PLATFORM=android-${ANDROID_API_LEVEL} \
+          -DCMAKE_INSTALL_PREFIX="$LIBSSH2_INSTALL"
+        cmake --build bld --target install -- -j"$NCPU"
+
+    - name: Checkout libgit2
+      uses: actions/checkout@v4
+      with:
+        repository: libgit2/libgit2
+        ref: refs/tags/v${{ inputs.libgit2_version }}
+        path: ./libgit2
+
+    - name: Build libgit2
+      shell: bash
+      run: |
+        set -euo pipefail
+        mv ./libgit2 /tmp/libgit2 && cd /tmp/libgit2
+        cmake -B bld \
+          -DBUILD_TESTS=OFF \
+          -DBUILD_SHARED_LIBS=ON \
+          -DUSE_SSH=libssh2 \
+          -DUSE_HTTPS=OpenSSL \
+          -DEXPERIMENTAL_SHA256=ON \
+          -DLIBSSH2_INCLUDE_DIR="$LIBSSH2_INSTALL/include" \
+          -DLIBSSH2_LIBRARY="$LIBSSH2_INSTALL/lib/libssh2.so" \
+          -DOPENSSL_ROOT_DIR="$OPENSSL_INSTALL" \
+          -DOPENSSL_INCLUDE_DIR="$OPENSSL_INSTALL/include" \
+          -DOPENSSL_SSL_LIBRARY="$OPENSSL_INSTALL/lib/libssl.so" \
+          -DOPENSSL_CRYPTO_LIBRARY="$OPENSSL_INSTALL/lib/libcrypto.so" \
+          -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+          -DANDROID_ABI="$ANDROID_ABI" \
+          -DANDROID_PLATFORM=android-${ANDROID_API_LEVEL} \
+          -DCMAKE_INSTALL_PREFIX="$LIBGIT2_INSTALL"
+        cmake --build bld --target install -- -j"$NCPU"
+
+    - name: Copy outputs
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "$OUTPUT_DIR"
+        cp "$OPENSSL_INSTALL/lib/libssl.so" "$OUTPUT_DIR/"
+        cp "$OPENSSL_INSTALL/lib/libcrypto.so" "$OUTPUT_DIR/"
+        cp "$LIBSSH2_INSTALL/lib/libssh2.so" "$OUTPUT_DIR/"
+        cp "$LIBGIT2_INSTALL/lib/libgit2-experimental.so $OUTPUT_DIR/libgit2.so
+
+    - name: Upload Android artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cache-android-${{ inputs.architecture }}
+        path: $OUTPUT_DIR
