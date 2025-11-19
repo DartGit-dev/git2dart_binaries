@@ -1,3 +1,7 @@
+## [1.10.1] - 2025-11-20
+### Fixed
+- Restored the synchronous library bootstrap path by removing the eager `git_libgit2_init` call and Android SSL configuration that ran on import and crashed apps before Flutter bindings were ready; `lib/src/util.dart` now only loads the native library and exposes `Libgit2`/`Libgit2Opts`.
+
 ## [1.10.0] - 2025-11-20
 
 ### Added

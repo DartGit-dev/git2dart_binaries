@@ -24,36 +24,7 @@ DynamicLibrary _loadLibrary() {
   }
 }
 
-Libgit2 _initLibrary(DynamicLibrary library) {
-  final libgit2 = Libgit2(library);
-
-  libgit2.git_libgit2_init();
-
-  if (Platform.isAndroid) {
-    unawaited(_configureAndroidSSL());
-  }
-
-  return libgit2;
-}
-
-Future<void> _configureAndroidSSL() async {
-  try {
-    final certPath = await AndroidSSLHelper.initialize();
-    using((arena) {
-      final certPathC = certPath.toNativeUtf8(allocator: arena);
-      libgit2Opts.git_libgit2_opts_set_ssl_cert_locations(
-        certPathC.cast<Char>(),
-        nullptr,
-      );
-    });
-  } catch (error, stackTrace) {
-    stderr.writeln(
-      'Failed to configure Android SSL certificates: $error\n$stackTrace',
-    );
-  }
-}
-
 final _library = _loadLibrary();
 final libgit2Opts = Libgit2Opts(_library);
 
-final Libgit2 libgit2 = _initLibrary(_library);
+final libgit2 = Libgit2(_library);
