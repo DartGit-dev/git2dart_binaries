@@ -1,5 +1,4 @@
-name: Generate bindings
-
+name: Build package
 on:
   push:
     # tags:
