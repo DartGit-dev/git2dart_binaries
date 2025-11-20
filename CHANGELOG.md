@@ -1,10 +1,12 @@
+## [1.10.2] - 2025-11-20
+### Fixed
+- Updated `lib/src/util.dart` to resolve the bundled libgit2 binary relative to the package location so transitive consumers (e.g. `flutter test`) no longer fail with “library not found” errors.
+
 ## [1.10.1] - 2025-11-20
 ### Fixed
 - Restored the synchronous library bootstrap path by removing the eager `git_libgit2_init` call and Android SSL configuration that ran on import and crashed apps before Flutter bindings were ready; `lib/src/util.dart` now only loads the native library and exposes `Libgit2`/`Libgit2Opts`.
-- Updated `lib/src/util.dart` to resolve the bundled libgit2 binary relative to the package location so transitive consumers (e.g. `flutter test`) no longer fail with “library not found” errors.
 
 ## [1.10.0] - 2025-11-20
-
 ### Added
 - Official Android FFI plugin packaging with Gradle/CMake scaffolding, JNI stubs, and GitHub Actions jobs that build libgit2 + OpenSSL artifacts for arm64-v8a and x86_64
 - Bundled Mozilla CA certificates as package assets together with the new AndroidSSLHelper utility for extracting them and configuring libgit2 on Android
