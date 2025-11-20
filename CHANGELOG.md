@@ -1,3 +1,6 @@
+## [1.10.3] - 2025-11-20
+### Fixed
+- Bug with .gitignore
 ## [1.10.2] - 2025-11-20
 ### Fixed
 - Updated `lib/src/util.dart` to resolve the bundled libgit2 binary relative to the package location so transitive consumers (e.g. `flutter test`) no longer fail with “library not found” errors.
