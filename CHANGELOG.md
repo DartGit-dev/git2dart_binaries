@@ -1,6 +1,7 @@
 ## [1.10.1] - 2025-11-20
 ### Fixed
 - Restored the synchronous library bootstrap path by removing the eager `git_libgit2_init` call and Android SSL configuration that ran on import and crashed apps before Flutter bindings were ready; `lib/src/util.dart` now only loads the native library and exposes `Libgit2`/`Libgit2Opts`.
+- Updated `lib/src/util.dart` to resolve the bundled libgit2 binary relative to the package location so transitive consumers (e.g. `flutter test`) no longer fail with “library not found” errors.
 
 ## [1.10.0] - 2025-11-20
 
@@ -147,7 +148,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated ffi to ^2.0.0
 - Updated meta to ^1.16.0
 - Updated path to ^1.8.1
-- Updated plugin_platform_interface to ^2.0.2
 - Updated pub_semver to ^2.1.3
 - Updated dev dependencies:
   - ffigen to ^18.1.0
@@ -173,7 +173,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated ffi to ^2.0.0
 - Updated meta to ^1.16.0
 - Updated path to ^1.8.1
-- Updated plugin_platform_interface to ^2.0.2
 - Updated pub_semver to ^2.1.3
 - Updated dev dependencies:
   - ffigen to ^18.1.0

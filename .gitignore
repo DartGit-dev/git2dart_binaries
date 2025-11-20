@@ -29,3 +29,6 @@ migrate_working_dir/
 .packages
 build/
 .artifacts/
+lib/src/bindings.dart
+linux/libgit2.so
+linux/libssh2.so

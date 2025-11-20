@@ -1,48 +1,19 @@
 import 'dart:ffi' as ffi;
-import 'dart:io' show Platform;
 
 import 'package:ffi/ffi.dart';
 import 'package:git2dart_binaries/src/bindings.dart';
 import 'package:git2dart_binaries/src/extensions.dart';
-import 'package:git2dart_binaries/src/opts_bindings.dart';
+import 'package:git2dart_binaries/src/util.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late Libgit2Opts opts;
-  late ffi.DynamicLibrary library;
-  late Libgit2 libgit2;
-
-  setUp(() {
-    // Load dependencies first
-    if (Platform.isMacOS) {
-      ffi.DynamicLibrary.open('macos/libssh2.1.dylib');
-    } else if (Platform.isLinux) {
-      ffi.DynamicLibrary.open('linux/libssh2.so');
-    } else if (Platform.isWindows) {
-      ffi.DynamicLibrary.open('windows/libssh2.dll');
-    }
-
-    // Then load the main library
-    if (Platform.isWindows) {
-      library = ffi.DynamicLibrary.open('windows/libgit2.dll');
-    } else if (Platform.isMacOS) {
-      library = ffi.DynamicLibrary.open('macos/libgit2.dylib');
-    } else {
-      library = ffi.DynamicLibrary.open('linux/libgit2.so');
-    }
-
-    libgit2 = Libgit2(library);
-    libgit2.git_libgit2_init();
-    opts = Libgit2Opts(library);
-  });
-
   group('Memory Window Integration Tests', () {
     test('get and set mwindow size', () {
       final size = calloc<ffi.Int>();
       try {
         // Get initial size
         expect(
-          opts.git_libgit2_opts_get_mwindow_size(size),
+          libgit2Opts.git_libgit2_opts_get_mwindow_size(size),
           equals(0),
           reason: libgit2.getLastError()?.toString(),
         );
@@ -51,14 +22,14 @@ void main() {
         // Set new size
         final newSize = initialSize + 1024;
         expect(
-          opts.git_libgit2_opts_set_mwindow_size(newSize),
+          libgit2Opts.git_libgit2_opts_set_mwindow_size(newSize),
           equals(0),
           reason: libgit2.getLastError()?.toString(),
         );
 
         // Verify size was changed
         expect(
-          opts.git_libgit2_opts_get_mwindow_size(size),
+          libgit2Opts.git_libgit2_opts_get_mwindow_size(size),
           equals(0),
           reason: libgit2.getLastError()?.toString(),
         );
@@ -70,7 +41,7 @@ void main() {
 
         // Restore original size
         expect(
-          opts.git_libgit2_opts_set_mwindow_size(initialSize),
+          libgit2Opts.git_libgit2_opts_set_mwindow_size(initialSize),
           equals(0),
           reason: libgit2.getLastError()?.toString(),
         );
@@ -84,7 +55,7 @@ void main() {
 
       // Get initial limit
       expect(
-        opts.git_libgit2_opts_get_mwindow_mapped_limit(limit),
+        libgit2Opts.git_libgit2_opts_get_mwindow_mapped_limit(limit),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -93,14 +64,14 @@ void main() {
       // Set new limit
       final newLimit = initialLimit + 2048;
       expect(
-        opts.git_libgit2_opts_set_mwindow_mapped_limit(newLimit),
+        libgit2Opts.git_libgit2_opts_set_mwindow_mapped_limit(newLimit),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
 
       // Verify limit was changed
       expect(
-        opts.git_libgit2_opts_get_mwindow_mapped_limit(limit),
+        libgit2Opts.git_libgit2_opts_get_mwindow_mapped_limit(limit),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -112,7 +83,7 @@ void main() {
 
       // Restore original limit
       expect(
-        opts.git_libgit2_opts_set_mwindow_mapped_limit(initialLimit),
+        libgit2Opts.git_libgit2_opts_set_mwindow_mapped_limit(initialLimit),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -127,7 +98,7 @@ void main() {
 
       // Get initial values
       expect(
-        opts.git_libgit2_opts_get_cached_memory(current, allowed),
+        libgit2Opts.git_libgit2_opts_get_cached_memory(current, allowed),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -136,14 +107,14 @@ void main() {
       // Set new cache size
       final newSize = initialAllowed + 1024 * 1024; // Increase by 1MB
       expect(
-        opts.git_libgit2_opts_set_cache_max_size(newSize),
+        libgit2Opts.git_libgit2_opts_set_cache_max_size(newSize),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
 
       // Verify change
       expect(
-        opts.git_libgit2_opts_get_cached_memory(current, allowed),
+        libgit2Opts.git_libgit2_opts_get_cached_memory(current, allowed),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -155,7 +126,7 @@ void main() {
 
       // Restore original size
       expect(
-        opts.git_libgit2_opts_set_cache_max_size(initialAllowed),
+        libgit2Opts.git_libgit2_opts_set_cache_max_size(initialAllowed),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -167,21 +138,21 @@ void main() {
     test('enable and disable caching', () {
       // Enable caching
       expect(
-        opts.git_libgit2_opts_enable_caching(1),
+        libgit2Opts.git_libgit2_opts_enable_caching(1),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
 
       // Disable caching
       expect(
-        opts.git_libgit2_opts_enable_caching(0),
+        libgit2Opts.git_libgit2_opts_enable_caching(0),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
 
       // Re-enable caching (default state)
       expect(
-        opts.git_libgit2_opts_enable_caching(1),
+        libgit2Opts.git_libgit2_opts_enable_caching(1),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -197,7 +168,7 @@ void main() {
 
       // Get system level search path
       expect(
-        opts.git_libgit2_opts_get_search_path(2, buf),
+        libgit2Opts.git_libgit2_opts_get_search_path(2, buf),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -207,7 +178,7 @@ void main() {
       final testPath = pathStr.toNativeUtf8().cast<ffi.Char>();
 
       expect(
-        opts.git_libgit2_opts_set_search_path(2, testPath),
+        libgit2Opts.git_libgit2_opts_set_search_path(2, testPath),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -217,7 +188,7 @@ void main() {
       buf.ref.reserved = 0;
 
       // Get and verify the new path
-      expect(opts.git_libgit2_opts_get_search_path(2, buf), equals(0));
+      expect(libgit2Opts.git_libgit2_opts_get_search_path(2, buf), equals(0));
 
       // Cleanup
       if (buf.ref.ptr != ffi.nullptr) {
@@ -237,7 +208,7 @@ void main() {
 
       // Get current user agent
       expect(
-        opts.git_libgit2_opts_get_user_agent(buf),
+        libgit2Opts.git_libgit2_opts_get_user_agent(buf),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -248,14 +219,14 @@ void main() {
       newAgent.value = agentStr.codeUnitAt(0);
 
       expect(
-        opts.git_libgit2_opts_set_user_agent(newAgent),
+        libgit2Opts.git_libgit2_opts_set_user_agent(newAgent),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
 
       // Get and verify new user agent
       expect(
-        opts.git_libgit2_opts_get_user_agent(buf),
+        libgit2Opts.git_libgit2_opts_get_user_agent(buf),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -275,7 +246,7 @@ void main() {
 
       // Get initial value
       expect(
-        opts.git_libgit2_opts_get_pack_max_objects(maxObjects),
+        libgit2Opts.git_libgit2_opts_get_pack_max_objects(maxObjects),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -284,14 +255,14 @@ void main() {
       // Set new value
       final newMax = initialMax + 1000;
       expect(
-        opts.git_libgit2_opts_set_pack_max_objects(newMax),
+        libgit2Opts.git_libgit2_opts_set_pack_max_objects(newMax),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
 
       // Verify change
       expect(
-        opts.git_libgit2_opts_get_pack_max_objects(maxObjects),
+        libgit2Opts.git_libgit2_opts_get_pack_max_objects(maxObjects),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -303,7 +274,7 @@ void main() {
 
       // Restore original value
       expect(
-        opts.git_libgit2_opts_set_pack_max_objects(initialMax),
+        libgit2Opts.git_libgit2_opts_set_pack_max_objects(initialMax),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -317,7 +288,7 @@ void main() {
 
       // Get initial state
       expect(
-        opts.git_libgit2_opts_get_owner_validation(enabled),
+        libgit2Opts.git_libgit2_opts_get_owner_validation(enabled),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -325,14 +296,14 @@ void main() {
 
       // Toggle state
       expect(
-        opts.git_libgit2_opts_set_owner_validation(1 - initialState),
+        libgit2Opts.git_libgit2_opts_set_owner_validation(1 - initialState),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
 
       // Verify change
       expect(
-        opts.git_libgit2_opts_get_owner_validation(enabled),
+        libgit2Opts.git_libgit2_opts_get_owner_validation(enabled),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -344,7 +315,7 @@ void main() {
 
       // Restore original state
       expect(
-        opts.git_libgit2_opts_set_owner_validation(initialState),
+        libgit2Opts.git_libgit2_opts_set_owner_validation(initialState),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -358,7 +329,7 @@ void main() {
 
       // Get supported extensions
       expect(
-        opts.git_libgit2_opts_get_extensions(extensions),
+        libgit2Opts.git_libgit2_opts_get_extensions(extensions),
         equals(0),
         reason: libgit2.getLastError()?.toString(),
       );
@@ -366,7 +337,7 @@ void main() {
       // Cleanup
       if (extensions.ref.strings != ffi.nullptr) {
         for (var i = 0; i < extensions.ref.count; i++) {
-          final strPtr = extensions.ref.strings.elementAt(i);
+          final strPtr = extensions.ref.strings + i;
           if (strPtr.value != ffi.nullptr) {
             calloc.free(strPtr.value);
           }
