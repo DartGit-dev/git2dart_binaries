@@ -1,3 +1,22 @@
+## [Unreleased]
+### Fixed
+- macOS: vendored `libgit2.dylib` filename didn't match its
+  `install_name` (`@rpath/libgit2-experimental.1.9.dylib`), causing
+  Flutter macOS apps to SIGABRT at launch with
+  `Library not loaded: @rpath/libgit2-experimental.1.9.dylib`.
+- macOS: `libssh2.1.dylib` (a transitive dependency of libgit2) ships
+  with the package but was not declared in `vendored_libraries`, so it
+  was never embedded into consumer `.app` bundles. Apps that didn't
+  crash on the first defect failed on the second.
+- macOS: `lib/src/util.dart` requested `libgit2.dylib` from the
+  bundle's Frameworks directory, which doesn't match the renamed file
+  or its install_name. The package-config fallback path doesn't work
+  inside compiled Flutter apps (no `package_config.json` at runtime),
+  so the lookup failed with `Unable to resolve git2dart_binaries
+  package location`.
+
+Fixes [#14](https://github.com/DartGit-dev/git2dart_binaries/issues/14).
+
 ## [1.10.3] - 2025-11-20
 ### Fixed
 - Bug with .gitignore
