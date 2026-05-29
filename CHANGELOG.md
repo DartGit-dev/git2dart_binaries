@@ -1,4 +1,4 @@
-## [Unreleased]
+##  [1.10.4] - 2026-05-29
 ### Fixed
 - macOS: vendored `libgit2.dylib` filename didn't match its
   `install_name` (`@rpath/libgit2-experimental.1.9.dylib`), causing
