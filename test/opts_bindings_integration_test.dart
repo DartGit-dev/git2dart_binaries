@@ -1,10 +1,10 @@
 import 'dart:ffi' as ffi;
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:git2dart_binaries/src/bindings.dart';
 import 'package:git2dart_binaries/src/extensions.dart';
 import 'package:git2dart_binaries/src/util.dart';
-import 'package:test/test.dart';
 
 void main() {
   group('Memory Window Integration Tests', () {
