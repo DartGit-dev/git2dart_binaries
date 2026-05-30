@@ -136,6 +136,9 @@ runs:
           -DOPENSSL_SSL_LIBRARY="$openssl_install/lib/libssl.a" \
           -DOPENSSL_CRYPTO_LIBRARY="$openssl_install/lib/libcrypto.a" \
           -DCMAKE_LIBRARY_PATH="$libssh2_install/lib;$openssl_install/lib" \
+          -DCMAKE_FIND_ROOT_PATH="$libssh2_install;$openssl_install;$sysroot" \
+          -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH \
+          -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
           -DCMAKE_SYSTEM_NAME=iOS \
           -DCMAKE_OSX_SYSROOT="$sysroot" \
           -DCMAKE_OSX_ARCHITECTURES="$IOS_ARCH" \
