@@ -263,7 +263,7 @@ jobs:
 
           mkdir -p "$test_app/test" "$test_app/integration_test"
           cp "$GITHUB_WORKSPACE/test/opts_bindings_integration_test.dart" "$test_app/test/"
-          cp "$GITHUB_WORKSPACE/integration_test/opts_bindings_integration_test.dart" "$test_app/integration_test/"
+          cp "$GITHUB_WORKSPACE/integration_test/"*.dart "$test_app/integration_test/"
 
           cd "$test_app"
           flutter pub get
@@ -288,6 +288,7 @@ jobs:
 
           cd "$test_app"
           flutter devices
+          flutter test integration_test/libgit2_ios_smoke_test.dart -d "$device_id" -r expanded
           flutter test integration_test/opts_bindings_integration_test.dart -d "$device_id" -r expanded
 
       - name: Dump iOS simulator logs
