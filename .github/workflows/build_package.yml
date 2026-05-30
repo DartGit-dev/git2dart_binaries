@@ -361,9 +361,8 @@ jobs:
           target: google_apis
           disable-animations: true
           script: |
-            cd "$RUNNER_TEMP/git2dart_mobile_test"
-            flutter devices
-            flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded
+            cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter devices
+            cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded
 
   publish_package:
     if: ${{ github.actor != 'nektos/act' }}
