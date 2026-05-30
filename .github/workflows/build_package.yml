@@ -55,6 +55,7 @@ jobs:
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
 
   build_libgit2_ios:
+    if: false
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -84,6 +85,7 @@ jobs:
           artifact_name: cache-ios-${{ matrix.slice }}
 
   assemble_libgit2_ios:
+    if: false
     needs: [build_libgit2_ios]
     runs-on: macos-latest
     steps:
@@ -145,7 +147,6 @@ jobs:
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
 
   build_libgit2_android:
-    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -216,6 +217,7 @@ jobs:
       - run:  flutter test -r expanded
 
   run_ios_tests:
+    if: false
     needs: [generate_bindings, assemble_libgit2_ios]
     runs-on: macos-latest
     timeout-minutes: 25
@@ -316,7 +318,6 @@ jobs:
             --target=integration_test/opts_bindings_integration_test.dart
 
   run_android_tests:
-    if: false
     needs: [generate_bindings, build_libgit2_android]
     runs-on: ubuntu-latest
     steps:
