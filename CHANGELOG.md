@@ -1,3 +1,12 @@
+## [1.11.0] - 2026-05-30
+### Added
+- Added iOS package support with generated XCFramework artifacts and CI integration tests.
+- Added Android build coverage for `armeabi-v7a`, `arm64-v8a`, `x86`, and `x86_64`.
+
+### Changed
+- Updated bundled libgit2 builds to `1.9.4`.
+- Re-enabled the full platform build workflow across Linux, macOS, Windows, iOS, and Android.
+
 ##  [1.10.4] - 2026-05-29
 ### Fixed
 - macOS: vendored `libgit2.dylib` filename didn't match its
