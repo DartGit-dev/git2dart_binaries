@@ -261,9 +261,10 @@ jobs:
           File.write(pubspec_path, pubspec.to_yaml)
           RUBY
 
-          mkdir -p "$test_app/test" "$test_app/integration_test"
+          mkdir -p "$test_app/test" "$test_app/integration_test" "$test_app/test_driver"
           cp "$GITHUB_WORKSPACE/test/opts_bindings_integration_test.dart" "$test_app/test/"
           cp "$GITHUB_WORKSPACE/integration_test/"*.dart "$test_app/integration_test/"
+          cp "$GITHUB_WORKSPACE/test_driver/integration_test.dart" "$test_app/test_driver/"
 
           cd "$test_app"
           flutter pub get
@@ -288,8 +289,35 @@ jobs:
 
           cd "$test_app"
           flutter devices
-          flutter test integration_test/libgit2_ios_smoke_test.dart -d "$device_id" -r expanded
-          flutter test integration_test/opts_bindings_integration_test.dart -d "$device_id" -r expanded
+
+          run_with_timeout() {
+            local seconds="$1"
+            shift
+            ruby -e '
+              require "timeout"
+
+              seconds = Integer(ARGV.shift)
+              command = ARGV
+              Timeout.timeout(seconds) do
+                system(*command)
+                exit($?.exitstatus || 1)
+              end
+            rescue Timeout::Error
+              warn "::error::Timed out after #{seconds}s: #{command.join(" ")}"
+              exit 124
+            end
+            ' "$seconds" "$@"
+          }
+
+          run_with_timeout 900 flutter drive \
+            -d "$device_id" \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/libgit2_ios_smoke_test.dart
+
+          run_with_timeout 900 flutter drive \
+            -d "$device_id" \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/opts_bindings_integration_test.dart
 
       - name: Dump iOS simulator logs
         if: ${{ failure() || cancelled() }}
