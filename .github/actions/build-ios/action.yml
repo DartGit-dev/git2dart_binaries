@@ -100,6 +100,7 @@ runs:
             -DCMAKE_INSTALL_PREFIX="$libssh2_install"
           cmake --build "$platform_dir/libssh2-bld" --target install -- -j"$(sysctl -n hw.ncpu)"
 
+          PKG_CONFIG_EXECUTABLE= \
           cmake -S ./libgit2 -B "$platform_dir/libgit2-bld" \
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTS=OFF \
@@ -135,6 +136,11 @@ runs:
 
         arm64_simulator_libgit2="$(find "$BUILD_ROOT/iphonesimulator-arm64/libgit2/lib" -maxdepth 1 -name 'libgit2*.a' | head -n 1)"
         x86_64_simulator_libgit2="$(find "$BUILD_ROOT/iphonesimulator-x86_64/libgit2/lib" -maxdepth 1 -name 'libgit2*.a' | head -n 1)"
+        device_libgit2="$(find "$BUILD_ROOT/iphoneos-arm64/libgit2/lib" -maxdepth 1 -name 'libgit2*.a' | head -n 1)"
+
+        test -n "$arm64_simulator_libgit2"
+        test -n "$x86_64_simulator_libgit2"
+        test -n "$device_libgit2"
 
         lipo -create \
           "$BUILD_ROOT/iphonesimulator-arm64/openssl/lib/libcrypto.a" \
@@ -152,8 +158,6 @@ runs:
           "$arm64_simulator_libgit2" \
           "$x86_64_simulator_libgit2" \
           -output "$simulator_dir/libgit2/lib/libgit2.a"
-
-        device_libgit2="$(find "$BUILD_ROOT/iphoneos-arm64/libgit2/lib" -maxdepth 1 -name 'libgit2*.a' | head -n 1)"
 
         xcodebuild -create-xcframework \
           -library "$BUILD_ROOT/iphoneos-arm64/openssl/lib/libcrypto.a" -headers "$BUILD_ROOT/iphoneos-arm64/openssl/include" \
