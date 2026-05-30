@@ -7,6 +7,10 @@ import 'package:git2dart_binaries/src/extensions.dart';
 import 'package:git2dart_binaries/src/util.dart';
 
 void main() {
+  tearDownAll(() {
+    libgit2.git_libgit2_shutdown();
+  });
+
   group('Memory Window Integration Tests', () {
     test('get and set mwindow size', () {
       final size = calloc<ffi.Int>();
@@ -191,9 +195,7 @@ void main() {
       expect(libgit2Opts.git_libgit2_opts_get_search_path(2, buf), equals(0));
 
       // Cleanup
-      if (buf.ref.ptr != ffi.nullptr) {
-        calloc.free(buf.ref.ptr);
-      }
+      libgit2.git_buf_dispose(buf);
       calloc.free(buf);
       calloc.free(testPath);
     });
@@ -214,9 +216,7 @@ void main() {
       );
 
       // Set new user agent
-      final newAgent = calloc<ffi.Char>();
-      final agentStr = 'git2dart-test/1.0';
-      newAgent.value = agentStr.codeUnitAt(0);
+      final newAgent = 'git2dart-test/1.0'.toNativeUtf8().cast<ffi.Char>();
 
       expect(
         libgit2Opts.git_libgit2_opts_set_user_agent(newAgent),
@@ -232,9 +232,7 @@ void main() {
       );
 
       // Cleanup
-      if (buf.ref.ptr != ffi.nullptr) {
-        calloc.free(buf.ref.ptr);
-      }
+      libgit2.git_buf_dispose(buf);
       calloc.free(buf);
       calloc.free(newAgent);
     });
@@ -335,15 +333,7 @@ void main() {
       );
 
       // Cleanup
-      if (extensions.ref.strings != ffi.nullptr) {
-        for (var i = 0; i < extensions.ref.count; i++) {
-          final strPtr = extensions.ref.strings + i;
-          if (strPtr.value != ffi.nullptr) {
-            calloc.free(strPtr.value);
-          }
-        }
-        calloc.free(extensions.ref.strings);
-      }
+      libgit2.git_strarray_dispose(extensions);
       calloc.free(extensions);
     });
   });

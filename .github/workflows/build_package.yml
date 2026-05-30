@@ -218,6 +218,7 @@ jobs:
   run_ios_tests:
     needs: [generate_bindings, assemble_libgit2_ios]
     runs-on: macos-latest
+    timeout-minutes: 25
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -268,6 +269,7 @@ jobs:
           flutter pub get
 
       - name: Run iOS integration tests
+        timeout-minutes: 15
         shell: bash
         run: |
           set -euo pipefail
@@ -287,6 +289,18 @@ jobs:
           cd "$test_app"
           flutter devices
           flutter test integration_test/opts_bindings_integration_test.dart -d "$device_id" -r expanded
+
+      - name: Dump iOS simulator logs
+        if: ${{ failure() || cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          xcrun simctl spawn booted log show \
+            --style compact \
+            --last 10m \
+            --predicate 'process == "Runner" OR eventMessage CONTAINS[c] "Runner" OR eventMessage CONTAINS[c] "git2dart" OR eventMessage CONTAINS[c] "libgit2" OR eventMessage CONTAINS[c] "dyld"' \
+            || true
 
   run_android_tests:
     if: false
