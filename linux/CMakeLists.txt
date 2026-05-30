@@ -42,6 +42,6 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
 set(git2dart_binaries_bundled_libraries
-  "${CMAKE_CURRENT_SOURCE_DIR}/libgit2-1.6.2.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libgit2.so"
   PARENT_SCOPE
 )

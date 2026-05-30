@@ -41,6 +41,9 @@ flutter:
       android:
         pluginClass: Git2dartBinariesPlugin
         ffiPlugin: true
+      ios:
+        pluginClass: Git2dartBinariesPlugin
+        ffiPlugin: true
       linux:
         pluginClass: Git2dartBinariesPlugin
         ffiPlugin: true

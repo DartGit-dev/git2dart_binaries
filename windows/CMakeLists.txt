@@ -49,7 +49,7 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 # external build triggered from this build file.
 set(git2dart_binaries_bundled_libraries
   "${CMAKE_CURRENT_SOURCE_DIR}/libcrypto-1_1-x64.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libgit2-1.6.2.dll"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libgit2.dll"
   "${CMAKE_CURRENT_SOURCE_DIR}/libssh2.dll"
   PARENT_SCOPE
 )

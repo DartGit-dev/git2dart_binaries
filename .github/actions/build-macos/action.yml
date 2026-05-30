@@ -65,12 +65,11 @@ runs:
       shell: bash
       run: |
         mkdir -p export
-        # Export under the file name that matches the dylib's own
-        # install_name (@rpath/libgit2-experimental.1.9.dylib). The
-        # podspec vendors that exact name and util.dart opens it, so the
-        # built artifact MUST carry it too — otherwise dyld can't resolve
-        # the library at runtime (and `flutter test` fails to dlopen it).
-        cp /tmp/libgit2/install/lib/libgit2-experimental.dylib export/libgit2-experimental.1.9.dylib
+        # Export under a stable file name and make the dylib's own install_name
+        # match it. The libgit2 version itself is controlled by LIBGIT2_VERSION
+        # in the workflow, not by platform file names.
+        cp /tmp/libgit2/install/lib/libgit2-experimental.dylib export/libgit2.dylib
+        install_name_tool -id @rpath/libgit2.dylib export/libgit2.dylib
         cp /tmp/libssh2/install/lib/libssh2.dylib export/libssh2.1.dylib
 
     - name: Cache git2 library

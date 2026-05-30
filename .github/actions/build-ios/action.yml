@@ -1,0 +1,182 @@
+name: Build libgit2 iOS
+description: Build libgit2, libssh2, and OpenSSL as iOS XCFrameworks
+inputs:
+  libgit2_version:
+    description: Version of libgit2 to build
+    required: true
+  libssh2_version:
+    description: Version of libssh2 to build
+    required: true
+  openssl_version:
+    description: Version of OpenSSL to build
+    required: true
+  ios_deployment_target:
+    description: Minimum iOS deployment target
+    required: false
+    default: "12.0"
+runs:
+  using: composite
+  steps:
+    - name: Checkout OpenSSL
+      uses: actions/checkout@v4
+      with:
+        repository: openssl/openssl
+        ref: refs/tags/openssl-${{ inputs.openssl_version }}
+        path: ./openssl
+
+    - name: Checkout libssh2
+      uses: actions/checkout@v4
+      with:
+        repository: libssh2/libssh2
+        ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
+        path: ./libssh2
+
+    - name: Checkout libgit2
+      uses: actions/checkout@v4
+      with:
+        repository: libgit2/libgit2
+        ref: refs/tags/v${{ inputs.libgit2_version }}
+        path: ./libgit2
+
+    - name: Build iOS libraries
+      shell: bash
+      env:
+        IOS_DEPLOYMENT_TARGET: ${{ inputs.ios_deployment_target }}
+      run: |
+        set -euo pipefail
+
+        BUILD_ROOT="/tmp/git2dart-ios"
+        OUTPUT_DIR="$BUILD_ROOT/export"
+        rm -rf "$BUILD_ROOT"
+        mkdir -p "$OUTPUT_DIR"
+
+        build_arch() {
+          local sdk="$1"
+          local arch="$2"
+          local openssl_target="$3"
+          local platform_dir="$BUILD_ROOT/$sdk-$arch"
+          local openssl_install="$platform_dir/openssl"
+          local libssh2_install="$platform_dir/libssh2"
+          local libgit2_install="$platform_dir/libgit2"
+          local sysroot
+          local min_version_flag
+
+          sysroot="$(xcrun --sdk "$sdk" --show-sdk-path)"
+          if [ "$sdk" = "iphoneos" ]; then
+            min_version_flag="-miphoneos-version-min=$IOS_DEPLOYMENT_TARGET"
+          else
+            min_version_flag="-mios-simulator-version-min=$IOS_DEPLOYMENT_TARGET"
+          fi
+          mkdir -p "$platform_dir"
+
+          cp -R ./openssl "$platform_dir/openssl-src"
+          pushd "$platform_dir/openssl-src"
+          CFLAGS="-arch $arch $min_version_flag" \
+          LDFLAGS="-arch $arch $min_version_flag" \
+          ./Configure "$openssl_target" \
+            -static \
+            no-shared \
+            no-tests \
+            --prefix="$openssl_install"
+          make clean || true
+          make -j"$(sysctl -n hw.ncpu)"
+          make install_sw
+          popd
+
+          cmake -S ./libssh2 -B "$platform_dir/libssh2-bld" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_EXAMPLES=OFF \
+            -DBUILD_TESTING=OFF \
+            -DBUILD_TESTS=OFF \
+            -DCRYPTO_BACKEND=OpenSSL \
+            -DOPENSSL_ROOT_DIR="$openssl_install" \
+            -DOPENSSL_INCLUDE_DIR="$openssl_install/include" \
+            -DOPENSSL_SSL_LIBRARY="$openssl_install/lib/libssl.a" \
+            -DOPENSSL_CRYPTO_LIBRARY="$openssl_install/lib/libcrypto.a" \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT="$sysroot" \
+            -DCMAKE_OSX_ARCHITECTURES="$arch" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="$IOS_DEPLOYMENT_TARGET" \
+            -DCMAKE_INSTALL_PREFIX="$libssh2_install"
+          cmake --build "$platform_dir/libssh2-bld" --target install -- -j"$(sysctl -n hw.ncpu)"
+
+          cmake -S ./libgit2 -B "$platform_dir/libgit2-bld" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_TESTS=OFF \
+            -DUSE_SSH=libssh2 \
+            -DUSE_HTTPS=OpenSSL \
+            -DEXPERIMENTAL_SHA256=ON \
+            -DLIBSSH2_INCLUDE_DIR="$libssh2_install/include" \
+            -DLIBSSH2_LIBRARY="$libssh2_install/lib/libssh2.a" \
+            -DOPENSSL_ROOT_DIR="$openssl_install" \
+            -DOPENSSL_INCLUDE_DIR="$openssl_install/include" \
+            -DOPENSSL_SSL_LIBRARY="$openssl_install/lib/libssl.a" \
+            -DOPENSSL_CRYPTO_LIBRARY="$openssl_install/lib/libcrypto.a" \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT="$sysroot" \
+            -DCMAKE_OSX_ARCHITECTURES="$arch" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="$IOS_DEPLOYMENT_TARGET" \
+            -DCMAKE_INSTALL_PREFIX="$libgit2_install"
+          cmake --build "$platform_dir/libgit2-bld" --target install -- -j"$(sysctl -n hw.ncpu)"
+        }
+
+        build_arch iphoneos arm64 ios64-xcrun
+        build_arch iphonesimulator arm64 iossimulator-xcrun
+        build_arch iphonesimulator x86_64 iossimulator-xcrun
+
+        simulator_dir="$BUILD_ROOT/iphonesimulator-universal"
+        mkdir -p "$simulator_dir/openssl/lib" "$simulator_dir/openssl/include"
+        mkdir -p "$simulator_dir/libssh2/lib" "$simulator_dir/libssh2/include"
+        mkdir -p "$simulator_dir/libgit2/lib" "$simulator_dir/libgit2/include"
+
+        cp -R "$BUILD_ROOT/iphonesimulator-arm64/openssl/include/." "$simulator_dir/openssl/include/"
+        cp -R "$BUILD_ROOT/iphonesimulator-arm64/libssh2/include/." "$simulator_dir/libssh2/include/"
+        cp -R "$BUILD_ROOT/iphonesimulator-arm64/libgit2/include/." "$simulator_dir/libgit2/include/"
+
+        arm64_simulator_libgit2="$(find "$BUILD_ROOT/iphonesimulator-arm64/libgit2/lib" -maxdepth 1 -name 'libgit2*.a' | head -n 1)"
+        x86_64_simulator_libgit2="$(find "$BUILD_ROOT/iphonesimulator-x86_64/libgit2/lib" -maxdepth 1 -name 'libgit2*.a' | head -n 1)"
+
+        lipo -create \
+          "$BUILD_ROOT/iphonesimulator-arm64/openssl/lib/libcrypto.a" \
+          "$BUILD_ROOT/iphonesimulator-x86_64/openssl/lib/libcrypto.a" \
+          -output "$simulator_dir/openssl/lib/libcrypto.a"
+        lipo -create \
+          "$BUILD_ROOT/iphonesimulator-arm64/openssl/lib/libssl.a" \
+          "$BUILD_ROOT/iphonesimulator-x86_64/openssl/lib/libssl.a" \
+          -output "$simulator_dir/openssl/lib/libssl.a"
+        lipo -create \
+          "$BUILD_ROOT/iphonesimulator-arm64/libssh2/lib/libssh2.a" \
+          "$BUILD_ROOT/iphonesimulator-x86_64/libssh2/lib/libssh2.a" \
+          -output "$simulator_dir/libssh2/lib/libssh2.a"
+        lipo -create \
+          "$arm64_simulator_libgit2" \
+          "$x86_64_simulator_libgit2" \
+          -output "$simulator_dir/libgit2/lib/libgit2.a"
+
+        device_libgit2="$(find "$BUILD_ROOT/iphoneos-arm64/libgit2/lib" -maxdepth 1 -name 'libgit2*.a' | head -n 1)"
+
+        xcodebuild -create-xcframework \
+          -library "$BUILD_ROOT/iphoneos-arm64/openssl/lib/libcrypto.a" -headers "$BUILD_ROOT/iphoneos-arm64/openssl/include" \
+          -library "$simulator_dir/openssl/lib/libcrypto.a" -headers "$simulator_dir/openssl/include" \
+          -output "$OUTPUT_DIR/libcrypto.xcframework"
+
+        xcodebuild -create-xcframework \
+          -library "$BUILD_ROOT/iphoneos-arm64/openssl/lib/libssl.a" -headers "$BUILD_ROOT/iphoneos-arm64/openssl/include" \
+          -library "$simulator_dir/openssl/lib/libssl.a" -headers "$simulator_dir/openssl/include" \
+          -output "$OUTPUT_DIR/libssl.xcframework"
+
+        xcodebuild -create-xcframework \
+          -library "$BUILD_ROOT/iphoneos-arm64/libssh2/lib/libssh2.a" -headers "$BUILD_ROOT/iphoneos-arm64/libssh2/include" \
+          -library "$simulator_dir/libssh2/lib/libssh2.a" -headers "$simulator_dir/libssh2/include" \
+          -output "$OUTPUT_DIR/libssh2.xcframework"
+
+        xcodebuild -create-xcframework \
+          -library "$device_libgit2" -headers "$BUILD_ROOT/iphoneos-arm64/libgit2/include" \
+          -library "$simulator_dir/libgit2/lib/libgit2.a" -headers "$simulator_dir/libgit2/include" \
+          -output "$OUTPUT_DIR/libgit2.xcframework"
+
+    - name: Cache iOS libraries
+      uses: actions/upload-artifact@v4
+      with:
+        name: cache-ios
+        path: /tmp/git2dart-ios/export/**

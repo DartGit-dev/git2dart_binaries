@@ -17,11 +17,11 @@ String? _cachedPackageRoot;
     return (name: 'libgit2.dll', subDir: 'windows');
   } else if (Platform.isMacOS) {
     // Must match the filename the podspec vendors AND the dylib's own
-    // install_name (`@rpath/libgit2-experimental.1.9.dylib`). The
+    // install_name (`@rpath/libgit2.dylib`). The
     // package_config fallback in _loadLibrary doesn't work inside
     // compiled Flutter apps (no package_config.json at runtime), so the
     // first DynamicLibrary.open MUST succeed with this exact name.
-    return (name: 'libgit2-experimental.1.9.dylib', subDir: 'macos');
+    return (name: 'libgit2.dylib', subDir: 'macos');
   } else if (Platform.isLinux) {
     return (name: 'libgit2.so', subDir: 'linux');
   } else if (Platform.isAndroid) {
@@ -31,6 +31,10 @@ String? _cachedPackageRoot;
 }
 
 DynamicLibrary _loadLibrary() {
+  if (Platform.isIOS) {
+    return DynamicLibrary.process();
+  }
+
   final target = _platformTarget();
 
   try {
