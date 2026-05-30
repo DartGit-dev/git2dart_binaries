@@ -390,10 +390,11 @@ jobs:
       - name: Run Android integration tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 29
           arch: x86_64
-          target: google_apis
+          target: default
           disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: |
             cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter devices
             cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded
