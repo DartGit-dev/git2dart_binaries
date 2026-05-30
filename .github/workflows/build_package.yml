@@ -57,16 +57,108 @@ jobs:
 
   build_libgit2_ios:
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - slice: iphoneos-arm64
+            sdk: iphoneos
+            arch: arm64
+            openssl_target: ios64-xcrun
+          - slice: iphonesimulator-arm64
+            sdk: iphonesimulator
+            arch: arm64
+            openssl_target: iossimulator-xcrun
+          - slice: iphonesimulator-x86_64
+            sdk: iphonesimulator
+            arch: x86_64
+            openssl_target: iossimulator-xcrun
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build iOS artifacts
+      - name: Build iOS slice
         uses: ./.github/actions/build-ios
         with:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+          ios_sdk: ${{ matrix.sdk }}
+          architecture: ${{ matrix.arch }}
+          openssl_target: ${{ matrix.openssl_target }}
+          artifact_name: cache-ios-${{ matrix.slice }}
+
+  assemble_libgit2_ios:
+    needs: [build_libgit2_ios]
+    runs-on: macos-latest
+    steps:
+      - name: Download iOS slices
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cache-ios-*
+          path: /tmp/git2dart-ios/slices
+          merge-multiple: true
+
+      - name: Assemble iOS XCFrameworks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          slices_dir="/tmp/git2dart-ios/slices"
+          output_dir="/tmp/git2dart-ios/export"
+          simulator_dir="/tmp/git2dart-ios/iphonesimulator-universal"
+
+          mkdir -p "$output_dir"
+          mkdir -p "$simulator_dir/openssl/lib" "$simulator_dir/openssl/include"
+          mkdir -p "$simulator_dir/libssh2/lib" "$simulator_dir/libssh2/include"
+          mkdir -p "$simulator_dir/libgit2/lib" "$simulator_dir/libgit2/include"
+
+          cp -R "$slices_dir/iphonesimulator-arm64/openssl/include/." "$simulator_dir/openssl/include/"
+          cp -R "$slices_dir/iphonesimulator-arm64/libssh2/include/." "$simulator_dir/libssh2/include/"
+          cp -R "$slices_dir/iphonesimulator-arm64/libgit2/include/." "$simulator_dir/libgit2/include/"
+
+          lipo -create \
+            "$slices_dir/iphonesimulator-arm64/openssl/lib/libcrypto.a" \
+            "$slices_dir/iphonesimulator-x86_64/openssl/lib/libcrypto.a" \
+            -output "$simulator_dir/openssl/lib/libcrypto.a"
+          lipo -create \
+            "$slices_dir/iphonesimulator-arm64/openssl/lib/libssl.a" \
+            "$slices_dir/iphonesimulator-x86_64/openssl/lib/libssl.a" \
+            -output "$simulator_dir/openssl/lib/libssl.a"
+          lipo -create \
+            "$slices_dir/iphonesimulator-arm64/libssh2/lib/libssh2.a" \
+            "$slices_dir/iphonesimulator-x86_64/libssh2/lib/libssh2.a" \
+            -output "$simulator_dir/libssh2/lib/libssh2.a"
+          lipo -create \
+            "$slices_dir/iphonesimulator-arm64/libgit2/lib/libgit2.a" \
+            "$slices_dir/iphonesimulator-x86_64/libgit2/lib/libgit2.a" \
+            -output "$simulator_dir/libgit2/lib/libgit2.a"
+
+          xcodebuild -create-xcframework \
+            -library "$slices_dir/iphoneos-arm64/openssl/lib/libcrypto.a" -headers "$slices_dir/iphoneos-arm64/openssl/include" \
+            -library "$simulator_dir/openssl/lib/libcrypto.a" -headers "$simulator_dir/openssl/include" \
+            -output "$output_dir/libcrypto.xcframework"
+
+          xcodebuild -create-xcframework \
+            -library "$slices_dir/iphoneos-arm64/openssl/lib/libssl.a" -headers "$slices_dir/iphoneos-arm64/openssl/include" \
+            -library "$simulator_dir/openssl/lib/libssl.a" -headers "$simulator_dir/openssl/include" \
+            -output "$output_dir/libssl.xcframework"
+
+          xcodebuild -create-xcframework \
+            -library "$slices_dir/iphoneos-arm64/libssh2/lib/libssh2.a" -headers "$slices_dir/iphoneos-arm64/libssh2/include" \
+            -library "$simulator_dir/libssh2/lib/libssh2.a" -headers "$simulator_dir/libssh2/include" \
+            -output "$output_dir/libssh2.xcframework"
+
+          xcodebuild -create-xcframework \
+            -library "$slices_dir/iphoneos-arm64/libgit2/lib/libgit2.a" -headers "$slices_dir/iphoneos-arm64/libgit2/include" \
+            -library "$simulator_dir/libgit2/lib/libgit2.a" -headers "$simulator_dir/libgit2/include" \
+            -output "$output_dir/libgit2.xcframework"
+
+      - name: Upload iOS XCFrameworks
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-ios
+          path: /tmp/git2dart-ios/export/**
 
   build_libgit2_windows:
     if: false
