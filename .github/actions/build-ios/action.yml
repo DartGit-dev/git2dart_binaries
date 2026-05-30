@@ -108,6 +108,11 @@ runs:
           -DCMAKE_INSTALL_PREFIX="$libssh2_install"
         cmake --build "$build_root/libssh2-bld" --target install -- -j"$(sysctl -n hw.ncpu)"
 
+        libssh2_pc="$libssh2_install/lib/pkgconfig/libssh2.pc"
+        if [ -f "$libssh2_pc" ]; then
+          sed -i.bak "s|-lssh2|$libssh2_install/lib/libssh2.a|g" "$libssh2_pc"
+        fi
+
         PKG_CONFIG_PATH="$libssh2_install/lib/pkgconfig" \
         cmake -S ./libgit2 -B "$build_root/libgit2-bld" \
           -DBUILD_SHARED_LIBS=OFF \
