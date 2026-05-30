@@ -76,7 +76,6 @@ runs:
           ./Configure "$openssl_target" \
             -static \
             no-shared \
-            no-apps \
             no-tests \
             --prefix="$openssl_install"
           make clean || true
