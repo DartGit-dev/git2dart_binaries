@@ -41,7 +41,9 @@ Dart bindings to libgit2.
   ].map { |path| "\"#{path}\"" }.join(' ')
   binary_xcconfig = {
     'LIBRARY_SEARCH_PATHS[sdk=iphoneos*]' => device_library_search_paths,
-    'LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]' => simulator_library_search_paths
+    'LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]' => simulator_library_search_paths,
+    'OTHER_LDFLAGS[sdk=iphoneos*]' => '$(inherited) -force_load "$(PODS_ROOT)/../.symlinks/plugins/git2dart_binaries/ios/libgit2.xcframework/ios-arm64/libgit2.a"',
+    'OTHER_LDFLAGS[sdk=iphonesimulator*]' => '$(inherited) -force_load "$(PODS_ROOT)/../.symlinks/plugins/git2dart_binaries/ios/libgit2.xcframework/ios-arm64-simulator/libgit2.a"'
   }
   s.pod_target_xcconfig = binary_xcconfig.merge({ 'DEFINES_MODULE' => 'YES' })
   s.user_target_xcconfig = binary_xcconfig
