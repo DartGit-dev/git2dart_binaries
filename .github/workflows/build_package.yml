@@ -289,7 +289,6 @@ jobs:
 
           cd "$test_app"
           flutter devices
-          mkdir -p "$RUNNER_TEMP/git2dart-ios-test-logs"
 
           run_with_timeout() {
             local seconds="$1"
@@ -311,48 +310,10 @@ jobs:
             ' "$seconds" "$@"
           }
 
-          run_logged() {
-            local name="$1"
-            shift
-            local log_file="$RUNNER_TEMP/git2dart-ios-test-logs/$name.log"
-
-            set +e
-            "$@" 2>&1 | tee "$log_file"
-            local status="${PIPESTATUS[0]}"
-            set -e
-
-            return "$status"
-          }
-
-          run_logged smoke run_with_timeout 900 flutter drive \
-            -d "$device_id" \
-            --driver=test_driver/integration_test.dart \
-            --target=integration_test/libgit2_ios_smoke_test.dart
-
-          run_logged opts run_with_timeout 900 flutter drive \
+          run_with_timeout 900 flutter drive \
             -d "$device_id" \
             --driver=test_driver/integration_test.dart \
             --target=integration_test/opts_bindings_integration_test.dart
-
-      - name: Upload iOS test logs
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-test-logs
-          path: ${{ runner.temp }}/git2dart-ios-test-logs/*.log
-          if-no-files-found: ignore
-
-      - name: Dump iOS simulator logs
-        if: ${{ failure() || cancelled() }}
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          xcrun simctl spawn booted log show \
-            --style compact \
-            --last 10m \
-            --predicate 'process == "Runner" OR eventMessage CONTAINS[c] "Runner" OR eventMessage CONTAINS[c] "git2dart" OR eventMessage CONTAINS[c] "libgit2" OR eventMessage CONTAINS[c] "dyld"' \
-            || true
 
   run_android_tests:
     if: false
