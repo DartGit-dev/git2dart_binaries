@@ -24,6 +24,26 @@ Dart bindings to libgit2.
   s.libraries = ['z', 'iconv']
 
   s.platform = :ios, '12.0'
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
+  binary_root = '$(PODS_ROOT)/../.symlinks/plugins/git2dart_binaries/ios'
+  device_library_search_paths = [
+    '$(inherited)',
+    "#{binary_root}/libcrypto.xcframework/ios-arm64",
+    "#{binary_root}/libssl.xcframework/ios-arm64",
+    "#{binary_root}/libssh2.xcframework/ios-arm64",
+    "#{binary_root}/libgit2.xcframework/ios-arm64"
+  ].map { |path| "\"#{path}\"" }.join(' ')
+  simulator_library_search_paths = [
+    '$(inherited)',
+    "#{binary_root}/libcrypto.xcframework/ios-arm64-simulator",
+    "#{binary_root}/libssl.xcframework/ios-arm64-simulator",
+    "#{binary_root}/libssh2.xcframework/ios-arm64-simulator",
+    "#{binary_root}/libgit2.xcframework/ios-arm64-simulator"
+  ].map { |path| "\"#{path}\"" }.join(' ')
+  binary_xcconfig = {
+    'LIBRARY_SEARCH_PATHS[sdk=iphoneos*]' => device_library_search_paths,
+    'LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]' => simulator_library_search_paths
+  }
+  s.pod_target_xcconfig = binary_xcconfig.merge({ 'DEFINES_MODULE' => 'YES' })
+  s.user_target_xcconfig = binary_xcconfig
   s.swift_version = '5.0'
 end
