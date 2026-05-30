@@ -299,14 +299,15 @@ jobs:
 
               seconds = Integer(ARGV.shift)
               command = ARGV
-              Timeout.timeout(seconds) do
-                system(*command)
-                exit($?.exitstatus || 1)
+              begin
+                Timeout.timeout(seconds) do
+                  system(*command)
+                  exit($?.exitstatus || 1)
+                end
+              rescue Timeout::Error
+                warn "::error::Timed out after #{seconds}s: #{command.join(" ")}"
+                exit 124
               end
-            rescue Timeout::Error
-              warn "::error::Timed out after #{seconds}s: #{command.join(" ")}"
-              exit 124
-            end
             ' "$seconds" "$@"
           }
 
