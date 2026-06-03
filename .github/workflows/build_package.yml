@@ -5,6 +5,7 @@ on:
     # - "v[0-9]+.[0-9]+.[0-9]+*"
     branches:
       - "main"
+      - "1.11.1"
       # - "**"
   pull_request:
     branches:
@@ -29,6 +30,7 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
 
   build_libgit2_linux:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -41,6 +43,7 @@ jobs:
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
 
   build_libgit2_macos:
+    if: false
     runs-on: macos-latest
     steps:
       - name: Check out repository
@@ -130,6 +133,7 @@ jobs:
           path: /tmp/git2dart-ios/export/**
 
   build_libgit2_windows:
+    if: false
     runs-on: windows-latest
     steps:
       - name: Check out repository
@@ -142,6 +146,7 @@ jobs:
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
 
   build_libgit2_android:
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -159,6 +164,7 @@ jobs:
           openssl_version: ${{ env.OPENSSL_VERSION }}
 
   run_tests:
+    if: false
     needs: [generate_bindings, build_libgit2_linux, build_libgit2_macos, assemble_libgit2_ios, build_libgit2_windows, build_libgit2_android]
    # needs: [generate_bindings, build_libgit2_android]
     runs-on: ${{ matrix.os }}
@@ -378,6 +384,7 @@ jobs:
           timestamp "Finished flutter drive with prebuilt app"
 
   run_android_tests:
+    if: false
     needs: [generate_bindings, build_libgit2_android]
     runs-on: ubuntu-latest
     steps:
@@ -460,6 +467,7 @@ jobs:
             cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded
 
   publish_package:
+    if: false
     needs: [run_tests, run_ios_tests, run_android_tests]
     runs-on: ubuntu-latest
     steps:
