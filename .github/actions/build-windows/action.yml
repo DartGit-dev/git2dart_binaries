@@ -27,9 +27,18 @@ runs:
           'C:/Program Files/OpenSSL',
           'C:/Program Files/OpenSSL-Win64'
         ) | Where-Object {
+          $libcrypto = @(
+            "$_/lib/libcrypto.lib",
+            "$_/lib/VC/x64/MD/libcrypto.lib"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          $libssl = @(
+            "$_/lib/libssl.lib",
+            "$_/lib/VC/x64/MD/libssl.lib"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+
           (Test-Path "$_/include/openssl/ssl.h") -and
-          (Test-Path "$_/lib/libcrypto.lib") -and
-          (Test-Path "$_/lib/libssl.lib")
+          $libcrypto -and
+          $libssl
         } | Select-Object -First 1
 
         if (-not $opensslRoot) {
@@ -37,8 +46,21 @@ runs:
           exit 1
         }
 
+        $opensslCryptoLibrary = @(
+          "$opensslRoot/lib/libcrypto.lib",
+          "$opensslRoot/lib/VC/x64/MD/libcrypto.lib"
+        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+        $opensslSslLibrary = @(
+          "$opensslRoot/lib/libssl.lib",
+          "$opensslRoot/lib/VC/x64/MD/libssl.lib"
+        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+
         "OPENSSL_ROOT_DIR=$opensslRoot" >> $env:GITHUB_ENV
+        "OPENSSL_CRYPTO_LIBRARY=$opensslCryptoLibrary" >> $env:GITHUB_ENV
+        "OPENSSL_SSL_LIBRARY=$opensslSslLibrary" >> $env:GITHUB_ENV
         Write-Host "OpenSSL root: $opensslRoot"
+        Write-Host "OpenSSL crypto library: $opensslCryptoLibrary"
+        Write-Host "OpenSSL ssl library: $opensslSslLibrary"
 
     - name: Checkout libssh2
       uses: actions/checkout@v4
@@ -51,7 +73,7 @@ runs:
       shell: pwsh
       run: |
         cd libssh2
-        cmake -S . -B build -G Ninja -DCRYPTO_BACKEND=OpenSSL -DOPENSSL_ROOT_DIR="$env:OPENSSL_ROOT_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=D:/libssh2/install
+        cmake -S . -B build -G Ninja -DCRYPTO_BACKEND=OpenSSL -DOPENSSL_ROOT_DIR="$env:OPENSSL_ROOT_DIR" -DOPENSSL_CRYPTO_LIBRARY="$env:OPENSSL_CRYPTO_LIBRARY" -DOPENSSL_SSL_LIBRARY="$env:OPENSSL_SSL_LIBRARY" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=D:/libssh2/install
         cmake --build build --parallel --target install
         mkdir -p D:/export
         copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
@@ -67,7 +89,7 @@ runs:
       shell: pwsh
       run: |
         cd libgit2
-        cmake -S . -B build -G Ninja -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DOPENSSL_ROOT_DIR="$env:OPENSSL_ROOT_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.lib
+        cmake -S . -B build -G Ninja -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DOPENSSL_ROOT_DIR="$env:OPENSSL_ROOT_DIR" -DOPENSSL_CRYPTO_LIBRARY="$env:OPENSSL_CRYPTO_LIBRARY" -DOPENSSL_SSL_LIBRARY="$env:OPENSSL_SSL_LIBRARY" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.lib
         cmake --build build --parallel --target install
         .\build\libgit2_tests.exe
 
