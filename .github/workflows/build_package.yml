@@ -377,7 +377,7 @@ jobs:
           timestamp "Finished flutter build ios --simulator"
 
       - name: Run iOS integration tests
-        timeout-minutes: 10
+        timeout-minutes: 20
         shell: bash
         run: |
           set -euo pipefail
@@ -398,23 +398,56 @@ jobs:
 
               seconds = Integer(ARGV.shift)
               command = ARGV
+              pid = nil
               begin
                 Timeout.timeout(seconds) do
-                  system(*command)
+                  pid = Process.spawn(*command, pgroup: true)
+                  Process.wait(pid)
                   exit($?.exitstatus || 1)
                 end
               rescue Timeout::Error
+                if pid
+                  begin
+                    Process.kill("TERM", -pid)
+                    sleep 5
+                    Process.kill("KILL", -pid)
+                  rescue Errno::ESRCH
+                  end
+                end
                 warn "::error::Timed out after #{seconds}s: #{command.join(" ")}"
                 exit 124
               end
             ' "$seconds" "$@"
           }
 
-          timestamp "Starting flutter test on iOS simulator"
-          run_with_timeout 600 flutter test \
-            integration_test/opts_bindings_integration_test.dart \
-            -d "$device_id" \
-            -r expanded
+          run_ios_tests() {
+            local seconds="$1"
+            timestamp "Starting flutter test on iOS simulator with ${seconds}s timeout"
+            run_with_timeout "$seconds" flutter test \
+              integration_test/opts_bindings_integration_test.dart \
+              -d "$device_id" \
+              -r expanded
+          }
+
+          set +e
+          run_ios_tests 300
+          status="$?"
+          set -e
+
+          if [ "$status" -ne 0 ]; then
+            if [ "$status" -ne 124 ]; then
+              exit "$status"
+            fi
+
+            timestamp "iOS test timed out; rebooting simulator before retry"
+            xcrun simctl shutdown "$device_id" || true
+            xcrun simctl boot "$device_id" || true
+            xcrun simctl bootstatus "$device_id" -b
+            flutter devices
+
+            run_ios_tests 600
+          fi
+
           timestamp "Finished flutter test on iOS simulator"
 
   run_android_tests:
