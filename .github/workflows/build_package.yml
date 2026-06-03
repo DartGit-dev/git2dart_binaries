@@ -142,11 +142,25 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
 
-  build_libgit2_android:
+  build_libgit2_android_x86_64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Android x86_64 artifacts
+        uses: ./.github/actions/build-android
+        with:
+          architecture: x86_64
+          libgit2_version: ${{ env.LIBGIT2_VERSION }}
+          libssh2_version: ${{ env.LIBSSH2_VERSION }}
+          openssl_version: ${{ env.OPENSSL_VERSION }}
+
+  build_libgit2_android_other:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [armeabi-v7a, arm64-v8a, x86, x86_64]
+        os: [armeabi-v7a, arm64-v8a, x86]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -159,13 +173,9 @@ jobs:
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
 
-  run_tests:
-    needs: [generate_bindings, build_libgit2_linux, build_libgit2_macos, assemble_libgit2_ios, build_libgit2_windows, build_libgit2_android]
-   # needs: [generate_bindings, build_libgit2_android]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+  run_linux_tests:
+    needs: [generate_bindings, build_libgit2_linux]
+    runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -178,38 +188,73 @@ jobs:
 
       - name: download linux deps
         uses: actions/download-artifact@v4
-        if: ${{ runner.os == 'Linux' }}
         with:
           path: ./linux
           name: cache-linux
+
       - name: Install linux dependencies
-        if: ${{ runner.os == 'Linux' }}
         run: |
             sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends openssl
 
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+
+      - run: flutter pub get
+      - run: flutter test -r expanded
+
+  run_macos_tests:
+    needs: [generate_bindings, build_libgit2_macos]
+    runs-on: macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: download bindings
+        uses: actions/download-artifact@v4
+        with:
+          path: ./lib/src/
+          name: cache-bindings
+
       - name: download macos deps
         uses: actions/download-artifact@v4
-        if: ${{ runner.os == 'macOS' }}
         with:
           path: ./macos
           name: cache-macos
 
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+
+      - run: flutter pub get
+      - run: flutter test -r expanded
+
+  run_windows_tests:
+    needs: [generate_bindings, build_libgit2_windows]
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: download bindings
+        uses: actions/download-artifact@v4
+        with:
+          path: ./lib/src/
+          name: cache-bindings
+
       - name: Install windows dependencies
-        if: ${{ runner.os == 'Windows' }}
         run: |
           choco install openssl -y
 
       - name: download windows deps
         uses: actions/download-artifact@v4
-        if: ${{ runner.os == 'Windows' }}
         with:
           path: ./windows
           name: cache-windows
 
-      - name: Run ffigen
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
-      - run:  flutter pub get
-      - run:  flutter test -r expanded
+
+      - run: flutter pub get
+      - run: flutter test -r expanded
 
   run_ios_tests:
     needs: [generate_bindings, assemble_libgit2_ios]
@@ -371,7 +416,7 @@ jobs:
           timestamp "Finished flutter test on iOS simulator"
 
   run_android_tests:
-    needs: [generate_bindings, build_libgit2_android]
+    needs: [generate_bindings, build_libgit2_android_x86_64]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -388,24 +433,6 @@ jobs:
         with:
           path: ./android/src/main/jniLibs/x86_64
           name: cache-android-x86_64
-
-      - name: download android binaries arm64-v8a
-        uses: actions/download-artifact@v4
-        with:
-          path: ./android/src/main/jniLibs/arm64-v8a
-          name: cache-android-arm64-v8a
-
-      - name: download android binaries x86
-        uses: actions/download-artifact@v4
-        with:
-          path: ./android/src/main/jniLibs/x86
-          name: cache-android-x86
-
-      - name: download android binaries armeabi-v7a
-        uses: actions/download-artifact@v4
-        with:
-          path: ./android/src/main/jniLibs/armeabi-v7a
-          name: cache-android-armeabi-v7a
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -453,7 +480,7 @@ jobs:
             cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded
 
   publish_package:
-    needs: [run_tests, run_ios_tests, run_android_tests]
+    needs: [run_linux_tests, run_macos_tests, run_windows_tests, run_ios_tests, run_android_tests, build_libgit2_android_other]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
