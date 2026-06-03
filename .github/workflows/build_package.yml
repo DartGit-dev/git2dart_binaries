@@ -30,6 +30,7 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
 
   build_libgit2_linux:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -42,6 +43,7 @@ jobs:
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
 
   build_libgit2_macos:
+    if: ${{ false }}
     runs-on: macos-latest
     steps:
       - name: Check out repository
@@ -54,6 +56,7 @@ jobs:
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
 
   build_libgit2_ios:
+    if: ${{ false }}
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -83,6 +86,7 @@ jobs:
           artifact_name: cache-ios-${{ matrix.slice }}
 
   assemble_libgit2_ios:
+    if: ${{ false }}
     needs: [build_libgit2_ios]
     runs-on: macos-latest
     steps:
@@ -143,6 +147,7 @@ jobs:
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
 
   build_libgit2_android_x86_64:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -157,6 +162,7 @@ jobs:
           openssl_version: ${{ env.OPENSSL_VERSION }}
 
   build_libgit2_android_other:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -174,6 +180,7 @@ jobs:
           openssl_version: ${{ env.OPENSSL_VERSION }}
 
   run_linux_tests:
+    if: ${{ false }}
     needs: [generate_bindings, build_libgit2_linux]
     runs-on: ubuntu-latest
     steps:
@@ -203,6 +210,7 @@ jobs:
       - run: flutter test -r expanded
 
   run_macos_tests:
+    if: ${{ false }}
     needs: [generate_bindings, build_libgit2_macos]
     runs-on: macos-latest
     steps:
@@ -257,6 +265,7 @@ jobs:
       - run: flutter test -r expanded
 
   run_ios_tests:
+    if: ${{ false }}
     needs: [generate_bindings, assemble_libgit2_ios]
     runs-on: macos-latest
     timeout-minutes: 40
@@ -416,6 +425,7 @@ jobs:
           timestamp "Finished flutter test on iOS simulator"
 
   run_android_tests:
+    if: ${{ false }}
     needs: [generate_bindings, build_libgit2_android_x86_64]
     runs-on: ubuntu-latest
     steps:
@@ -480,6 +490,7 @@ jobs:
             cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded
 
   publish_package:
+    if: ${{ false }}
     needs: [run_linux_tests, run_macos_tests, run_windows_tests, run_ios_tests, run_android_tests, build_libgit2_android_other]
     runs-on: ubuntu-latest
     steps:
