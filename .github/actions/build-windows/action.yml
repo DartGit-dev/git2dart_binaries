@@ -11,7 +11,7 @@ runs:
   using: composite
   steps:
     - name: Set up MSVC
-      uses: ilammy/msvc-dev-cmd@v1
+      uses: ilammy/msvc-dev-cmd@v1.13.0
 
     - name: Verify dependencies
       shell: pwsh
@@ -63,7 +63,7 @@ runs:
         Write-Host "OpenSSL ssl library: $opensslSslLibrary"
 
     - name: Checkout libssh2
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
         ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
@@ -79,7 +79,7 @@ runs:
         copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
 
     - name: Checkout libgit2
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
         ref: refs/tags/v${{ inputs.libgit2_version }}
@@ -98,7 +98,7 @@ runs:
       run: copy D:/libgit2/install/bin/git2-experimental.dll D:/export/libgit2.dll
 
     - name: Cache git2 library
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: cache-windows
         path: D:/export/**

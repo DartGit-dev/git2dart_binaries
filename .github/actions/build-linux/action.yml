@@ -17,7 +17,7 @@ runs:
         mkdir /tmp/export
 
     - name: Checkout libssh2
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
         ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
@@ -34,7 +34,7 @@ runs:
         cp /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
 
     - name: Checkout libgit2
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
         ref: refs/tags/v${{ inputs.libgit2_version }}
@@ -54,7 +54,7 @@ runs:
       run: cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
 
     - name: Cache git2 library
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: cache-linux
         path: /tmp/export/**

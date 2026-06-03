@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build Linux artifacts
         uses: ./.github/actions/generate-bindings
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build Linux artifacts
         uses: ./.github/actions/build-linux
@@ -45,7 +45,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build macOS artifacts
         uses: ./.github/actions/build-macos
@@ -69,7 +69,7 @@ jobs:
             openssl_target: iossimulator-xcrun
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build iOS slice
         uses: ./.github/actions/build-ios
@@ -87,7 +87,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Download iOS slices
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: cache-ios-*
           path: /tmp/git2dart-ios/slices
@@ -125,7 +125,7 @@ jobs:
             -output "$output_dir/libgit2.xcframework"
 
       - name: Upload iOS XCFrameworks
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cache-ios
           path: /tmp/git2dart-ios/export/**
@@ -134,7 +134,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build Windows artifacts
         uses: ./.github/actions/build-windows
@@ -146,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build Android x86_64 artifacts
         uses: ./.github/actions/build-android
@@ -163,7 +163,7 @@ jobs:
         os: [armeabi-v7a, arm64-v8a, x86]
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build Android artifacts
         uses: ./.github/actions/build-android
@@ -178,16 +178,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: download bindings
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./lib/src/
           name: cache-bindings
 
       - name: download linux deps
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./linux
           name: cache-linux
@@ -207,16 +207,16 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: download bindings
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./lib/src/
           name: cache-bindings
 
       - name: download macos deps
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./macos
           name: cache-macos
@@ -232,10 +232,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: download bindings
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./lib/src/
           name: cache-bindings
@@ -247,7 +247,7 @@ jobs:
           Get-Command openssl -ErrorAction Stop
 
       - name: download windows deps
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./windows
           name: cache-windows
@@ -264,16 +264,16 @@ jobs:
     timeout-minutes: 40
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: download bindings
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./lib/src/
           name: cache-bindings
 
       - name: download ios binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./ios
           name: cache-ios
@@ -422,16 +422,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: download bindings
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./lib/src/
           name: cache-bindings
 
       - name: download android binaries x86_64
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./android/src/main/jniLibs/x86_64
           name: cache-android-x86_64
@@ -486,71 +486,71 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: download bindings
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./lib/src/
           name: cache-bindings
 
       - name: download macos binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./macos
           name: cache-macos
 
       - name: download ios binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./ios
           name: cache-ios
 
       - name: download windows binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./windows
           name: cache-windows
 
       - name: download linux binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./linux
           name: cache-linux
 
       - name: download android binaries x86_64
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./android/src/main/jniLibs/x86_64
           name: cache-android-x86_64
 
       - name: download android binaries arm64-v8a
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./android/src/main/jniLibs/arm64-v8a
           name: cache-android-arm64-v8a
 
       - name: download android binaries x86
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./android/src/main/jniLibs/x86
           name: cache-android-x86
 
       - name: download android binaries armeabi-v7a
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./android/src/main/jniLibs/armeabi-v7a
           name: cache-android-armeabi-v7a
 
       - name: Zip package into cache
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-package
           path: .
 
       - name: Publish package
         if: ${{ github.event_name != 'pull_request' }}
-        uses: k-paxian/dart-package-publisher@master
+        uses: k-paxian/dart-package-publisher@v.1.6.2
         with:
           accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
           refreshToken: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}

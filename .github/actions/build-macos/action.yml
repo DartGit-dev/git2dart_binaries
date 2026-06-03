@@ -15,7 +15,7 @@ runs:
     #   run: brew install openssl cmake
 
     - name: Checkout libssh2
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
         ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
@@ -35,7 +35,7 @@ runs:
         cmake --build . --target install
 
     - name: Checkout libgit2
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
         ref: refs/tags/v${{ inputs.libgit2_version }}
@@ -118,7 +118,7 @@ runs:
         otool -L export/libcrypto.3.dylib
 
     - name: Cache git2 library
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: cache-macos
         path: export/**

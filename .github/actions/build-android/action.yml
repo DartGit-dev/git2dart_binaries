@@ -31,7 +31,7 @@ runs:
 
     - name: Set up Android NDK
       id: setup-ndk
-      uses: nttld/setup-ndk@v1
+      uses: nttld/setup-ndk@v1.6.0
       with:
         ndk-version: r26d
         add-to-path: false
@@ -116,7 +116,7 @@ runs:
         } >> "$GITHUB_ENV"
 
     - name: Checkout OpenSSL
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: openssl/openssl
         ref: refs/tags/openssl-${{ inputs.openssl_version }}
@@ -134,7 +134,7 @@ runs:
         make install_sw
 
     - name: Checkout libssh2
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
         ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
@@ -160,7 +160,7 @@ runs:
         cmake --build bld --target install -- -j"$NCPU"
 
     - name: Checkout libgit2
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
         ref: refs/tags/v${{ inputs.libgit2_version }}
@@ -200,7 +200,7 @@ runs:
         cp "$LIBGIT2_INSTALL/lib/libgit2-experimental.so" "$OUTPUT_DIR/libgit2.so"
 
     - name: Upload Android artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: cache-android-${{ inputs.architecture }}
         path: /tmp/export/**
