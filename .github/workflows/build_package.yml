@@ -248,9 +248,11 @@ jobs:
           path: ./lib/src/
           name: cache-bindings
 
-      - name: Install windows dependencies
+      - name: Verify windows dependencies
+        shell: pwsh
         run: |
-          choco install openssl -y
+          openssl version
+          Get-Command openssl -ErrorAction Stop
 
       - name: download windows deps
         uses: actions/download-artifact@v4
