@@ -368,20 +368,12 @@ jobs:
             ' "$seconds" "$@"
           }
 
-          app_bundle="$test_app/build/ios/iphonesimulator/Runner.app"
-          if [ ! -d "$app_bundle" ]; then
-            echo "::error::Built iOS simulator app was not found at $app_bundle"
-            find "$test_app/build/ios" -maxdepth 3 -type d -name '*.app' -print || true
-            exit 1
-          fi
-
-          timestamp "Starting flutter drive with prebuilt app"
-          run_with_timeout 600 flutter drive \
+          timestamp "Starting flutter test on iOS simulator"
+          run_with_timeout 600 flutter test \
+            integration_test/opts_bindings_integration_test.dart \
             -d "$device_id" \
-            --use-application-binary="$app_bundle" \
-            --driver=test_driver/integration_test.dart \
-            --target=integration_test/opts_bindings_integration_test.dart
-          timestamp "Finished flutter drive with prebuilt app"
+            -r expanded
+          timestamp "Finished flutter test on iOS simulator"
 
   run_android_tests:
     if: false
