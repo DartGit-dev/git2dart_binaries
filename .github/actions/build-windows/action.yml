@@ -10,9 +10,35 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install dependencies
+    - name: Set up MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Verify dependencies
       shell: pwsh
-      run: choco install openssl cmake -y
+      run: |
+        cmake --version
+        ninja --version
+        openssl version
+
+        $openssl = Get-Command openssl -ErrorAction Stop
+        $opensslBinRoot = Split-Path (Split-Path $openssl.Source -Parent) -Parent
+        $opensslRoot = @(
+          $opensslBinRoot,
+          'C:/Program Files/OpenSSL',
+          'C:/Program Files/OpenSSL-Win64'
+        ) | Where-Object {
+          (Test-Path "$_/include/openssl/ssl.h") -and
+          (Test-Path "$_/lib/libcrypto.lib") -and
+          (Test-Path "$_/lib/libssl.lib")
+        } | Select-Object -First 1
+
+        if (-not $opensslRoot) {
+          Write-Error 'Could not find OpenSSL headers and import libraries'
+          exit 1
+        }
+
+        "OPENSSL_ROOT_DIR=$opensslRoot" >> $env:GITHUB_ENV
+        Write-Host "OpenSSL root: $opensslRoot"
 
     - name: Checkout libssh2
       uses: actions/checkout@v4
@@ -25,10 +51,8 @@ runs:
       shell: pwsh
       run: |
         cd libssh2
-        mkdir build
-        cd build
-        cmake -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=D:/libssh2/install ..
-        cmake --build . --config Release --target install
+        cmake -S . -B build -G Ninja -DCRYPTO_BACKEND=OpenSSL -DOPENSSL_ROOT_DIR="$env:OPENSSL_ROOT_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=D:/libssh2/install
+        cmake --build build --parallel --target install
         mkdir -p D:/export
         copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
 
@@ -43,11 +67,9 @@ runs:
       shell: pwsh
       run: |
         cd libgit2
-        mkdir build
-        cd build
-        cmake -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.lib ..
-        cmake --build . --config Release --target install
-        .\Release\libgit2_tests.exe
+        cmake -S . -B build -G Ninja -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DOPENSSL_ROOT_DIR="$env:OPENSSL_ROOT_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.lib
+        cmake --build build --parallel --target install
+        .\build\libgit2_tests.exe
 
     - name: Export git2 library
       shell: pwsh
