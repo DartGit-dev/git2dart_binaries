@@ -47,8 +47,13 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
+file(GLOB git2dart_binaries_openssl_libraries
+  "${CMAKE_CURRENT_SOURCE_DIR}/libcrypto*.dll"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libssl*.dll"
+)
+
 set(git2dart_binaries_bundled_libraries
-  "${CMAKE_CURRENT_SOURCE_DIR}/libcrypto-1_1-x64.dll"
+  ${git2dart_binaries_openssl_libraries}
   "${CMAKE_CURRENT_SOURCE_DIR}/libgit2.dll"
   "${CMAKE_CURRENT_SOURCE_DIR}/libssh2.dll"
   PARENT_SCOPE

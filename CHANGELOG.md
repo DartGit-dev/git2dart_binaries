@@ -1,3 +1,9 @@
+## [1.11.4] - 2026-06-29
+### Fixed
+- Windows: bundle OpenSSL runtime DLLs with the generated artifact and load
+  them before `libssh2.dll`, so plain Dart and Flutter tests no longer depend
+  on OpenSSL being available on `PATH`.
+
 ## [1.11.2] - 2026-06-04
 ### Fixed
 - macOS: build the release `libgit2.dylib` with libssh2 and OpenSSL linked

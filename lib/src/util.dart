@@ -81,7 +81,7 @@ void _loadPlatformDependencies(String packageRoot) {
     } else if (Platform.isMacOS) {
       // macOS release artifacts link libssh2/OpenSSL statically into libgit2.
     } else if (Platform.isWindows) {
-      DynamicLibrary.open(p.join(packageRoot, 'windows', 'libssh2.dll'));
+      _loadWindowsDependencies(packageRoot);
     }
   } catch (e) {
     stderr.writeln(
@@ -90,6 +90,34 @@ void _loadPlatformDependencies(String packageRoot) {
     );
     rethrow;
   }
+}
+
+void _loadWindowsDependencies(String packageRoot) {
+  final windowsDir = Directory(p.join(packageRoot, 'windows'));
+  if (!windowsDir.existsSync()) {
+    DynamicLibrary.open(p.join(windowsDir.path, 'libssh2.dll'));
+    return;
+  }
+
+  for (final prefix in ['libcrypto', 'libssl']) {
+    final libraries =
+        windowsDir
+            .listSync()
+            .whereType<File>()
+            .where(
+              (file) =>
+                  p.basename(file.path).toLowerCase().startsWith(prefix) &&
+                  p.extension(file.path).toLowerCase() == '.dll',
+            )
+            .toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
+
+    for (final library in libraries) {
+      DynamicLibrary.open(library.path);
+    }
+  }
+
+  DynamicLibrary.open(p.join(windowsDir.path, 'libssh2.dll'));
 }
 
 String _resolvePackageRoot() {

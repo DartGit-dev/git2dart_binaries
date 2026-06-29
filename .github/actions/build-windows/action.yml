@@ -77,6 +77,7 @@ runs:
         cmake --build build --parallel --target install
         mkdir -p D:/export
         copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
+        Get-ChildItem "$env:OPENSSL_ROOT_DIR/bin/libcrypto*.dll", "$env:OPENSSL_ROOT_DIR/bin/libssl*.dll" -File | Copy-Item -Destination D:/export
 
     - name: Checkout libgit2
       uses: actions/checkout@v6
