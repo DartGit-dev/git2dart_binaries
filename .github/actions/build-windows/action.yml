@@ -11,7 +11,9 @@ runs:
   using: composite
   steps:
     - name: Set up MSVC
-      uses: ilammy/msvc-dev-cmd@v1.13.0
+      uses: TheMrMilchmann/setup-msvc-dev@v4
+      with:
+        arch: x64
 
     - name: Verify dependencies
       shell: pwsh
@@ -92,7 +94,10 @@ runs:
         cd libgit2
         cmake -S . -B build -G Ninja -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DOPENSSL_ROOT_DIR="$env:OPENSSL_ROOT_DIR" -DOPENSSL_CRYPTO_LIBRARY="$env:OPENSSL_CRYPTO_LIBRARY" -DOPENSSL_SSL_LIBRARY="$env:OPENSSL_SSL_LIBRARY" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=D:/libgit2/install -DLIBSSH2_INCLUDE_DIR=D:/libssh2/install/include -DLIBSSH2_LIBRARY=D:/libssh2/install/lib/libssh2.lib
         cmake --build build --parallel --target install
-        .\build\libgit2_tests.exe
+
+    - name: Run libgit2 tests
+      shell: pwsh
+      run: .\libgit2\build\libgit2_tests.exe
 
     - name: Export git2 library
       shell: pwsh
@@ -103,3 +108,4 @@ runs:
       with:
         name: cache-windows
         path: D:/export/**
+        retention-days: 1

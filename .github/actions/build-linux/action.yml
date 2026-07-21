@@ -87,3 +87,4 @@ runs:
       with:
         name: cache-linux
         path: /tmp/export/**
+        retention-days: 1

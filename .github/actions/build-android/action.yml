@@ -226,3 +226,4 @@ runs:
       with:
         name: cache-android-${{ inputs.architecture }}
         path: /tmp/export/**
+        retention-days: 1

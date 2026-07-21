@@ -144,3 +144,4 @@ runs:
       with:
         name: cache-macos
         path: export/**
+        retention-days: 1

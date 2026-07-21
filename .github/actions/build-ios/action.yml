@@ -197,3 +197,4 @@ runs:
       with:
         name: ${{ inputs.artifact_name }}
         path: /tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}/export/**
+        retention-days: 1

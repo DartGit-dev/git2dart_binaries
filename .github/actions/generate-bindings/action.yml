@@ -4,6 +4,9 @@ inputs:
   libgit2_version:
     description: Version of libgit2 to build
     required: true
+  flutter_version:
+    description: Flutter SDK version used to generate bindings
+    required: true
 runs:
   using: composite
   steps:
@@ -25,6 +28,12 @@ runs:
     
     - name: Run ffigen
       uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version: ${{ inputs.flutter_version }}
+        cache: true
+        pub-cache: true
+        pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
     
     - name: generate bindings
       shell: bash
@@ -38,3 +47,4 @@ runs:
       with:
         name: cache-bindings
         path: lib/src/bindings.dart
+        retention-days: 1
