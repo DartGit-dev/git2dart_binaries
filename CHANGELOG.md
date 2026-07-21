@@ -1,3 +1,7 @@
+## [1.11.5] - 2026-07-21
+### Changed
+- Updated bundled libgit2 builds to `1.9.6`.
+
 ## [1.11.4] - 2026-06-29
 ### Fixed
 - Windows: bundle OpenSSL runtime DLLs with the generated artifact and load
