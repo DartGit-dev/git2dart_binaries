@@ -278,6 +278,41 @@ void main() {
       );
       calloc.free(maxObjects);
     });
+
+    test('get and set pack max object size', () {
+      final maxObjectSize = calloc<ffi.Size>();
+
+      expect(
+        libgit2Opts.git_libgit2_opts_get_pack_max_object_size(maxObjectSize),
+        equals(0),
+        reason: libgit2.getLastError()?.toString(),
+      );
+      final initialMax = maxObjectSize.value;
+      addTearDown(() {
+        libgit2Opts.git_libgit2_opts_set_pack_max_object_size(initialMax);
+        calloc.free(maxObjectSize);
+      });
+
+      const newMax = 64 * 1024 * 1024;
+      expect(
+        libgit2Opts.git_libgit2_opts_set_pack_max_object_size(newMax),
+        equals(0),
+        reason: libgit2.getLastError()?.toString(),
+      );
+      expect(
+        libgit2Opts.git_libgit2_opts_get_pack_max_object_size(maxObjectSize),
+        equals(0),
+        reason: libgit2.getLastError()?.toString(),
+      );
+      expect(maxObjectSize.value, equals(newMax));
+    });
+
+    test('rejects a negative pack max object size', () {
+      expect(
+        () => libgit2Opts.git_libgit2_opts_set_pack_max_object_size(-1),
+        throwsRangeError,
+      );
+    });
   });
 
   group('Owner Validation Integration Tests', () {

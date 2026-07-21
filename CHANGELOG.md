@@ -1,3 +1,8 @@
+## [1.12.1] - 2026-07-21
+### Added
+- Added typed `Libgit2Opts` getters and setters for the maximum declared object
+  size accepted in downloaded packfiles.
+
 ## [1.12.0] - 2026-07-21
 ### Changed
 - Updated bundled libgit2 builds to `1.9.6`.
