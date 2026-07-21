@@ -13,7 +13,52 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Fingerprint macOS toolchain
+      id: toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        sdk_version="$(xcrun --sdk macosx --show-sdk-version)"
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-macosx-${sdk_version}"
+        fingerprint="$(printf '%s' "$raw" | shasum -a 256 | cut -d' ' -f1)"
+        echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+
+    - name: Restore macOS native cache
+      id: native-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          openssl
+          libssh2
+          libgit2
+          /tmp/git2dart-macos
+          export
+          /tmp/git2dart-macos-manifest.json
+        key: native-v1-macos-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-macos/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
+    - name: Validate macOS native cache
+      id: validate-cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ "${{ steps.native-cache.outputs.cache-hit }}" = "true" ] && \
+          python3 .github/scripts/native_cache_manifest.py validate \
+            --manifest /tmp/git2dart-macos-manifest.json \
+            --export-root export \
+            --platform macos \
+            --abi "${RUNNER_ARCH}" \
+            --libgit2 "${{ inputs.libgit2_version }}" \
+            --libssh2 "${{ inputs.libssh2_version }}" \
+            --openssl "${{ inputs.openssl_version }}" \
+            --toolchain "${{ steps.toolchain.outputs.fingerprint }}"; then
+          echo 'valid=true' >> "$GITHUB_OUTPUT"
+        else
+          rm -rf openssl libssh2 libgit2 /tmp/git2dart-macos export /tmp/git2dart-macos-manifest.json
+          echo 'valid=false' >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Checkout OpenSSL
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: openssl/openssl
@@ -21,6 +66,7 @@ runs:
         path: ./openssl
 
     - name: Checkout libssh2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
@@ -28,6 +74,7 @@ runs:
         path: ./libssh2
 
     - name: Checkout libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
@@ -35,6 +82,7 @@ runs:
         path: ./libgit2
 
     - name: Build libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       run: |
         set -euo pipefail
@@ -108,6 +156,7 @@ runs:
         /tmp/git2dart-macos/libgit2-bld/libgit2_tests
 
     - name: Export git2 library
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       run: |
         set -euo pipefail
@@ -138,6 +187,33 @@ runs:
           echo '| --- | ---: | ---: |'
           echo "| libgit2.dylib | $before_bytes | $after_bytes |"
         } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Create macOS cache manifest
+      if: steps.validate-cache.outputs.valid != 'true'
+      shell: bash
+      run: |
+        python3 .github/scripts/native_cache_manifest.py create \
+          --manifest /tmp/git2dart-macos-manifest.json \
+          --export-root export \
+          --platform macos \
+          --abi "${RUNNER_ARCH}" \
+          --libgit2 "${{ inputs.libgit2_version }}" \
+          --libssh2 "${{ inputs.libssh2_version }}" \
+          --openssl "${{ inputs.openssl_version }}" \
+          --toolchain "${{ steps.toolchain.outputs.fingerprint }}"
+
+    - name: Save macOS native cache
+      if: steps.validate-cache.outputs.valid != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          openssl
+          libssh2
+          libgit2
+          /tmp/git2dart-macos
+          export
+          /tmp/git2dart-macos-manifest.json
+        key: native-v1-macos-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-macos/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7

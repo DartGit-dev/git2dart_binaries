@@ -476,6 +476,9 @@ jobs:
   run_android_tests:
     needs: [generate_bindings, build_libgit2_android_x86_64]
     runs-on: ubuntu-latest
+    env:
+      ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: "2"
+      ANDROID_EMULATOR_BUILD: "13605811"
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -504,6 +507,13 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      - name: Enable KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Cache Android emulator
         id: avd-cache
         uses: actions/cache@v5
@@ -511,7 +521,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-${{ runner.os }}-api29-default-x86_64-v1
+          key: avd-${{ runner.os }}-api29-default-x86_64-v1-${{ env.ANDROID_EMULATOR_BUILD }}
 
       - name: Create Android emulator snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -520,10 +530,11 @@ jobs:
           api-level: 29
           arch: x86_64
           target: default
+          emulator-build: ${{ env.ANDROID_EMULATOR_BUILD }}
           force-avd-creation: false
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: echo "Created Android emulator snapshot"
+          script: echo "Generated Android emulator snapshot"
 
       - name: Prepare integration test app
         shell: bash
@@ -556,20 +567,17 @@ jobs:
           flutter pub get
 
       - name: Run Android integration tests
+        timeout-minutes: 20
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
           arch: x86_64
           target: default
+          emulator-build: ${{ env.ANDROID_EMULATOR_BUILD }}
           force-avd-creation: false
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot-save -noaudio -no-boot-anim -camera-back none
-          script: |
-            cd "$RUNNER_TEMP/git2dart_mobile_test"
-            if ! flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded; then
-              flutter devices
-              exit 1
-            fi
+          script: cd "$RUNNER_TEMP/git2dart_mobile_test" && timeout 900s flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded || { status=$?; flutter devices; exit "$status"; }
 
   publish_package:
     needs: [run_linux_tests, run_macos_tests, run_windows_tests, run_ios_tests, run_android_tests, build_libgit2_android_other]

@@ -64,7 +64,72 @@ runs:
         Write-Host "OpenSSL crypto library: $opensslCryptoLibrary"
         Write-Host "OpenSSL ssl library: $opensslSslLibrary"
 
+    - name: Fingerprint Windows toolchain
+      id: toolchain
+      shell: pwsh
+      run: |
+        $compiler = (Get-Item (Get-Command cl.exe -ErrorAction Stop).Source).VersionInfo.FileVersion
+        $cmake = cmake --version | Select-Object -First 1
+        $opensslVersion = (openssl version).Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)[1]
+        $raw = "$env:RUNNER_OS-$env:RUNNER_ARCH-$compiler-$cmake-openssl-$opensslVersion"
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($raw)
+        $fingerprint = [Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+        "fingerprint=$fingerprint" >> $env:GITHUB_OUTPUT
+        "openssl_version=$opensslVersion" >> $env:GITHUB_OUTPUT
+
+    - name: Restore Windows native cache
+      id: native-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          libssh2
+          libgit2
+          D:/libssh2
+          D:/libgit2
+          D:/export
+          D:/git2dart-windows-manifest.json
+        key: native-v1-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ steps.toolchain.outputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
+    - name: Validate Windows native cache
+      id: validate-cache
+      shell: pwsh
+      run: |
+        $valid = $false
+        if ('${{ steps.native-cache.outputs.cache-hit }}' -eq 'true') {
+          python .github/scripts/native_cache_manifest.py validate `
+            --manifest D:/git2dart-windows-manifest.json `
+            --export-root D:/export `
+            --platform windows `
+            --abi "$env:RUNNER_ARCH" `
+            --libgit2 '${{ inputs.libgit2_version }}' `
+            --libssh2 '${{ inputs.libssh2_version }}' `
+            --openssl '${{ steps.toolchain.outputs.openssl_version }}' `
+            --toolchain '${{ steps.toolchain.outputs.fingerprint }}'
+          $valid = $LASTEXITCODE -eq 0
+        }
+
+        if ($valid) {
+          'valid=true' >> $env:GITHUB_OUTPUT
+        } else {
+          foreach ($path in @(
+            (Join-Path $env:GITHUB_WORKSPACE 'libssh2'),
+            (Join-Path $env:GITHUB_WORKSPACE 'libgit2')
+          )) {
+            if ($path.StartsWith("$env:GITHUB_WORKSPACE\") -and (Test-Path -LiteralPath $path)) {
+              Remove-Item -LiteralPath $path -Recurse -Force
+            }
+          }
+          foreach ($path in @('D:\libssh2', 'D:\libgit2', 'D:\export')) {
+            if (Test-Path -LiteralPath $path) {
+              Remove-Item -LiteralPath $path -Recurse -Force
+            }
+          }
+          Remove-Item -LiteralPath 'D:\git2dart-windows-manifest.json' -Force -ErrorAction SilentlyContinue
+          'valid=false' >> $env:GITHUB_OUTPUT
+        }
+
     - name: Checkout libssh2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
@@ -72,6 +137,7 @@ runs:
         path: ./libssh2
 
     - name: Build libssh2
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: pwsh
       run: |
         cd libssh2
@@ -82,6 +148,7 @@ runs:
         Get-ChildItem "$env:OPENSSL_ROOT_DIR/bin/libcrypto*.dll", "$env:OPENSSL_ROOT_DIR/bin/libssl*.dll" -File | Copy-Item -Destination D:/export
 
     - name: Checkout libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
@@ -89,6 +156,7 @@ runs:
         path: ./libgit2
 
     - name: Build libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: pwsh
       run: |
         cd libgit2
@@ -100,8 +168,44 @@ runs:
       run: .\libgit2\build\libgit2_tests.exe
 
     - name: Export git2 library
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: pwsh
-      run: copy D:/libgit2/install/bin/git2-experimental.dll D:/export/libgit2.dll
+      run: |
+        Copy-Item D:/libgit2/install/bin/git2-experimental.dll D:/export/libgit2.dll
+        $exports = dumpbin /exports D:/export/libgit2.dll | Out-String
+        if ($exports -notmatch '\bgit_libgit2_init\b') {
+          throw 'git_libgit2_init is missing from libgit2.dll exports'
+        }
+        if ($exports -notmatch '\bgit_repository_open\b') {
+          throw 'git_repository_open is missing from libgit2.dll exports'
+        }
+
+    - name: Create Windows cache manifest
+      if: steps.validate-cache.outputs.valid != 'true'
+      shell: pwsh
+      run: |
+        python .github/scripts/native_cache_manifest.py create `
+          --manifest D:/git2dart-windows-manifest.json `
+          --export-root D:/export `
+          --platform windows `
+          --abi "$env:RUNNER_ARCH" `
+          --libgit2 '${{ inputs.libgit2_version }}' `
+          --libssh2 '${{ inputs.libssh2_version }}' `
+          --openssl '${{ steps.toolchain.outputs.openssl_version }}' `
+          --toolchain '${{ steps.toolchain.outputs.fingerprint }}'
+
+    - name: Save Windows native cache
+      if: steps.validate-cache.outputs.valid != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          libssh2
+          libgit2
+          D:/libssh2
+          D:/libgit2
+          D:/export
+          D:/git2dart-windows-manifest.json
+        key: native-v1-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ steps.toolchain.outputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7
