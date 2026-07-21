@@ -432,8 +432,16 @@ jobs:
                   begin
                     Process.kill("TERM", -pid)
                     sleep 5
-                    Process.kill("KILL", -pid)
                   rescue Errno::ESRCH
+                  rescue Errno::EPERM => error
+                    warn "::warning::Could not terminate process group #{pid}: #{error.message}"
+                  ensure
+                    begin
+                      Process.kill("KILL", -pid)
+                    rescue Errno::ESRCH
+                    rescue Errno::EPERM => error
+                      warn "::warning::Could not kill process group #{pid}: #{error.message}"
+                    end
                   end
                 end
                 warn "::error::Timed out after #{seconds}s: #{command.join(" ")}"
