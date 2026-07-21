@@ -68,6 +68,7 @@ runs:
         popd
 
         cmake -S ./libssh2 -B "$build_root/libssh2-bld" \
+          -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_SHARED_LIBS=OFF \
           -DBUILD_EXAMPLES=OFF \
           -DBUILD_TESTING=OFF \
@@ -82,6 +83,7 @@ runs:
 
         PKG_CONFIG_PATH="$libssh2_install/lib/pkgconfig" \
         cmake -S ./libgit2 -B "$build_root/libgit2-bld" \
+          -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_TESTS=ON \
           -DUSE_SSH=libssh2 \
           -DUSE_HTTPS=OpenSSL \
@@ -98,7 +100,12 @@ runs:
           -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
           -DCMAKE_INSTALL_PREFIX="$libgit2_install"
         cmake --build "$build_root/libgit2-bld" --target install -- -j"$(sysctl -n hw.ncpu)"
-        "$build_root/libgit2-bld/libgit2_tests"
+
+    - name: Run libgit2 tests
+      shell: bash
+      run: |
+        set -euo pipefail
+        /tmp/git2dart-macos/libgit2-bld/libgit2_tests
 
     - name: Export git2 library
       shell: bash
@@ -109,6 +116,14 @@ runs:
         cp /tmp/git2dart-macos/libgit2/lib/libgit2-experimental.dylib export/libgit2.dylib
         install_name_tool -id @rpath/libgit2.dylib export/libgit2.dylib
 
+        before_bytes="$(wc -c < export/libgit2.dylib | tr -d ' ')"
+        strip -x export/libgit2.dylib
+        after_bytes="$(wc -c < export/libgit2.dylib | tr -d ' ')"
+
+        exported_symbols="$(nm -gU export/libgit2.dylib)"
+        grep -q '_git_libgit2_init$' <<< "$exported_symbols"
+        grep -q '_git_repository_open$' <<< "$exported_symbols"
+
         if otool -L export/libgit2.dylib | grep -E '/(opt/homebrew|usr/local)/|libssh2|libcrypto|libssl'; then
           echo "::error::Exported macOS dylibs must not reference Homebrew paths"
           echo "::error::libssh2 and OpenSSL must be statically linked into libgit2.dylib"
@@ -116,6 +131,13 @@ runs:
         fi
 
         otool -L export/libgit2.dylib
+
+        {
+          echo '### macOS native artifact sizes'
+          echo '| File | Before strip | After strip |'
+          echo '| --- | ---: | ---: |'
+          echo "| libgit2.dylib | $before_bytes | $after_bytes |"
+        } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7

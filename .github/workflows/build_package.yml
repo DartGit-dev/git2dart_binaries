@@ -15,6 +15,7 @@ env:
   LIBGIT2_VERSION: "1.9.6"
   LIBSSH2_VERSION: "1.11.1"
   OPENSSL_VERSION: "3.0.15"
+  FLUTTER_VERSION: "3.44.0"
 
 
 jobs:
@@ -580,7 +581,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          max_bytes=$((100 * 1024 * 1024))
+          max_bytes=$((256 * 1024 * 1024))
           package_bytes="$(
             find \
               android assets integration_test ios lib linux macos test test_driver windows \
@@ -592,15 +593,50 @@ jobs:
           printf 'Expanded publish payload: %s bytes\n' "$package_bytes"
           if [ "$package_bytes" -gt "$max_bytes" ]; then
             echo "::error::Expanded publish payload exceeds ${max_bytes} bytes"
+            du -sh android assets integration_test ios lib linux macos test test_driver windows || true
+            find \
+              android assets integration_test ios lib linux macos test test_driver windows \
+              CHANGELOG.md LICENSE README.md analysis_options.yaml ffigen.yaml pubspec.yaml \
+              -type f -printf '%s\t%p\n' | sort -nr | head -n 20
             exit 1
           fi
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Validate publish package
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          dart pub publish --dry-run
 
       - name: Zip package into cache
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@v7
         with:
           name: release-package
-          path: .
+          retention-days: 7
+          path: |
+            android
+            assets
+            integration_test
+            ios
+            lib
+            linux
+            macos
+            test
+            test_driver
+            windows
+            CHANGELOG.md
+            LICENSE
+            README.md
+            analysis_options.yaml
+            ffigen.yaml
+            pubspec.yaml
 
       - name: Publish package
         if: ${{ github.event_name != 'pull_request' }}

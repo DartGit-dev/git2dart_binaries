@@ -13,7 +13,7 @@ runs:
     - name: Run prerequisites
       shell: bash
       run: |
-        sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends binutils clang cmake curl libssl-dev
         mkdir /tmp/export
 
     - name: Checkout libssh2
@@ -29,8 +29,8 @@ runs:
         mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
         mkdir -p /usr/local/share/doc
 
-        cmake -B bld -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
-        cmake --build bld --target install
+        cmake -B bld -DCRYPTO_BACKEND=OpenSSL -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
+        cmake --build bld --parallel --target install
         cp /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
 
     - name: Checkout libgit2
@@ -45,13 +45,42 @@ runs:
       run: |
         mv ./libgit2 /tmp/libgit2
         cd /tmp/libgit2
-        cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
-        cmake --build bld --target install
+        cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
+        cmake --build bld --parallel --target install
+
+    - name: Run libgit2 tests
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd /tmp/libgit2
         ./bld/libgit2_tests
 
     - name: Export git2 library
       shell: bash
-      run: cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
+      run: |
+        set -euo pipefail
+
+        cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
+
+        libssh2_before="$(wc -c < /tmp/export/libssh2.so | tr -d ' ')"
+        libgit2_before="$(wc -c < /tmp/export/libgit2.so | tr -d ' ')"
+
+        strip --strip-unneeded /tmp/export/libssh2.so /tmp/export/libgit2.so
+
+        exported_symbols="$(readelf --dyn-syms --wide /tmp/export/libgit2.so)"
+        grep -q 'git_libgit2_init' <<< "$exported_symbols"
+        grep -q 'git_repository_open' <<< "$exported_symbols"
+
+        libssh2_after="$(wc -c < /tmp/export/libssh2.so | tr -d ' ')"
+        libgit2_after="$(wc -c < /tmp/export/libgit2.so | tr -d ' ')"
+
+        {
+          echo '### Linux native artifact sizes'
+          echo '| File | Before strip | After strip |'
+          echo '| --- | ---: | ---: |'
+          echo "| libssh2.so | $libssh2_before | $libssh2_after |"
+          echo "| libgit2.so | $libgit2_before | $libgit2_after |"
+        } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7

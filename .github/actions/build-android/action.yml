@@ -147,6 +147,7 @@ runs:
         mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
         cmake -B bld \
           -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_SHARED_LIBS=ON \
           -DCRYPTO_BACKEND=OpenSSL \
           -DOPENSSL_ROOT_DIR="$OPENSSL_INSTALL" \
@@ -172,6 +173,7 @@ runs:
         set -euo pipefail
         mv ./libgit2 /tmp/libgit2 && cd /tmp/libgit2
         cmake -B bld \
+          -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_TESTS=OFF \
           -DBUILD_SHARED_LIBS=ON \
           -DUSE_SSH=libssh2 \
@@ -198,6 +200,26 @@ runs:
         cp "$OPENSSL_INSTALL/lib/libcrypto.so" "$OUTPUT_DIR/"
         cp "$LIBSSH2_INSTALL/lib/libssh2.so" "$OUTPUT_DIR/"
         cp "$LIBGIT2_INSTALL/lib/libgit2-experimental.so" "$OUTPUT_DIR/libgit2.so"
+
+        declare -A before_sizes
+        for library in libssl.so libcrypto.so libssh2.so libgit2.so; do
+          before_sizes["$library"]="$(wc -c < "$OUTPUT_DIR/$library" | tr -d ' ')"
+          "$ANDROID_LLVM_BIN/llvm-strip" --strip-unneeded "$OUTPUT_DIR/$library"
+        done
+
+        exported_symbols="$("$ANDROID_LLVM_BIN/llvm-readelf" --dyn-syms --wide "$OUTPUT_DIR/libgit2.so")"
+        grep -q 'git_libgit2_init' <<< "$exported_symbols"
+        grep -q 'git_repository_open' <<< "$exported_symbols"
+
+        {
+          echo "### Android $ANDROID_ABI native artifact sizes"
+          echo '| File | Before strip | After strip |'
+          echo '| --- | ---: | ---: |'
+          for library in libssl.so libcrypto.so libssh2.so libgit2.so; do
+            after_size="$(wc -c < "$OUTPUT_DIR/$library" | tr -d ' ')"
+            echo "| $library | ${before_sizes[$library]} | $after_size |"
+          done
+        } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Upload Android artifact
       uses: actions/upload-artifact@v7
