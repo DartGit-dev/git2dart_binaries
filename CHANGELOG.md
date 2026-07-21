@@ -1,4 +1,4 @@
-## [1.11.5] - 2026-07-21
+## [1.12.0] - 2026-07-21
 ### Changed
 - Updated bundled libgit2 builds to `1.9.6`.
 
