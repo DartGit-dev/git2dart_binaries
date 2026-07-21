@@ -6,6 +6,7 @@ on:
     branches:
       - "main"
       - "1.11.2"
+      - "1.12.1"
       # - "**"
   pull_request:
     branches:
