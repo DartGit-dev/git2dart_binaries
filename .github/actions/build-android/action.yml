@@ -91,7 +91,7 @@ runs:
           exit 1
         fi
 
-        BUILD_ROOT="/tmp"
+        BUILD_ROOT="/tmp/git2dart-android-$ARCHITECTURE"
         OPENSSL_INSTALL="$BUILD_ROOT/openssl_install"
         LIBSSH2_INSTALL="$BUILD_ROOT/libssh2_install"
         LIBGIT2_INSTALL="$BUILD_ROOT/libgit2_install"
@@ -115,7 +115,47 @@ runs:
           echo "OUTPUT_DIR=$OUTPUT_DIR"
         } >> "$GITHUB_ENV"
 
+    - name: Fingerprint Android toolchain
+      id: toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-ndk-r26d-$($ANDROID_LLVM_BIN/clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')"
+        fingerprint="$(printf '%s' "$raw" | sha256sum | cut -d' ' -f1)"
+        echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+
+    - name: Restore Android native cache
+      id: native-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: /tmp/git2dart-android-${{ inputs.architecture }}
+        key: native-v1-android-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-android/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
+    - name: Validate Android native cache
+      id: validate-cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        cache_root="/tmp/git2dart-android-${{ inputs.architecture }}"
+        if [ "${{ steps.native-cache.outputs.cache-hit }}" = "true" ] && \
+          python3 .github/scripts/native_cache_manifest.py validate \
+            --manifest "$cache_root/manifest.json" \
+            --export-root "$cache_root/export" \
+            --platform android \
+            --abi "${{ inputs.architecture }}" \
+            --libgit2 "${{ inputs.libgit2_version }}" \
+            --libssh2 "${{ inputs.libssh2_version }}" \
+            --openssl "${{ inputs.openssl_version }}" \
+            --toolchain "${{ steps.toolchain.outputs.fingerprint }}"; then
+          echo 'valid=true' >> "$GITHUB_OUTPUT"
+        else
+          rm -rf "$cache_root"
+          mkdir -p "$cache_root"
+          echo 'valid=false' >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Checkout OpenSSL
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: openssl/openssl
@@ -123,10 +163,11 @@ runs:
         path: ./openssl
 
     - name: Build OpenSSL
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       run: |
         set -euo pipefail
-        mv ./openssl /tmp/openssl && cd /tmp/openssl
+        mv ./openssl "$BUILD_ROOT/openssl-src" && cd "$BUILD_ROOT/openssl-src"
         export PATH="$ANDROID_LLVM_BIN:$PATH"
         ./Configure "$OPENSSL_ARCH" -D__ANDROID_API__=$ANDROID_API_LEVEL --prefix="$OPENSSL_INSTALL" no-tests shared
         make clean || true
@@ -134,6 +175,7 @@ runs:
         make install_sw
 
     - name: Checkout libssh2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
@@ -141,12 +183,14 @@ runs:
         path: ./libssh2
 
     - name: Build libssh2
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       run: |
         set -euo pipefail
-        mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
+        mv ./libssh2 "$BUILD_ROOT/libssh2-src" && cd "$BUILD_ROOT/libssh2-src"
         cmake -B bld \
           -G "Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_SHARED_LIBS=ON \
           -DCRYPTO_BACKEND=OpenSSL \
           -DOPENSSL_ROOT_DIR="$OPENSSL_INSTALL" \
@@ -160,6 +204,7 @@ runs:
         cmake --build bld --target install -- -j"$NCPU"
 
     - name: Checkout libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
@@ -167,11 +212,13 @@ runs:
         path: ./libgit2
 
     - name: Build libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       run: |
         set -euo pipefail
-        mv ./libgit2 /tmp/libgit2 && cd /tmp/libgit2
+        mv ./libgit2 "$BUILD_ROOT/libgit2-src" && cd "$BUILD_ROOT/libgit2-src"
         cmake -B bld \
+          -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_TESTS=OFF \
           -DBUILD_SHARED_LIBS=ON \
           -DUSE_SSH=libssh2 \
@@ -190,6 +237,7 @@ runs:
         cmake --build bld --target install -- -j"$NCPU"
 
     - name: Copy outputs
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       run: |
         set -euo pipefail
@@ -199,8 +247,51 @@ runs:
         cp "$LIBSSH2_INSTALL/lib/libssh2.so" "$OUTPUT_DIR/"
         cp "$LIBGIT2_INSTALL/lib/libgit2-experimental.so" "$OUTPUT_DIR/libgit2.so"
 
+        declare -A before_sizes
+        for library in libssl.so libcrypto.so libssh2.so libgit2.so; do
+          before_sizes["$library"]="$(wc -c < "$OUTPUT_DIR/$library" | tr -d ' ')"
+          "$ANDROID_LLVM_BIN/llvm-strip" --strip-unneeded "$OUTPUT_DIR/$library"
+        done
+
+        exported_symbols="$("$ANDROID_LLVM_BIN/llvm-readelf" --dyn-syms --wide "$OUTPUT_DIR/libgit2.so")"
+        grep -q 'git_libgit2_init' <<< "$exported_symbols"
+        grep -q 'git_repository_open' <<< "$exported_symbols"
+
+        {
+          echo "### Android $ANDROID_ABI native artifact sizes"
+          echo '| File | Before strip | After strip |'
+          echo '| --- | ---: | ---: |'
+          for library in libssl.so libcrypto.so libssh2.so libgit2.so; do
+            after_size="$(wc -c < "$OUTPUT_DIR/$library" | tr -d ' ')"
+            echo "| $library | ${before_sizes[$library]} | $after_size |"
+          done
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Create Android cache manifest
+      if: steps.validate-cache.outputs.valid != 'true'
+      shell: bash
+      run: |
+        cache_root="/tmp/git2dart-android-${{ inputs.architecture }}"
+        python3 .github/scripts/native_cache_manifest.py create \
+          --manifest "$cache_root/manifest.json" \
+          --export-root "$cache_root/export" \
+          --platform android \
+          --abi "${{ inputs.architecture }}" \
+          --libgit2 "${{ inputs.libgit2_version }}" \
+          --libssh2 "${{ inputs.libssh2_version }}" \
+          --openssl "${{ inputs.openssl_version }}" \
+          --toolchain "${{ steps.toolchain.outputs.fingerprint }}"
+
+    - name: Save Android native cache
+      if: steps.validate-cache.outputs.valid != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: /tmp/git2dart-android-${{ inputs.architecture }}
+        key: native-v1-android-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-android/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
     - name: Upload Android artifact
       uses: actions/upload-artifact@v7
       with:
         name: cache-android-${{ inputs.architecture }}
-        path: /tmp/export/**
+        path: /tmp/git2dart-android-${{ inputs.architecture }}/export/**
+        retention-days: 1

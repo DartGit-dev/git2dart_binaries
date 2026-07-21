@@ -29,7 +29,47 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Fingerprint iOS toolchain
+      id: toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        sdk_version="$(xcrun --sdk '${{ inputs.ios_sdk }}' --show-sdk-version)"
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(xcrun clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-${{ inputs.ios_sdk }}-${sdk_version}"
+        fingerprint="$(printf '%s' "$raw" | shasum -a 256 | cut -d' ' -f1)"
+        echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+
+    - name: Restore iOS native cache
+      id: native-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: /tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}
+        key: native-v1-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-ios/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
+    - name: Validate iOS native cache
+      id: validate-cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        cache_root="/tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}"
+        if [ "${{ steps.native-cache.outputs.cache-hit }}" = "true" ] && \
+          python3 .github/scripts/native_cache_manifest.py validate \
+            --manifest "$cache_root/manifest.json" \
+            --export-root "$cache_root/export" \
+            --platform ios \
+            --abi "${{ inputs.ios_sdk }}-${{ inputs.architecture }}" \
+            --libgit2 "${{ inputs.libgit2_version }}" \
+            --libssh2 "${{ inputs.libssh2_version }}" \
+            --openssl "${{ inputs.openssl_version }}" \
+            --toolchain "${{ steps.toolchain.outputs.fingerprint }}"; then
+          echo 'valid=true' >> "$GITHUB_OUTPUT"
+        else
+          rm -rf "$cache_root"
+          echo 'valid=false' >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Checkout OpenSSL
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: openssl/openssl
@@ -37,6 +77,7 @@ runs:
         path: ./openssl
 
     - name: Checkout libssh2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
@@ -44,6 +85,7 @@ runs:
         path: ./libssh2
 
     - name: Checkout libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
@@ -51,6 +93,7 @@ runs:
         path: ./libgit2
 
     - name: Build iOS slice
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       env:
         IOS_DEPLOYMENT_TARGET: ${{ inputs.ios_deployment_target }}
@@ -92,6 +135,7 @@ runs:
         popd
 
         cmake -S ./libssh2 -B "$build_root/libssh2-bld" \
+          -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_SHARED_LIBS=OFF \
           -DBUILD_EXAMPLES=OFF \
           -DBUILD_TESTING=OFF \
@@ -124,6 +168,7 @@ runs:
 
         PKG_CONFIG_PATH="$libssh2_install/lib/pkgconfig" \
         cmake -S ./libgit2 -B "$build_root/libgit2-bld" \
+          -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_SHARED_LIBS=OFF \
           -DBUILD_TESTS=OFF \
           -DUSE_SSH=libssh2 \
@@ -158,12 +203,63 @@ runs:
         cp "$libssh2_install/lib/libssh2.a" "$output_dir/libssh2/lib/"
         cp "$libgit2_archive" "$output_dir/libgit2/lib/libgit2.a"
 
+        before_sizes=()
+        archives=(
+          "$output_dir/openssl/lib/libcrypto.a"
+          "$output_dir/openssl/lib/libssl.a"
+          "$output_dir/libssh2/lib/libssh2.a"
+          "$output_dir/libgit2/lib/libgit2.a"
+        )
+        for archive in "${archives[@]}"; do
+          before_sizes+=("$(wc -c < "$archive" | tr -d ' ')")
+          xcrun strip -S "$archive"
+        done
+
+        exported_symbols="$(nm -gU "$output_dir/libgit2/lib/libgit2.a")"
+        grep -q '_git_libgit2_init$' <<< "$exported_symbols"
+        grep -q '_git_repository_open$' <<< "$exported_symbols"
+
+        {
+          echo "### iOS $slice native artifact sizes"
+          echo '| File | Before strip | After strip |'
+          echo '| --- | ---: | ---: |'
+          index=0
+          for archive in "${archives[@]}"; do
+            after_size="$(wc -c < "$archive" | tr -d ' ')"
+            echo "| $(basename "$archive") | ${before_sizes[$index]} | $after_size |"
+            index=$((index + 1))
+          done
+        } >> "$GITHUB_STEP_SUMMARY"
+
         cp -R "$openssl_install/include/." "$output_dir/openssl/include/"
         cp -R "$libssh2_install/include/." "$output_dir/libssh2/include/"
         cp -R "$libgit2_install/include/." "$output_dir/libgit2/include/"
+
+    - name: Create iOS cache manifest
+      if: steps.validate-cache.outputs.valid != 'true'
+      shell: bash
+      run: |
+        cache_root="/tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}"
+        python3 .github/scripts/native_cache_manifest.py create \
+          --manifest "$cache_root/manifest.json" \
+          --export-root "$cache_root/export" \
+          --platform ios \
+          --abi "${{ inputs.ios_sdk }}-${{ inputs.architecture }}" \
+          --libgit2 "${{ inputs.libgit2_version }}" \
+          --libssh2 "${{ inputs.libssh2_version }}" \
+          --openssl "${{ inputs.openssl_version }}" \
+          --toolchain "${{ steps.toolchain.outputs.fingerprint }}"
+
+    - name: Save iOS native cache
+      if: steps.validate-cache.outputs.valid != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: /tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}
+        key: native-v1-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-ios/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Upload iOS slice
       uses: actions/upload-artifact@v7
       with:
         name: ${{ inputs.artifact_name }}
         path: /tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}/export/**
+        retention-days: 1

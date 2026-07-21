@@ -13,10 +13,55 @@ runs:
     - name: Run prerequisites
       shell: bash
       run: |
-        sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends clang cmake curl libssl-dev
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends binutils clang cmake curl libssl-dev
         mkdir /tmp/export
 
+    - name: Fingerprint Linux toolchain
+      id: toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        openssl_version="$(openssl version | awk '{print $2}')"
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-openssl-${openssl_version}"
+        fingerprint="$(printf '%s' "$raw" | sha256sum | cut -d' ' -f1)"
+        echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+        echo "openssl_version=$openssl_version" >> "$GITHUB_OUTPUT"
+
+    - name: Restore Linux native cache
+      id: native-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          /tmp/libssh2
+          /tmp/libgit2
+          /tmp/export
+          /tmp/git2dart-linux-manifest.json
+        key: native-v1-linux-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ steps.toolchain.outputs.openssl_version }}-${{ hashFiles('.github/actions/build-linux/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
+    - name: Validate Linux native cache
+      id: validate-cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ "${{ steps.native-cache.outputs.cache-hit }}" = "true" ] && \
+          python3 .github/scripts/native_cache_manifest.py validate \
+            --manifest /tmp/git2dart-linux-manifest.json \
+            --export-root /tmp/export \
+            --platform linux \
+            --abi "${RUNNER_ARCH}" \
+            --libgit2 "${{ inputs.libgit2_version }}" \
+            --libssh2 "${{ inputs.libssh2_version }}" \
+            --openssl "${{ steps.toolchain.outputs.openssl_version }}" \
+            --toolchain "${{ steps.toolchain.outputs.fingerprint }}"; then
+          echo 'valid=true' >> "$GITHUB_OUTPUT"
+        else
+          rm -rf /tmp/libssh2 /tmp/libgit2 /tmp/export /tmp/git2dart-linux-manifest.json
+          mkdir -p /tmp/export
+          echo 'valid=false' >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Checkout libssh2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libssh2/libssh2
@@ -24,16 +69,18 @@ runs:
         path: ./libssh2
 
     - name: Build libssh2
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       run: |
         mv ./libssh2 /tmp/libssh2 && cd /tmp/libssh2
         mkdir -p /usr/local/share/doc
 
-        cmake -B bld -DCRYPTO_BACKEND=OpenSSL -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
-        cmake --build bld --target install
+        cmake -B bld -DCRYPTO_BACKEND=OpenSSL -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/libssh2/install
+        cmake --build bld --parallel --target install
         cp /tmp/libssh2/install/lib/libssh2.so /tmp/export/libssh2.so
 
     - name: Checkout libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/checkout@v6
       with:
         repository: libgit2/libgit2
@@ -41,20 +88,77 @@ runs:
         path: ./libgit2
 
     - name: Build libgit2
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
       run: |
         mv ./libgit2 /tmp/libgit2
         cd /tmp/libgit2
-        cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
-        cmake --build bld --target install
+        cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
+        cmake --build bld --parallel --target install
+
+    - name: Run libgit2 tests
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd /tmp/libgit2
         ./bld/libgit2_tests
 
     - name: Export git2 library
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: bash
-      run: cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
+      run: |
+        set -euo pipefail
+
+        cp /tmp/libgit2/install/lib/libgit2-experimental.so /tmp/export/libgit2.so
+
+        libssh2_before="$(wc -c < /tmp/export/libssh2.so | tr -d ' ')"
+        libgit2_before="$(wc -c < /tmp/export/libgit2.so | tr -d ' ')"
+
+        strip --strip-unneeded /tmp/export/libssh2.so /tmp/export/libgit2.so
+
+        exported_symbols="$(readelf --dyn-syms --wide /tmp/export/libgit2.so)"
+        grep -q 'git_libgit2_init' <<< "$exported_symbols"
+        grep -q 'git_repository_open' <<< "$exported_symbols"
+
+        libssh2_after="$(wc -c < /tmp/export/libssh2.so | tr -d ' ')"
+        libgit2_after="$(wc -c < /tmp/export/libgit2.so | tr -d ' ')"
+
+        {
+          echo '### Linux native artifact sizes'
+          echo '| File | Before strip | After strip |'
+          echo '| --- | ---: | ---: |'
+          echo "| libssh2.so | $libssh2_before | $libssh2_after |"
+          echo "| libgit2.so | $libgit2_before | $libgit2_after |"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Create Linux cache manifest
+      if: steps.validate-cache.outputs.valid != 'true'
+      shell: bash
+      run: |
+        python3 .github/scripts/native_cache_manifest.py create \
+          --manifest /tmp/git2dart-linux-manifest.json \
+          --export-root /tmp/export \
+          --platform linux \
+          --abi "${RUNNER_ARCH}" \
+          --libgit2 "${{ inputs.libgit2_version }}" \
+          --libssh2 "${{ inputs.libssh2_version }}" \
+          --openssl "${{ steps.toolchain.outputs.openssl_version }}" \
+          --toolchain "${{ steps.toolchain.outputs.fingerprint }}"
+
+    - name: Save Linux native cache
+      if: steps.validate-cache.outputs.valid != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          /tmp/libssh2
+          /tmp/libgit2
+          /tmp/export
+          /tmp/git2dart-linux-manifest.json
+        key: native-v1-linux-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ steps.toolchain.outputs.openssl_version }}-${{ hashFiles('.github/actions/build-linux/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7
       with:
         name: cache-linux
         path: /tmp/export/**
+        retention-days: 1

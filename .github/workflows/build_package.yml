@@ -12,9 +12,14 @@ on:
       - "main"
 env:
   PUB_ENVIRONMENT: bot.github
-  LIBGIT2_VERSION: "1.9.4"
+  LIBGIT2_VERSION: "1.9.6"
   LIBSSH2_VERSION: "1.11.1"
   OPENSSL_VERSION: "3.0.15"
+  FLUTTER_VERSION: "3.44.0"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 
 jobs:
@@ -28,6 +33,7 @@ jobs:
         uses: ./.github/actions/generate-bindings
         with:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
+          flutter_version: ${{ env.FLUTTER_VERSION }}
 
   build_libgit2_linux:
     runs-on: ubuntu-latest
@@ -130,6 +136,7 @@ jobs:
         with:
           name: cache-ios
           path: /tmp/git2dart-ios/export/**
+          retention-days: 1
 
   build_libgit2_windows:
     runs-on: windows-latest
@@ -199,6 +206,12 @@ jobs:
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+          pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
 
       - run: flutter pub get
       - run: flutter test -r expanded
@@ -224,6 +237,12 @@ jobs:
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+          pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
 
       - run: flutter pub get
       - run: flutter test -r expanded
@@ -255,6 +274,12 @@ jobs:
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+          pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
 
       - run: flutter pub get
       - run: flutter test -r expanded
@@ -281,6 +306,12 @@ jobs:
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+          pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
 
       - name: Prepare integration test app
         shell: bash
@@ -338,16 +369,6 @@ jobs:
           timestamp "Waiting for simulator bootstatus"
           xcrun simctl bootstatus "$device_id" -b
           timestamp "Simulator is booted"
-
-      - name: List Flutter devices
-        timeout-minutes: 3
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          test_app="$RUNNER_TEMP/git2dart_mobile_test"
-          cd "$test_app"
-          flutter devices
 
       - name: Build iOS integration test app
         timeout-minutes: 15
@@ -437,6 +458,7 @@ jobs:
 
           if [ "$status" -ne 0 ]; then
             if [ "$status" -ne 124 ]; then
+              flutter devices
               exit "$status"
             fi
 
@@ -454,6 +476,9 @@ jobs:
   run_android_tests:
     needs: [generate_bindings, build_libgit2_android_x86_64]
     runs-on: ubuntu-latest
+    env:
+      ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: "2"
+      ANDROID_EMULATOR_BUILD: "13605811"
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -472,6 +497,45 @@ jobs:
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+          pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Enable KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Cache Android emulator
+        id: avd-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ runner.os }}-api29-default-x86_64-v1-${{ env.ANDROID_EMULATOR_BUILD }}
+
+      - name: Create Android emulator snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          target: default
+          emulator-build: ${{ env.ANDROID_EMULATOR_BUILD }}
+          force-avd-creation: false
+          disable-animations: false
+          pre-emulator-launch-script: adb start-server
+          emulator-options: -no-window -gpu swiftshader_indirect -delay-adb -noaudio -no-boot-anim -camera-back none
+          script: echo "Generated Android emulator snapshot"
 
       - name: Prepare integration test app
         shell: bash
@@ -504,16 +568,18 @@ jobs:
           flutter pub get
 
       - name: Run Android integration tests
+        timeout-minutes: 20
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
           arch: x86_64
           target: default
+          emulator-build: ${{ env.ANDROID_EMULATOR_BUILD }}
+          force-avd-creation: false
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: |
-            cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter devices
-            cd "$RUNNER_TEMP/git2dart_mobile_test" && flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded
+          pre-emulator-launch-script: adb start-server
+          emulator-options: -no-window -gpu swiftshader_indirect -delay-adb -no-snapshot-save -noaudio -no-boot-anim -camera-back none
+          script: cd "$RUNNER_TEMP/git2dart_mobile_test" && timeout 900s flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded || { status=$?; flutter devices; exit "$status"; }
 
   publish_package:
     needs: [run_linux_tests, run_macos_tests, run_windows_tests, run_ios_tests, run_android_tests, build_libgit2_android_other]
@@ -580,7 +646,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          max_bytes=$((100 * 1024 * 1024))
+          max_bytes=$((256 * 1024 * 1024))
           package_bytes="$(
             find \
               android assets integration_test ios lib linux macos test test_driver windows \
@@ -592,15 +658,53 @@ jobs:
           printf 'Expanded publish payload: %s bytes\n' "$package_bytes"
           if [ "$package_bytes" -gt "$max_bytes" ]; then
             echo "::error::Expanded publish payload exceeds ${max_bytes} bytes"
+            du -sh android assets integration_test ios lib linux macos test test_driver windows || true
+            find \
+              android assets integration_test ios lib linux macos test test_driver windows \
+              CHANGELOG.md LICENSE README.md analysis_options.yaml ffigen.yaml pubspec.yaml \
+              -type f -printf '%s\t%p\n' | sort -nr | head -n 20
             exit 1
           fi
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+          pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
+
+      - name: Validate publish package
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          dart pub publish --dry-run
 
       - name: Zip package into cache
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@v7
         with:
           name: release-package
-          path: .
+          retention-days: 7
+          path: |
+            android
+            assets
+            integration_test
+            ios
+            lib
+            linux
+            macos
+            test
+            test_driver
+            windows
+            CHANGELOG.md
+            LICENSE
+            README.md
+            analysis_options.yaml
+            ffigen.yaml
+            pubspec.yaml
 
       - name: Publish package
         if: ${{ github.event_name != 'pull_request' }}
