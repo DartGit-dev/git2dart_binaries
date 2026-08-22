@@ -4,12 +4,13 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:git2dart_binaries/src/bindings.dart';
 import 'package:git2dart_binaries/src/extensions.dart';
-import 'package:git2dart_binaries/src/util.dart';
+import 'package:git2dart_binaries/src/runtime.dart';
 
 void main() {
-  tearDownAll(() {
-    libgit2.git_libgit2_shutdown();
-  });
+  final libgit2 = libgit2Runtime.bindings;
+  final libgit2Opts = libgit2Runtime.options;
+
+  tearDownAll(libgit2Runtime.shutdown);
 
   group('Memory Window Integration Tests', () {
     test('get and set mwindow size', () {

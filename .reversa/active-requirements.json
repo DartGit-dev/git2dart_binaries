@@ -1,0 +1,15 @@
+{
+  "schema-version": 1,
+  "feature-dir": "_reversa_forward/001-libgit2-process-lifecycle",
+  "feature-id": "001",
+  "short-name": "libgit2-process-lifecycle",
+  "started-at": "2026-08-22T04:34:03.7658577Z",
+  "current-stage": "coding",
+  "stages-completed": [
+    "requirements",
+    "clarify",
+    "plan",
+    "to-do"
+  ],
+  "paused-features": []
+}

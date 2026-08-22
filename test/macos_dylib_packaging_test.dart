@@ -2,11 +2,8 @@ import 'dart:ffi' as ffi;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-
-typedef _GitLibgit2InitNative = ffi.Int Function();
-typedef _GitLibgit2Init = int Function();
-typedef _GitLibgit2ShutdownNative = ffi.Int Function();
-typedef _GitLibgit2Shutdown = int Function();
+import 'package:git2dart_binaries/src/runtime.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   test(
@@ -15,7 +12,7 @@ void main() {
       final libgit2 = File('macos/libgit2.dylib').absolute;
 
       expect(
-        await libgit2.exists(),
+        libgit2.existsSync(),
         isTrue,
         reason: '${libgit2.path} must be present in macOS artifacts',
       );
@@ -34,17 +31,9 @@ void main() {
 
       expect(openedLibgit2, isA<ffi.DynamicLibrary>());
 
-      final init = openedLibgit2
-          .lookupFunction<_GitLibgit2InitNative, _GitLibgit2Init>(
-            'git_libgit2_init',
-          );
-      final shutdown = openedLibgit2
-          .lookupFunction<_GitLibgit2ShutdownNative, _GitLibgit2Shutdown>(
-            'git_libgit2_shutdown',
-          );
-
-      expect(init(), greaterThanOrEqualTo(0));
-      expect(shutdown(), greaterThanOrEqualTo(0));
+      libgit2Runtime.ensureInitialized();
+      expect(libgit2Runtime.bindings, same(libgit2Runtime.bindings));
+      expect(libgit2Runtime.shutdown(), greaterThanOrEqualTo(0));
     },
     skip: Platform.isMacOS ? null : 'macOS packaging test',
   );
@@ -54,7 +43,7 @@ void main() {
     () async {
       final packageConfig = File('.dart_tool/package_config.json').absolute;
       expect(
-        await packageConfig.exists(),
+        packageConfig.existsSync(),
         isTrue,
         reason: '${packageConfig.path} must exist after pub get',
       );
@@ -67,17 +56,22 @@ void main() {
         await script.writeAsString(r'''
 import 'dart:io';
 
-import 'package:git2dart_binaries/src/util.dart' as git2;
+import 'package:git2dart_binaries/src/runtime.dart';
 
 void main() {
-  final initCount = git2.libgit2.git_libgit2_init();
-  if (initCount < 1) {
-    stderr.writeln('git_libgit2_init returned $initCount');
+  final runtime = libgit2Runtime;
+  runtime.ensureInitialized();
+  if (!identical(runtime.bindings, runtime.bindings) ||
+      !identical(runtime.options, runtime.options)) {
+    stderr.writeln('managed runtime did not reuse bindings/options');
     exit(1);
   }
 
-  git2.libgit2.git_libgit2_shutdown();
-  git2.libgit2.git_libgit2_shutdown();
+  final remaining = runtime.shutdown();
+  if (remaining < 0) {
+    stderr.writeln('managed shutdown returned $remaining');
+    exit(1);
+  }
   stdout.writeln('plain-dart-libgit2-ok');
 }
 ''');
@@ -111,8 +105,25 @@ Future<void> _expectDylibId(File dylib, String expectedId) async {
 }
 
 String _dartExecutable() {
-  final executable = File(Platform.resolvedExecutable).uri.pathSegments.last;
-  return executable == 'dart' ? Platform.resolvedExecutable : 'dart';
+  final resolved = File(Platform.resolvedExecutable).absolute;
+  if (p.basenameWithoutExtension(resolved.path) == 'dart') {
+    return resolved.path;
+  }
+
+  var directory = resolved.parent;
+  while (directory.parent.path != directory.path) {
+    final candidate = File(
+      p.join(
+        directory.path,
+        'dart-sdk',
+        'bin',
+        Platform.isWindows ? 'dart.exe' : 'dart',
+      ),
+    );
+    if (candidate.existsSync()) return candidate.path;
+    directory = directory.parent;
+  }
+  return 'dart';
 }
 
 void _expectNoHomebrewReferences(String otoolOutput) {

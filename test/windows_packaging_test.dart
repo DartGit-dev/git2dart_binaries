@@ -30,7 +30,7 @@ void main() {
       'package-root loader works in a plain Dart process',
       () async {
         final packageConfig = File('.dart_tool/package_config.json').absolute;
-        expect(await packageConfig.exists(), isTrue);
+        expect(packageConfig.existsSync(), isTrue);
 
         final tempDir = await Directory.systemTemp.createTemp(
           'git2dart_binaries_windows_loader_',
@@ -40,17 +40,22 @@ void main() {
           await script.writeAsString(r'''
 import 'dart:io';
 
-import 'package:git2dart_binaries/src/util.dart' as git2;
+import 'package:git2dart_binaries/src/runtime.dart';
 
 void main() {
-  final initCount = git2.libgit2.git_libgit2_init();
-  if (initCount < 1) {
-    stderr.writeln('git_libgit2_init returned $initCount');
+  final runtime = libgit2Runtime;
+  runtime.ensureInitialized();
+  if (!identical(runtime.bindings, runtime.bindings) ||
+      !identical(runtime.options, runtime.options)) {
+    stderr.writeln('managed runtime did not reuse bindings/options');
     exit(1);
   }
 
-  git2.libgit2.git_libgit2_shutdown();
-  git2.libgit2.git_libgit2_shutdown();
+  final remaining = runtime.shutdown();
+  if (remaining < 0) {
+    stderr.writeln('managed shutdown returned $remaining');
+    exit(1);
+  }
   stdout.writeln('plain-dart-libgit2-ok');
 }
 ''');
@@ -83,17 +88,37 @@ void main() {
 }
 
 bool _canRunWindowsLoaderTest() {
+  final artifactRoot = Platform.environment['GIT2DART_BINARIES_PACKAGE_ROOT'];
+  final windowsRoot =
+      artifactRoot == null ? 'windows' : p.join(artifactRoot, 'windows');
   return Platform.isWindows &&
       File(p.join('lib', 'src', 'bindings.dart')).existsSync() &&
-      File(p.join('windows', 'libgit2.dll')).existsSync() &&
-      File(p.join('windows', 'libssh2.dll')).existsSync() &&
-      Directory('windows').listSync().whereType<File>().any((file) {
+      File(p.join(windowsRoot, 'libgit2.dll')).existsSync() &&
+      File(p.join(windowsRoot, 'libssh2.dll')).existsSync() &&
+      Directory(windowsRoot).listSync().whereType<File>().any((file) {
         final name = p.basename(file.path).toLowerCase();
         return name.startsWith('libcrypto') && name.endsWith('.dll');
       });
 }
 
 String _dartExecutable() {
-  final executable = File(Platform.resolvedExecutable).uri.pathSegments.last;
-  return executable == 'dart' ? Platform.resolvedExecutable : 'dart';
+  final resolved = File(Platform.resolvedExecutable).absolute;
+  if (p.basenameWithoutExtension(resolved.path) == 'dart') {
+    return resolved.path;
+  }
+
+  var directory = resolved.parent;
+  while (directory.parent.path != directory.path) {
+    final candidate = File(
+      p.join(
+        directory.path,
+        'dart-sdk',
+        'bin',
+        Platform.isWindows ? 'dart.exe' : 'dart',
+      ),
+    );
+    if (candidate.existsSync()) return candidate.path;
+    directory = directory.parent;
+  }
+  return 'dart';
 }

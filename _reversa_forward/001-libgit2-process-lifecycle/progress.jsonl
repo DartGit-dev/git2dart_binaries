@@ -1,0 +1,17 @@
+{"ts":"2026-08-22T12:24:47+07:00","action":"T001","status":"done","files":["test/libgit2_runtime_test.dart"]}
+{"ts":"2026-08-22T12:24:48+07:00","action":"T002","status":"done","files":["test/libgit2_runtime_test.dart"]}
+{"ts":"2026-08-22T12:24:49+07:00","action":"T003","status":"done","files":["test/libgit2_runtime_test.dart"]}
+{"ts":"2026-08-22T12:24:50+07:00","action":"T004","status":"done","files":["test/libgit2_runtime_test.dart"]}
+{"ts":"2026-08-22T12:24:51+07:00","action":"T005","status":"done","files":["test/libgit2_runtime_test.dart"]}
+{"ts":"2026-08-22T12:24:52+07:00","action":"T006","status":"done","files":["test/libgit2_lifecycle_integration_test.dart"]}
+{"ts":"2026-08-22T12:24:53+07:00","action":"T007","status":"done","files":["test/public_lifecycle_api_test.dart"]}
+{"ts":"2026-08-22T06:12:12Z","action":"T008","status":"done","files":["lib/src/runtime.dart"]}
+{"ts":"2026-08-22T06:12:13Z","action":"T009","status":"done","files":["lib/src/runtime.dart"]}
+{"ts":"2026-08-22T06:12:14Z","action":"T010","status":"done","files":["lib/src/error.dart","lib/src/runtime.dart"]}
+{"ts":"2026-08-22T06:12:15Z","action":"T011","status":"done","files":["lib/src/bindings.dart","lib/src/runtime.dart","lib/src/util.dart"]}
+{"ts":"2026-08-22T06:12:16Z","action":"T012","status":"done","files":["lib/git2dart_binaries.dart"]}
+{"ts":"2026-08-22T06:12:17Z","action":"T013","status":"done","files":["test/opts_bindings_integration_test.dart"]}
+{"ts":"2026-08-22T06:12:18Z","action":"T014","status":"done","files":["test/windows_packaging_test.dart"]}
+{"ts":"2026-08-22T06:12:19Z","action":"T015","status":"done","files":["test/macos_dylib_packaging_test.dart"]}
+{"ts":"2026-08-22T06:12:20Z","action":"T016","status":"done","files":["README.md"]}
+{"ts":"2026-08-22T06:12:21Z","action":"T017","status":"done","files":["_reversa_forward/001-libgit2-process-lifecycle/legacy-impact.md","_reversa_forward/001-libgit2-process-lifecycle/regression-watch.md","_reversa_forward/001-libgit2-process-lifecycle/gate-2-green.md"]}
