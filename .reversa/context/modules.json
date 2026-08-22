@@ -1,0 +1,133 @@
+{
+  "generated_at": "2026-08-16T15:59:16Z",
+  "modules": [
+    {
+      "name": "dart-ffi-facade",
+      "path": "lib",
+      "purpose": "Expose generated libgit2 bindings and handwritten Dart helpers as the package API.",
+      "primary_files": ["lib/git2dart_binaries.dart", "lib/src/extensions.dart", "lib/src/error.dart"],
+      "functions": [
+        {"name":"isValidSHA1","file":"lib/src/extensions.dart","params":[],"returns":"bool","confidence":"confirmed"},
+        {"name":"isValidRefName","file":"lib/src/extensions.dart","params":[],"returns":"bool","confidence":"confirmed"},
+        {"name":"toDartString","file":"lib/src/extensions.dart","params":["length: int?"],"returns":"String","confidence":"confirmed"},
+        {"name":"getLastError","file":"lib/src/extensions.dart","params":[],"returns":"LibGit2Error?","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"LibGit2Error","fields":[{"name":"_errorPointer","type":"Pointer<git_error>","required":true},{"name":"message","type":"String","required":true},{"name":"errorClass","type":"git_error_t","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"SHA-1 text must be hexadecimal and within libgit2 prefix/full-hash limits.","location":"lib/src/extensions.dart:15","confidence":"confirmed"}
+      ],
+      "dependencies": ["generated-bindings", "package:ffi"],
+      "algorithms": ["native error conversion", "Git identifier validation"],
+      "complexity": "low"
+    },
+    {
+      "name": "native-loader-lifecycle",
+      "path": "lib/src/util.dart",
+      "purpose": "Select, load, initialize, and expose the platform libgit2 library.",
+      "primary_files": ["lib/src/util.dart"],
+      "functions": [
+        {"name":"_platformTarget","file":"lib/src/util.dart","params":[],"returns":"({String name, String? subDir})","confidence":"confirmed"},
+        {"name":"_loadLibrary","file":"lib/src/util.dart","params":[],"returns":"DynamicLibrary","confidence":"confirmed"},
+        {"name":"_resolvePackageRoot","file":"lib/src/util.dart","params":[],"returns":"String","confidence":"confirmed"},
+        {"name":"_loadWindowsDependencies","file":"lib/src/util.dart","params":["packageRoot: String"],"returns":"void","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"PlatformTarget","fields":[{"name":"name","type":"String","required":true},{"name":"subDir","type":"String?","required":false}],"confidence":"confirmed"},
+        {"name":"PackageConfigEntry","fields":[{"name":"name","type":"String","required":true},{"name":"rootUri","type":"String","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"iOS resolves symbols from the process image; Android has no package-path fallback.","location":"lib/src/util.dart:34","confidence":"confirmed"},
+        {"description":"Windows loads sorted OpenSSL DLLs before libssh2 on package fallback.","location":"lib/src/util.dart:95","confidence":"confirmed"}
+      ],
+      "dependencies": ["dart:ffi", "dart:isolate", "package:path", "generated-bindings"],
+      "algorithms": ["two-stage dynamic-library loading", "multi-source package-root resolution", "ordered Windows dependency preload"],
+      "complexity": "high"
+    },
+    {
+      "name": "libgit2-global-options",
+      "path": "lib/src/opts_bindings.dart",
+      "purpose": "Provide typed Dart wrappers over the variadic git_libgit2_opts C entry point.",
+      "primary_files": ["lib/src/opts_bindings.dart", "test/opts_bindings_integration_test.dart"],
+      "functions": [
+        {"name":"git_libgit2_opts_*","file":"lib/src/opts_bindings.dart","params":["option-specific values/pointers"],"returns":"int","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"Libgit2Opts","fields":[{"name":"_lookup","type":"Pointer<T> Function(String)","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"Negative pack maximum object size is rejected before native size_t conversion.","location":"lib/src/opts_bindings.dart:425","confidence":"confirmed"}
+      ],
+      "dependencies": ["dart:ffi", "generated git_libgit2_opt_t", "git_libgit2_opts ABI"],
+      "algorithms": ["option discriminator to typed variadic ABI dispatch"],
+      "complexity": "high"
+    },
+    {
+      "name": "android-tls-bootstrap",
+      "path": "lib/src/android_ssl_helper.dart",
+      "purpose": "Extract a bundled CA certificate to Android temporary storage after libgit2 initialization.",
+      "primary_files": ["lib/src/android_ssl_helper.dart", "assets/certs/cacert.pem", "android/src/main/assets/certs/cacert.pem"],
+      "functions": [
+        {"name":"AndroidSSLHelper.initialize","file":"lib/src/android_ssl_helper.dart","params":[],"returns":"Future<String>","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"AndroidSSLState","fields":[{"name":"_initialized","type":"bool","required":true},{"name":"_certPath","type":"String?","required":false}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"Certificate extraction/configuration must occur after libgit2 initialization.","location":"lib/src/android_ssl_helper.dart:12","confidence":"confirmed"}
+      ],
+      "dependencies": ["Flutter rootBundle", "path_provider", "cacert.pem"],
+      "algorithms": ["idempotent asset extraction with retry-on-failure state"],
+      "complexity": "medium"
+    },
+    {
+      "name": "platform-packaging",
+      "path": "android, ios, linux, macos, windows",
+      "purpose": "Declare Flutter integration and native artifact bundling/linkage for each platform.",
+      "primary_files": ["pubspec.yaml", "android/CMakeLists.txt", "ios/git2dart_binaries.podspec", "linux/CMakeLists.txt", "macos/git2dart_binaries.podspec", "windows/CMakeLists.txt"],
+      "entities": [
+        {"name":"NativeArtifactSet","fields":[{"name":"platform","type":"String","required":true},{"name":"artifacts","type":"List<String>","required":true},{"name":"linkMode","type":"String","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"macOS dylib name must match @rpath/libgit2.dylib.","location":"macos/git2dart_binaries.podspec:18","confidence":"confirmed"},
+        {"description":"Windows bundles all versioned OpenSSL runtime DLLs through globs.","location":"windows/CMakeLists.txt:44","confidence":"confirmed"}
+      ],
+      "dependencies": ["Flutter plugin toolchain", "CMake", "CocoaPods", "Gradle"],
+      "algorithms": ["platform-specific artifact mapping"],
+      "complexity": "high"
+    },
+    {
+      "name": "native-build-bindings-generation",
+      "path": ".github/actions",
+      "purpose": "Build pinned native dependencies and generate the Dart ABI for every release platform.",
+      "primary_files": [".github/actions/generate-bindings/action.yml", ".github/actions/build-android/action.yml", ".github/actions/build-ios/action.yml", ".github/actions/build-linux/action.yml", ".github/actions/build-macos/action.yml", ".github/actions/build-windows/action.yml", ".github/scripts/native_cache_manifest.py"],
+      "entities": [
+        {"name":"NativeVersionSet","fields":[{"name":"libgit2","type":"String","required":true},{"name":"libssh2","type":"String","required":true},{"name":"openssl","type":"String","required":true},{"name":"flutter","type":"String","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"Bindings and native libraries use the same pinned libgit2 version.","location":".github/workflows/build_package.yml:13","confidence":"confirmed"},
+        {"description":"Exported libraries must contain git_libgit2_init and git_repository_open.","location":".github/actions/build-linux/action.yml:119","confidence":"confirmed"}
+      ],
+      "dependencies": ["GitHub Actions", "CMake", "OpenSSL", "libssh2", "libgit2", "ffigen", "libclang"],
+      "algorithms": ["toolchain fingerprinted cache validation", "cross-platform native build", "ABI generation"],
+      "complexity": "high"
+    },
+    {
+      "name": "validation-release-assembly",
+      "path": ".github/workflows/build_package.yml",
+      "purpose": "Test injected platform artifacts, assemble the expanded pub package, validate it, and publish it.",
+      "primary_files": [".github/workflows/build_package.yml", "test/opts_bindings_integration_test.dart", "test/windows_packaging_test.dart", "test/macos_dylib_packaging_test.dart", "integration_test/opts_bindings_integration_test.dart"],
+      "entities": [
+        {"name":"ReleasePayload","fields":[{"name":"bindings","type":"bindings.dart","required":true},{"name":"platformArtifacts","type":"Map<Platform,List<File>>","required":true},{"name":"metadata","type":"pub package files","required":true}],"confidence":"inferred"}
+      ],
+      "business_rules": [
+        {"description":"Publication waits for all platform tests and remaining Android builds.","location":".github/workflows/build_package.yml:592","confidence":"confirmed"},
+        {"description":"Expanded publish payload must not exceed 256 MiB.","location":".github/workflows/build_package.yml:652","confidence":"confirmed"}
+      ],
+      "dependencies": ["all build modules", "Flutter test", "Android emulator", "iOS simulator", "pub.dev publisher"],
+      "algorithms": ["CI dependency DAG", "artifact injection", "release payload size gate"],
+      "complexity": "high"
+    }
+  ]
+}

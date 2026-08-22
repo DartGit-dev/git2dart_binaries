@@ -1,0 +1,46 @@
+schema_version: 1
+project: git2dart_binaries
+
+areas:
+  - runtime
+  - packaging
+  - build-release
+
+modules:
+  - dart-ffi
+  - native-runtime
+  - android-tls
+  - platform-integration
+  - ci-supply-chain
+
+features:
+  - dart-ffi-facade
+  - native-loader-lifecycle
+  - libgit2-global-options
+  - android-tls-bootstrap
+  - platform-packaging
+  - native-build-bindings-generation
+  - validation-release-assembly
+
+mappings:
+  native-loader-lifecycle:
+    area: runtime
+    module: native-runtime
+  dart-ffi-facade:
+    area: runtime
+    module: dart-ffi
+  libgit2-global-options:
+    area: runtime
+    module: dart-ffi
+  android-tls-bootstrap:
+    area: runtime
+    module: android-tls
+  platform-packaging:
+    area: packaging
+    module: platform-integration
+  native-build-bindings-generation:
+    area: build-release
+    module: ci-supply-chain
+  validation-release-assembly:
+    area: build-release
+    module: ci-supply-chain

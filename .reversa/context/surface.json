@@ -1,0 +1,77 @@
+{
+  "generated_at": "2026-08-16T22:46:11+07:00",
+  "project_root": "F:\\git2dart_binaries",
+  "languages": [
+    { "name": "Dart", "extensions": [".dart"], "file_count": 11 },
+    { "name": "YAML", "extensions": [".yml", ".yaml"], "file_count": 10 },
+    { "name": "C/C++", "extensions": [".cpp", ".cc", ".h"], "file_count": 7 },
+    { "name": "Swift", "extensions": [".swift"], "file_count": 2 },
+    { "name": "Ruby Podspec DSL", "extensions": [".podspec"], "file_count": 2 },
+    { "name": "Python", "extensions": [".py"], "file_count": 1 },
+    { "name": "Gradle/Groovy", "extensions": [".gradle"], "file_count": 1 }
+  ],
+  "primary_language": "Dart",
+  "frameworks": [
+    { "name": "Flutter FFI plugin", "version": ">=3.29.3", "source": "pubspec.yaml" },
+    { "name": "Dart FFI", "version": "2.1.4", "source": "pubspec.lock" },
+    { "name": "ffigen", "version": "18.1.0", "source": "pubspec.lock" },
+    { "name": "libgit2", "version": "1.9.6", "source": ".github/workflows/build_package.yml" }
+  ],
+  "package_manager": "Dart pub / Flutter pub",
+  "entry_points": [
+    { "path": "lib/git2dart_binaries.dart", "type": "package_entry" },
+    { "path": "lib/src/util.dart", "type": "native_loader_and_initializer" },
+    { "path": "integration_test/opts_bindings_integration_test.dart", "type": "integration_test_entry" },
+    { "path": "test_driver/integration_test.dart", "type": "integration_test_driver" }
+  ],
+  "config_files": [
+    "pubspec.yaml",
+    "pubspec.lock",
+    "ffigen.yaml",
+    "analysis_options.yaml",
+    ".metadata",
+    "android/build.gradle",
+    "android/CMakeLists.txt",
+    "ios/git2dart_binaries.podspec",
+    "linux/CMakeLists.txt",
+    "macos/git2dart_binaries.podspec",
+    "windows/CMakeLists.txt"
+  ],
+  "ci_cd": [
+    ".github/workflows/build_package.yml",
+    ".github/actions/generate-bindings/action.yml",
+    ".github/actions/build-android/action.yml",
+    ".github/actions/build-ios/action.yml",
+    ".github/actions/build-linux/action.yml",
+    ".github/actions/build-macos/action.yml",
+    ".github/actions/build-windows/action.yml"
+  ],
+  "docker": {},
+  "database_hints": [],
+  "test_framework": "flutter_test, test, integration_test",
+  "test_file_count": 5,
+  "modules": [
+    "dart-ffi-facade",
+    "native-loader-lifecycle",
+    "libgit2-global-options",
+    "android-tls-bootstrap",
+    "platform-packaging",
+    "native-build-bindings-generation",
+    "validation-release-assembly"
+  ],
+  "total_files": 47,
+  "organization_suggestion": {
+    "granularity": "feature",
+    "rationale": "The repository is a compact cross-platform plugin whose dominant boundaries are packaging and runtime features rather than routed endpoints or domain folders.",
+    "signals": [],
+    "features": [
+      "dart-ffi-facade",
+      "native-loader-lifecycle",
+      "libgit2-global-options",
+      "android-tls-bootstrap",
+      "platform-packaging",
+      "native-build-bindings-generation",
+      "validation-release-assembly"
+    ]
+  }
+}
