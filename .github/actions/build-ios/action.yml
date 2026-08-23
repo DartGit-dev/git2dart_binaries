@@ -35,7 +35,7 @@ runs:
       run: |
         set -euo pipefail
         sdk_version="$(xcrun --sdk '${{ inputs.ios_sdk }}' --show-sdk-version)"
-        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(xcrun clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-${{ inputs.ios_sdk }}-${sdk_version}"
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(xcrun clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-${{ inputs.ios_sdk }}-${sdk_version}-deployment-${{ inputs.ios_deployment_target }}-openssl-target-${{ inputs.openssl_target }}"
         fingerprint="$(printf '%s' "$raw" | shasum -a 256 | cut -d' ' -f1)"
         echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
 

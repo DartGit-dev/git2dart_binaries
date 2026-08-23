@@ -70,11 +70,11 @@ class AndroidSSLHelper {
       return _certPath!;
     }
 
-    // Get the app's cache directory
-    final cacheDir = await getTemporaryDirectory();
-    final certFile = File('${cacheDir.path}/cacert.pem');
-
     try {
+      // Get the app's cache directory
+      final cacheDir = await getTemporaryDirectory();
+      final certFile = File('${cacheDir.path}/cacert.pem');
+
       // Extract the CA bundle from assets
       final certData = await rootBundle.load(
         'packages/git2dart_binaries/assets/certs/cacert.pem',

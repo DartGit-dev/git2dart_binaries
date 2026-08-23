@@ -384,16 +384,19 @@ DynamicLibrary _loadLibrary() {
       rethrow;
     }
 
-    final packageRoot = _packageRoot();
-    _loadPlatformDependencies(packageRoot);
-    final fallbackPath = p.join(packageRoot, target.subDir!, target.name);
+    var fallbackStage = 'package root resolution';
     try {
+      final packageRoot = _packageRoot();
+      fallbackStage = 'dependency preload';
+      _loadPlatformDependencies(packageRoot);
+      final fallbackPath = p.join(packageRoot, target.subDir!, target.name);
+      fallbackStage = fallbackPath;
       return DynamicLibrary.open(fallbackPath);
-    } catch (secondError) {
+    } catch (fallbackError) {
       stderr.writeln(
         'Failed to open libgit2. Tried:\n'
         '  ${target.name} -> $firstError\n'
-        '  $fallbackPath -> $secondError\n'
+        '  $fallbackStage -> $fallbackError\n'
         'Make sure the library is bundled with the application.',
       );
       rethrow;

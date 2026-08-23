@@ -120,7 +120,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        raw="${RUNNER_OS}-${RUNNER_ARCH}-ndk-r26d-$($ANDROID_LLVM_BIN/clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')"
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-ndk-r26d-$($ANDROID_LLVM_BIN/clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-android-api-${{ inputs.android_api_level }}"
         fingerprint="$(printf '%s' "$raw" | sha256sum | cut -d' ' -f1)"
         echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
 

@@ -46,10 +46,11 @@ final class Libgit2LifecycleException implements Exception {
 /// It wraps the native `git_error` structure and provides a Dart-friendly
 /// interface to access error information.
 class LibGit2Error {
-  /// Creates a new instance of [LibGit2Error] from a native error pointer.
+  /// Creates an error wrapper from a checked native error pointer.
   ///
-  /// Note: This constructor is for internal use only.
-  LibGit2Error(this._errorPointer);
+  /// This constructor stays private so public callers cannot wrap arbitrary
+  /// native addresses.
+  LibGit2Error._(this._errorPointer);
 
   final Pointer<git_error> _errorPointer;
 
@@ -64,4 +65,13 @@ class LibGit2Error {
 
   @override
   String toString() => "error: $errorClass: $message";
+}
+
+/// Reads the nullable last error reported by libgit2.
+extension GetLastError on Libgit2 {
+  /// Returns null when libgit2 has not reported an error.
+  LibGit2Error? getLastError() {
+    final error = git_error_last();
+    return error == nullptr ? null : LibGit2Error._(error);
+  }
 }

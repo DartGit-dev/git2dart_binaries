@@ -649,6 +649,45 @@ jobs:
           path: ./android/src/main/jniLibs/armeabi-v7a
           name: cache-android-armeabi-v7a
 
+      - name: Verify native release inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            lib/src/bindings.dart
+            linux/libgit2.so
+            linux/libssh2.so
+            macos/libgit2.dylib
+            windows/libgit2.dll
+            windows/libssh2.dll
+          )
+          for file in "${required_files[@]}"; do
+            test -s "$file" || { echo "::error::Missing required release file: $file"; exit 1; }
+          done
+
+          for dependency in 'libcrypto*.dll' 'libssl*.dll'; do
+            find windows -maxdepth 1 -type f -name "$dependency" -print -quit | grep -q . || {
+              echo "::error::Missing required Windows dependency: $dependency"
+              exit 1
+            }
+          done
+
+          for abi in x86_64 arm64-v8a x86 armeabi-v7a; do
+            for library in libssl.so libcrypto.so libssh2.so libgit2.so; do
+              file="android/src/main/jniLibs/$abi/$library"
+              test -s "$file" || { echo "::error::Missing required Android file: $file"; exit 1; }
+            done
+          done
+
+          for framework in libcrypto libssl libssh2 libgit2; do
+            directory="ios/$framework.xcframework"
+            test -d "$directory" && test -s "$directory/Info.plist" || {
+              echo "::error::Missing required iOS XCFramework: $directory"
+              exit 1
+            }
+          done
+
       - name: Check expanded package size
         shell: bash
         run: |

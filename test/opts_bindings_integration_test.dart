@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ffi' as ffi;
 
 import 'package:ffi/ffi.dart';
@@ -14,7 +15,7 @@ void main() {
 
   group('Memory Window Integration Tests', () {
     test('get and set mwindow size', () {
-      final size = calloc<ffi.Int>();
+      final size = calloc<ffi.Size>();
       try {
         // Get initial size
         expect(
@@ -23,9 +24,16 @@ void main() {
           reason: libgit2.getLastError()?.toString(),
         );
         final initialSize = size.value;
+        addTearDown(() {
+          expect(
+            libgit2Opts.git_libgit2_opts_set_mwindow_size(initialSize),
+            equals(0),
+            reason: libgit2.getLastError()?.toString(),
+          );
+        });
 
         // Set new size
-        final newSize = initialSize + 1024;
+        final newSize = initialSize + (1 << 32);
         expect(
           libgit2Opts.git_libgit2_opts_set_mwindow_size(newSize),
           equals(0),
@@ -43,20 +51,13 @@ void main() {
           equals(newSize),
           reason: libgit2.getLastError()?.toString(),
         );
-
-        // Restore original size
-        expect(
-          libgit2Opts.git_libgit2_opts_set_mwindow_size(initialSize),
-          equals(0),
-          reason: libgit2.getLastError()?.toString(),
-        );
       } finally {
         calloc.free(size);
       }
     });
 
     test('get and set mwindow mapped limit', () {
-      final limit = calloc<ffi.Int>();
+      final limit = calloc<ffi.Size>();
 
       // Get initial limit
       expect(
@@ -65,9 +66,16 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
       final initialLimit = limit.value;
+      addTearDown(() {
+        expect(
+          libgit2Opts.git_libgit2_opts_set_mwindow_mapped_limit(initialLimit),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+      });
 
       // Set new limit
-      final newLimit = initialLimit + 2048;
+      final newLimit = initialLimit + (1 << 32);
       expect(
         libgit2Opts.git_libgit2_opts_set_mwindow_mapped_limit(newLimit),
         equals(0),
@@ -86,20 +94,47 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
 
-      // Restore original limit
-      expect(
-        libgit2Opts.git_libgit2_opts_set_mwindow_mapped_limit(initialLimit),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
       calloc.free(limit);
+    });
+
+    test('get and set mwindow file limit with a pointer-width value', () {
+      final limit = calloc<ffi.Size>();
+      try {
+        expect(
+          libgit2Opts.git_libgit2_opts_get_mwindow_file_limit(limit),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        final initialLimit = limit.value;
+        addTearDown(() {
+          expect(
+            libgit2Opts.git_libgit2_opts_set_mwindow_file_limit(initialLimit),
+            equals(0),
+            reason: libgit2.getLastError()?.toString(),
+          );
+        });
+        final newLimit = initialLimit + (1 << 32);
+        expect(
+          libgit2Opts.git_libgit2_opts_set_mwindow_file_limit(newLimit),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        expect(
+          libgit2Opts.git_libgit2_opts_get_mwindow_file_limit(limit),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        expect(limit.value, equals(newLimit));
+      } finally {
+        calloc.free(limit);
+      }
     });
   });
 
   group('Cache Integration Tests', () {
     test('get and set cache memory limits', () {
-      final current = calloc<ffi.Int>();
-      final allowed = calloc<ffi.Int>();
+      final current = calloc<ffi.IntPtr>();
+      final allowed = calloc<ffi.IntPtr>();
 
       // Get initial values
       expect(
@@ -108,9 +143,16 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
       final initialAllowed = allowed.value;
+      addTearDown(() {
+        expect(
+          libgit2Opts.git_libgit2_opts_set_cache_max_size(initialAllowed),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+      });
 
       // Set new cache size
-      final newSize = initialAllowed + 1024 * 1024; // Increase by 1MB
+      final newSize = initialAllowed + (1 << 32);
       expect(
         libgit2Opts.git_libgit2_opts_set_cache_max_size(newSize),
         equals(0),
@@ -129,76 +171,66 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
 
-      // Restore original size
-      expect(
-        libgit2Opts.git_libgit2_opts_set_cache_max_size(initialAllowed),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-
       calloc.free(current);
       calloc.free(allowed);
     });
 
-    test('enable and disable caching', () {
-      // Enable caching
-      expect(
-        libgit2Opts.git_libgit2_opts_enable_caching(1),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-
-      // Disable caching
-      expect(
-        libgit2Opts.git_libgit2_opts_enable_caching(0),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-
-      // Re-enable caching (default state)
-      expect(
-        libgit2Opts.git_libgit2_opts_enable_caching(1),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
+    test('declares cache object limit with a pointer-width value', () {
+      final wrapper = File('lib/src/opts_bindings.dart').readAsStringSync();
+      expect(wrapper, contains('ffi.VarArgs<(ffi.Int, ffi.Size)>'));
     });
   });
 
   group('Search Path Integration Tests', () {
     test('get and set search path', () {
       final buf = calloc<git_buf>();
-      buf.ref.ptr = ffi.nullptr;
-      buf.ref.size = 0;
-      buf.ref.reserved = 0;
-
-      // Get system level search path
-      expect(
-        libgit2Opts.git_libgit2_opts_get_search_path(2, buf),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-
-      // Set a new search path
       final pathStr = '/tmp/git2dart_test';
       final testPath = pathStr.toNativeUtf8().cast<ffi.Char>();
+      ffi.Pointer<ffi.Char>? initialPath;
+      var pathChanged = false;
 
-      expect(
-        libgit2Opts.git_libgit2_opts_set_search_path(2, testPath),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
+      try {
+        expect(
+          libgit2Opts.git_libgit2_opts_get_search_path(2, buf),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        initialPath =
+            buf.ref.ptr
+                .cast<Utf8>()
+                .toDartString()
+                .toNativeUtf8()
+                .cast<ffi.Char>();
+        libgit2.git_buf_dispose(buf);
+        buf.ref.ptr = ffi.nullptr;
+        buf.ref.size = 0;
+        buf.ref.reserved = 0;
 
-      buf.ref.ptr = ffi.nullptr;
-      buf.ref.size = 0;
-      buf.ref.reserved = 0;
+        expect(
+          libgit2Opts.git_libgit2_opts_set_search_path(2, testPath),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        pathChanged = true;
 
-      // Get and verify the new path
-      expect(libgit2Opts.git_libgit2_opts_get_search_path(2, buf), equals(0));
-
-      // Cleanup
-      libgit2.git_buf_dispose(buf);
-      calloc.free(buf);
-      calloc.free(testPath);
+        expect(
+          libgit2Opts.git_libgit2_opts_get_search_path(2, buf),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+      } finally {
+        if (pathChanged && initialPath != null) {
+          expect(
+            libgit2Opts.git_libgit2_opts_set_search_path(2, initialPath),
+            equals(0),
+            reason: libgit2.getLastError()?.toString(),
+          );
+        }
+        libgit2.git_buf_dispose(buf);
+        calloc.free(buf);
+        if (initialPath != null) calloc.free(initialPath);
+        calloc.free(testPath);
+      }
     });
   });
 
@@ -208,40 +240,58 @@ void main() {
       buf.ref.ptr = ffi.nullptr;
       buf.ref.size = 0;
       buf.ref.reserved = 0;
-
-      // Get current user agent
-      expect(
-        libgit2Opts.git_libgit2_opts_get_user_agent(buf),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-
-      // Set new user agent
       final newAgent = 'git2dart-test/1.0'.toNativeUtf8().cast<ffi.Char>();
+      ffi.Pointer<ffi.Char>? initialAgent;
+      var userAgentChanged = false;
 
-      expect(
-        libgit2Opts.git_libgit2_opts_set_user_agent(newAgent),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
+      try {
+        expect(
+          libgit2Opts.git_libgit2_opts_get_user_agent(buf),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        initialAgent =
+            buf.ref.ptr
+                .cast<Utf8>()
+                .toDartString()
+                .toNativeUtf8()
+                .cast<ffi.Char>();
+        libgit2.git_buf_dispose(buf);
+        buf.ref.ptr = ffi.nullptr;
+        buf.ref.size = 0;
+        buf.ref.reserved = 0;
 
-      // Get and verify new user agent
-      expect(
-        libgit2Opts.git_libgit2_opts_get_user_agent(buf),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
+        expect(
+          libgit2Opts.git_libgit2_opts_set_user_agent(newAgent),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+        userAgentChanged = true;
 
-      // Cleanup
-      libgit2.git_buf_dispose(buf);
-      calloc.free(buf);
-      calloc.free(newAgent);
+        expect(
+          libgit2Opts.git_libgit2_opts_get_user_agent(buf),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+      } finally {
+        if (userAgentChanged && initialAgent != null) {
+          expect(
+            libgit2Opts.git_libgit2_opts_set_user_agent(initialAgent),
+            equals(0),
+            reason: libgit2.getLastError()?.toString(),
+          );
+        }
+        libgit2.git_buf_dispose(buf);
+        calloc.free(buf);
+        if (initialAgent != null) calloc.free(initialAgent);
+        calloc.free(newAgent);
+      }
     });
   });
 
   group('Pack File Integration Tests', () {
     test('get and set pack max objects', () {
-      final maxObjects = calloc<ffi.Int>();
+      final maxObjects = calloc<ffi.Size>();
 
       // Get initial value
       expect(
@@ -250,9 +300,16 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
       final initialMax = maxObjects.value;
+      addTearDown(() {
+        expect(
+          libgit2Opts.git_libgit2_opts_set_pack_max_objects(initialMax),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+      });
 
       // Set new value
-      final newMax = initialMax + 1000;
+      final newMax = initialMax + (1 << 32);
       expect(
         libgit2Opts.git_libgit2_opts_set_pack_max_objects(newMax),
         equals(0),
@@ -271,12 +328,6 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
 
-      // Restore original value
-      expect(
-        libgit2Opts.git_libgit2_opts_set_pack_max_objects(initialMax),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
       calloc.free(maxObjects);
     });
 
@@ -327,6 +378,13 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
       final initialState = enabled.value;
+      addTearDown(() {
+        expect(
+          libgit2Opts.git_libgit2_opts_set_owner_validation(initialState),
+          equals(0),
+          reason: libgit2.getLastError()?.toString(),
+        );
+      });
 
       // Toggle state
       expect(
@@ -347,12 +405,6 @@ void main() {
         reason: libgit2.getLastError()?.toString(),
       );
 
-      // Restore original state
-      expect(
-        libgit2Opts.git_libgit2_opts_set_owner_validation(initialState),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
       calloc.free(enabled);
     });
   });

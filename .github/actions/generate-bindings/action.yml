@@ -24,7 +24,7 @@ runs:
       uses: actions/cache/restore@v5
       with:
         path: /tmp/git2dart-bindings-cache
-        key: native-v1-bindings-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-none-none-${{ hashFiles('.github/actions/generate-bindings/action.yml', '.github/scripts/native_cache_manifest.py') }}
+        key: native-v1-bindings-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-none-none-${{ hashFiles('.github/actions/generate-bindings/action.yml', '.github/scripts/native_cache_manifest.py', 'ffigen.yaml', 'pubspec.lock') }}
 
     - name: Validate bindings cache
       id: validate-cache
@@ -110,7 +110,7 @@ runs:
       uses: actions/cache/save@v5
       with:
         path: /tmp/git2dart-bindings-cache
-        key: native-v1-bindings-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-none-none-${{ hashFiles('.github/actions/generate-bindings/action.yml', '.github/scripts/native_cache_manifest.py') }}
+        key: native-v1-bindings-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-none-none-${{ hashFiles('.github/actions/generate-bindings/action.yml', '.github/scripts/native_cache_manifest.py', 'ffigen.yaml', 'pubspec.lock') }}
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7

@@ -26,8 +26,8 @@ class Libgit2Opts {
   /// when reading pack files. The result is stored in [out].
   ///
   /// Returns 0 on success, or a negative error code.
-  int git_libgit2_opts_get_mwindow_size(ffi.Pointer<ffi.Int> out) {
-    return _git_libgit2_opts_get_int(
+  int git_libgit2_opts_get_mwindow_size(ffi.Pointer<ffi.Size> out) {
+    return _git_libgit2_opts_get_size(
       git_libgit2_opt_t.GIT_OPT_GET_MWINDOW_SIZE.value,
       out,
     );
@@ -40,7 +40,7 @@ class Libgit2Opts {
   ///
   /// Returns 0 on success, or a negative error code.
   int git_libgit2_opts_set_mwindow_size(int value) {
-    return _git_libgit2_opts_set_int(
+    return _git_libgit2_opts_set_size(
       git_libgit2_opt_t.GIT_OPT_SET_MWINDOW_SIZE.value,
       value,
     );
@@ -51,8 +51,8 @@ class Libgit2Opts {
   /// The result is stored in [out]. A value of 0 means unlimited.
   ///
   /// Returns 0 on success, or a negative error code.
-  int git_libgit2_opts_get_mwindow_mapped_limit(ffi.Pointer<ffi.Int> out) {
-    return _git_libgit2_opts_get_int(
+  int git_libgit2_opts_get_mwindow_mapped_limit(ffi.Pointer<ffi.Size> out) {
+    return _git_libgit2_opts_get_size(
       git_libgit2_opt_t.GIT_OPT_GET_MWINDOW_MAPPED_LIMIT.value,
       out,
     );
@@ -64,7 +64,7 @@ class Libgit2Opts {
   ///
   /// Returns 0 on success, or a negative error code.
   int git_libgit2_opts_set_mwindow_mapped_limit(int value) {
-    return _git_libgit2_opts_set_int(
+    return _git_libgit2_opts_set_size(
       git_libgit2_opt_t.GIT_OPT_SET_MWINDOW_MAPPED_LIMIT.value,
       value,
     );
@@ -75,8 +75,8 @@ class Libgit2Opts {
   /// The result is stored in [out]. A value of 0 means unlimited.
   ///
   /// Returns 0 on success, or a negative error code.
-  int git_libgit2_opts_get_mwindow_file_limit(ffi.Pointer<ffi.Int> out) {
-    return _git_libgit2_opts_get_int(
+  int git_libgit2_opts_get_mwindow_file_limit(ffi.Pointer<ffi.Size> out) {
+    return _git_libgit2_opts_get_size(
       git_libgit2_opt_t.GIT_OPT_GET_MWINDOW_FILE_LIMIT.value,
       out,
     );
@@ -88,7 +88,7 @@ class Libgit2Opts {
   ///
   /// Returns 0 on success, or a negative error code.
   int git_libgit2_opts_set_mwindow_file_limit(int value) {
-    return _git_libgit2_opts_set_int(
+    return _git_libgit2_opts_set_size(
       git_libgit2_opt_t.GIT_OPT_SET_MWINDOW_FILE_LIMIT.value,
       value,
     );
@@ -165,7 +165,7 @@ class Libgit2Opts {
   ///
   /// Returns 0 on success, or a negative error code.
   int git_libgit2_opts_set_cache_max_size(int bytes) {
-    return _git_libgit2_opts_set_int(
+    return _git_libgit2_opts_set_ssize(
       git_libgit2_opt_t.GIT_OPT_SET_CACHE_MAX_SIZE.value,
       bytes,
     );
@@ -178,8 +178,8 @@ class Libgit2Opts {
   ///
   /// Returns 0 on success, or a negative error code.
   int git_libgit2_opts_get_cached_memory(
-    ffi.Pointer<ffi.Int> current,
-    ffi.Pointer<ffi.Int> allowed,
+    ffi.Pointer<ffi.IntPtr> current,
+    ffi.Pointer<ffi.IntPtr> allowed,
   ) {
     return _git_libgit2_opts_get_cached_memory(
       git_libgit2_opt_t.GIT_OPT_GET_CACHED_MEMORY.value,
@@ -384,8 +384,8 @@ class Libgit2Opts {
   /// The result is stored in [out].
   ///
   /// Returns 0 on success, or a negative error code.
-  int git_libgit2_opts_get_pack_max_objects(ffi.Pointer<ffi.Int> out) {
-    return _git_libgit2_opts_get_int(
+  int git_libgit2_opts_get_pack_max_objects(ffi.Pointer<ffi.Size> out) {
+    return _git_libgit2_opts_get_size(
       git_libgit2_opt_t.GIT_OPT_GET_PACK_MAX_OBJECTS.value,
       out,
     );
@@ -398,7 +398,7 @@ class Libgit2Opts {
   ///
   /// Returns 0 on success, or a negative error code.
   int git_libgit2_opts_set_pack_max_objects(int value) {
-    return _git_libgit2_opts_set_int(
+    return _git_libgit2_opts_set_size(
       git_libgit2_opt_t.GIT_OPT_SET_PACK_MAX_OBJECTS.value,
       value,
     );
@@ -560,6 +560,12 @@ class Libgit2Opts {
   late final _git_libgit2_opts_set_size =
       _git_libgit2_opts_set_sizePtr.asFunction<int Function(int, int)>();
 
+  late final _git_libgit2_opts_set_ssizePtr = _lookup<
+    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.IntPtr,)>)>
+  >('git_libgit2_opts');
+  late final _git_libgit2_opts_set_ssize =
+      _git_libgit2_opts_set_ssizePtr.asFunction<int Function(int, int)>();
+
   late final _git_libgit2_opts_get_bufPtr = _lookup<
     ffi.NativeFunction<
       ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Pointer<git_buf>,)>)
@@ -598,7 +604,7 @@ class Libgit2Opts {
 
   late final _git_libgit2_opts_set_cache_object_limitPtr = _lookup<
     ffi.NativeFunction<
-      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Int, ffi.Int)>)
+      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Int, ffi.Size)>)
     >
   >('git_libgit2_opts');
   late final _git_libgit2_opts_set_cache_object_limit =
@@ -609,14 +615,14 @@ class Libgit2Opts {
     ffi.NativeFunction<
       ffi.Int Function(
         ffi.Int,
-        ffi.VarArgs<(ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>,
+        ffi.VarArgs<(ffi.Pointer<ffi.IntPtr>, ffi.Pointer<ffi.IntPtr>)>,
       )
     >
   >('git_libgit2_opts');
   late final _git_libgit2_opts_get_cached_memory =
       _git_libgit2_opts_get_cached_memoryPtr
           .asFunction<
-            int Function(int, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)
+            int Function(int, ffi.Pointer<ffi.IntPtr>, ffi.Pointer<ffi.IntPtr>)
           >();
 
   late final _git_libgit2_opts_set_ssl_cert_locationsPtr = _lookup<
