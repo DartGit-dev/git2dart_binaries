@@ -69,7 +69,6 @@ void main() {
         (linux, 'cache-linux'),
         (macos, 'cache-macos'),
         (windows, 'cache-windows'),
-        (workflow, 'cache-ios'),
       ]) {
         expect(
           artifactUpload(entry.$1, entry.$2),
@@ -77,6 +76,11 @@ void main() {
           reason: '${entry.$2} must deliver native export contents directly',
         );
       }
+      expect(
+        artifactUpload(workflow, 'cache-ios'),
+        contains('/tmp/git2dart-ios/export/provenance.json'),
+        reason: 'cache-ios must retain its OpenSSL provenance sidecar',
+      );
     },
   );
 }
