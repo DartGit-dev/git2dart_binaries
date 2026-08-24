@@ -121,11 +121,12 @@ runs:
       shell: pwsh
       run: |
         cd openssl
-        perl Configure VC-WIN64A shared --prefix=D:/openssl/install --openssldir=D:/openssl/install/ssl
+        perl Configure VC-WIN64A shared no-apps no-tests --prefix=D:/openssl/install --openssldir=D:/openssl/install/ssl
         nmake
-        nmake test
         nmake install_sw
         if (-not (Test-Path D:/openssl/install/include/openssl/ssl.h)) { throw 'OpenSSL source build did not install headers' }
+        if (-not (Get-ChildItem D:/openssl/install/bin/libcrypto*.dll -File -ErrorAction SilentlyContinue)) { throw 'OpenSSL source build did not install libcrypto DLL' }
+        if (-not (Get-ChildItem D:/openssl/install/bin/libssl*.dll -File -ErrorAction SilentlyContinue)) { throw 'OpenSSL source build did not install libssl DLL' }
         "OPENSSL_ROOT_DIR=D:/openssl/install" >> $env:GITHUB_ENV
         "OPENSSL_CRYPTO_LIBRARY=D:/openssl/install/lib/libcrypto.lib" >> $env:GITHUB_ENV
         "OPENSSL_SSL_LIBRARY=D:/openssl/install/lib/libssl.lib" >> $env:GITHUB_ENV

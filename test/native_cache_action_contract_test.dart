@@ -51,6 +51,12 @@ void main() {
       expect(windows, contains('Stage Windows native cache'));
       expect(
         windows,
+        contains('VC-WIN64A shared no-apps no-tests'),
+        reason: 'Windows CI must build only the OpenSSL runtime required by libgit2',
+      );
+      expect(windows, isNot(contains('nmake test')));
+      expect(
+        windows,
         contains(r'Copy-Item -LiteralPath $source -Destination $destination'),
         reason: 'a valid workspace cache must be staged before validation',
       );
