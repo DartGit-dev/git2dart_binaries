@@ -91,7 +91,7 @@ void main() {
       }
       expect(
         artifactUpload(workflow, 'cache-ios'),
-        contains('/tmp/git2dart-ios/export/provenance.json'),
+        contains('/tmp/git2dart-ios/export/provenance/openssl-provenance.json'),
         reason: 'cache-ios must retain its OpenSSL provenance sidecar',
       );
     },

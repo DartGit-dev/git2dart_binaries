@@ -148,7 +148,8 @@ jobs:
             -library "$simulator_dir/libgit2/lib/libgit2.a" \
             -output "$output_dir/libgit2.xcframework"
 
-          python3 - "$slices_dir" "$output_dir/provenance.json" <<'PY'
+          mkdir -p "$output_dir/provenance"
+          python3 - "$slices_dir" "$output_dir/provenance/openssl-provenance.json" <<'PY'
           import json
           import pathlib
           import sys
@@ -170,7 +171,6 @@ jobs:
           name: cache-ios
           path: |
             /tmp/git2dart-ios/export/**
-            /tmp/git2dart-ios/export/provenance.json
           retention-days: 1
       - name: Prove final iOS XCFramework payload
         continue-on-error: true
