@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 #
 # prepare-roadmap.sh
-# Helper específico do skill /reversa-plan.
-# Garante que a pasta da feature ativa esteja pronta para receber roadmap, investigation, data-delta, onboarding e interfaces/.
-# Emite JSON com caminhos absolutos prontos para o agente usar.
+# Helper specific to /reversa-plan.
+# Ensures the active feature directory is ready for roadmap, investigation, data-delta, onboarding, and interfaces/.
+# Emits JSON with absolute paths ready for the agent to use.
 #
 # Uso:
 #   prepare-roadmap.sh [--json]
 #
-# Códigos de saída:
+# Exit codes:
 #   0 = sucesso, JSON emitido
-#   1 = active-requirements.json ausente ou inválido
-#   2 = feature-dir não existe e não pôde ser criada
-#   3 = uso inválido
+#   1 = active-requirements.json missing or invalid
+#   2 = feature-dir does not exist and could not be created
+#   3 = invalid usage
 
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 REVERSA_DIR="$PROJECT_ROOT/.reversa"
-SDD_DIR="$PROJECT_ROOT/_reversa_sdd"
+SDD_DIR="$REVERSA_DIR/_reversa_sdd"
 ACTIVE="$REVERSA_DIR/active-requirements.json"
 
 JSON_MODE=0
@@ -31,18 +31,18 @@ while [ $# -gt 0 ]; do
 done
 
 if [ ! -f "$ACTIVE" ]; then
-  echo "erro: $ACTIVE nao existe. rode reversa-requirements antes." >&2
+  echo "error: $ACTIVE does not exist. run reversa-requirements first." >&2
   exit 1
 fi
 
 feature_dir_rel="$(grep -o '"feature-dir"[[:space:]]*:[[:space:]]*"[^"]*"' "$ACTIVE" | sed 's/.*"\([^"]*\)"$/\1/' | head -n 1)"
 if [ -z "$feature_dir_rel" ]; then
-  echo "erro: campo feature-dir nao encontrado em $ACTIVE" >&2
+  echo "error: feature-dir field not found in $ACTIVE" >&2
   exit 1
 fi
 
 feature_dir="$PROJECT_ROOT/$feature_dir_rel"
-mkdir -p "$feature_dir/interfaces" || { echo "erro: nao foi possivel criar $feature_dir/interfaces" >&2; exit 2; }
+mkdir -p "$feature_dir/interfaces" || { echo "error: could not create $feature_dir/interfaces" >&2; exit 2; }
 
 requirements_path="$feature_dir/requirements.md"
 roadmap_path="$feature_dir/roadmap.md"
@@ -72,7 +72,7 @@ if [ $JSON_MODE -eq 1 ]; then
   printf '}\n'
 else
   echo "feature-dir: $feature_dir"
-  echo "requirements presente: $requirements_present"
+  echo "requirements present: $requirements_present"
   echo "roadmap ja existe: $roadmap_already"
 fi
 

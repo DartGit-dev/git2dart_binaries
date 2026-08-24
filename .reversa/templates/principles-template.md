@@ -1,75 +1,75 @@
 <!--
-Template de corpo do principles.md
-Carregado por /reversa-principles.
+Template body for principles.md
+Loaded by /reversa-principles.
 
-REGRAS DE PREENCHIMENTO:
-- Princípios numerados em romano (I, II, III, ...). Numeração é estável, jamais reciclada.
-- Princípios aposentados NÃO são apagados, são marcados como "aposentado em YYYY-MM-DD" e movidos para o final.
-- Cada princípio tem título curto, descrição completa e UM exemplo concreto de aplicação.
-- A seção "Impacto" lista quais templates dependem desse princípio.
-- Princípios são raros, frequência tipicamente menor que uma vez por mês.
+FILLING RULES:
+- Principles are numbered with Roman numerals (I, II, III, ...). Numbering is stable and never reused.
+- Retired principles are NOT deleted; mark them "retired on YYYY-MM-DD" and move them to the end.
+- Each principle has a short title, a complete description, and ONE concrete usage example.
+- The "Impact" section lists the templates that depend on this principle.
+- Principles are rare: typically less frequent than once per month.
 -->
 
-# Princípios do projeto
+# Project principles
 
-> Projeto: `<nome do projeto>`
-> Data da última alteração: `YYYY-MM-DD`
-> Mantido por: `/reversa-principles`
+> Project: `<project name>`
+> Last changed: `YYYY-MM-DD`
+> Maintained by: `/reversa-principles`
 
-## Princípios ativos
+## Active principles
 
-### I. <Título curto>
+### I. <Short title>
 
-**Descrição.** <Parágrafo de uma a três frases descrevendo o princípio em linguagem clara.>
+**Description.** <One to three sentences describing the principle in plain language.>
 
-**Exemplo de aplicação.** <Cenário concreto onde o princípio se aplica e como ele influencia a decisão.>
+**Usage example.** <A concrete scenario where the principle applies and how it affects the decision.>
 
-**Impacto em templates.**
-- `requirements-template.md`: <como esse princípio molda o conteúdo do requirements>
-- `roadmap-template.md`: <como esse princípio molda decisões técnicas>
+**Template impact.**
+- `requirements-template.md`: <how this principle shapes requirements content>
+- `roadmap-template.md`: <how this principle shapes technical decisions>
 - `actions-template.md`: <quando aplicável>
 
-**Criado em.** `YYYY-MM-DD`
-**Última revisão.** `YYYY-MM-DD`
+**Created on.** `YYYY-MM-DD`
+**Last reviewed.** `YYYY-MM-DD`
 
 ---
 
-### II. <Título curto>
+### II. <Short title>
 
-**Descrição.** <...>
+**Description.** <...>
 
-**Exemplo de aplicação.** <...>
+**Usage example.** <...>
 
 **Impacto em templates.**
 - `requirements-template.md`: <...>
 - `roadmap-template.md`: <...>
 
 **Criado em.** `YYYY-MM-DD`
-**Última revisão.** `YYYY-MM-DD`
+**Last reviewed.** `YYYY-MM-DD`
 
 ---
 
-## Princípios aposentados
+## Retired principles
 
 <!--
-Princípios que deixaram de valer ficam aqui, com data de aposentadoria.
-Não apague, o histórico ajuda a entender decisões antigas.
+Principles that are no longer valid stay here, with their retirement date.
+Do not delete them; the history helps explain past decisions.
 -->
 
-### <NUMERAÇÃO ROMANA>. <Título original>
+### <ROMAN NUMERAL>. <Original title>
 
-**Descrição original.** <texto>
+**Original description.** <text>
 
-**Aposentado em.** `YYYY-MM-DD`
-**Motivo.** <por que deixou de valer>
+**Retired on.** `YYYY-MM-DD`
+**Reason.** <why it is no longer valid>
 
 ---
 
-## Histórico de alterações
+## Change history
 
-| Data | Operação | Princípio | Resumo |
+| Date | Operation | Principle | Summary |
 |------|----------|-----------|--------|
-| YYYY-MM-DD | criar | I | Versão inicial |
-| YYYY-MM-DD | adicionar | II | <resumo> |
-| YYYY-MM-DD | alterar | I | <resumo da alteração> |
-| YYYY-MM-DD | aposentar | III | <motivo curto> |
+| YYYY-MM-DD | create | I | Initial version |
+| YYYY-MM-DD | add | II | <summary> |
+| YYYY-MM-DD | change | I | <change summary> |
+| YYYY-MM-DD | retire | III | <short reason> |

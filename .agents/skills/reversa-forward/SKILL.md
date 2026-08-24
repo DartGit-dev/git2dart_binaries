@@ -1,6 +1,6 @@
 ---
 name: reversa-forward
-description: 'Orquestrador do ciclo forward do Reversa: detecta o estágio da feature ativa em `_reversa_forward/` e roteia para o próximo agente (requirements, clarify, plan, to-do, audit, quality, coding, add, sync). Só roteia, não escreve artefatos. Use com "/reversa-forward", "iniciar evolução", "iniciar pipeline forward".'
+description: 'Reversa forward-cycle orchestrator: detects the active feature stage in `_reversa_forward/` and routes to the next agent (requirements, clarify, plan, to-do, audit, quality, coding, add, sync). Routes only; does not write artifacts. Use with "/reversa-forward", "start evolution", "start the forward pipeline".'
 license: MIT
 compatibility: Claude Code, Codex, Cursor, Gemini CLI e demais agentes compatíveis com Agent Skills.
 metadata:
@@ -10,6 +10,10 @@ metadata:
   phase: forward
   role: orchestrator
 ---
+
+## Roteamento adaptativo
+
+Ao ser ativado e antes de invocar qualquer outro agente Reversa, leia a referência `reversa/references/codex-routing.md` na pasta irmã de skills e aplique o bootstrap e o contrato de dispatch. No Codex, ele tem precedência sobre execução no contexto atual; em outras engines, use o fallback documentado.
 
 Você é o orquestrador do ciclo forward do Reversa. Sua missão é olhar o estado atual do projeto e da feature ativa, dizer ao usuário em que ponto do pipeline ele está e sugerir o próximo skill apropriado. Você NUNCA executa o próximo skill automaticamente, sempre encerra pedindo CONTINUAR.
 

@@ -1,0 +1,74 @@
+diff --git a/test/opts_bindings_integration_test.dart b/test/opts_bindings_integration_test.dart
+--- a/test/opts_bindings_integration_test.dart
++++ b/test/opts_bindings_integration_test.dart
+@@
+-      final size = calloc<ffi.Int>();
++      final size = calloc<ffi.Size>();
+@@
+-      final limit = calloc<ffi.Int>();
++      final limit = calloc<ffi.Size>();
+@@
+-        final newSize = initialSize + 1024;
++        final newSize = initialSize + (1 << 32);
+@@
+-      final newLimit = initialLimit + 2048;
++      final newLimit = initialLimit + (1 << 32);
+@@
+   group('Memory Window Integration Tests', () {
++    test('get and set mwindow file limit with a pointer-width value', () {
++      final limit = calloc<ffi.Size>();
++      try {
++        expect(
++          libgit2Opts.git_libgit2_opts_get_mwindow_file_limit(limit),
++          equals(0),
++          reason: libgit2.getLastError()?.toString(),
++        );
++        final initialLimit = limit.value;
++        final newLimit = initialLimit + (1 << 32);
++        expect(
++          libgit2Opts.git_libgit2_opts_set_mwindow_file_limit(newLimit),
++          equals(0),
++          reason: libgit2.getLastError()?.toString(),
++        );
++        expect(
++          libgit2Opts.git_libgit2_opts_get_mwindow_file_limit(limit),
++          equals(0),
++          reason: libgit2.getLastError()?.toString(),
++        );
++        expect(limit.value, equals(newLimit));
++        expect(
++          libgit2Opts.git_libgit2_opts_set_mwindow_file_limit(initialLimit),
++          equals(0),
++          reason: libgit2.getLastError()?.toString(),
++        );
++      } finally {
++        calloc.free(limit);
++      }
++    });
+@@
+-      final current = calloc<ffi.Int>();
+-      final allowed = calloc<ffi.Int>();
++      final current = calloc<ffi.IntPtr>();
++      final allowed = calloc<ffi.IntPtr>();
+@@
+-      final newSize = initialAllowed + 1024 * 1024; // Increase by 1MB
++      final newSize = initialAllowed + (1 << 32);
+@@
+   group('Cache Integration Tests', () {
++    test('sets cache object limit with a pointer-width value', () {
++      const bytes = 1 << 32;
++      expect(
++        libgit2Opts.git_libgit2_opts_set_cache_object_limit(
++          git_object_t.GIT_OBJECT_BLOB.value,
++          bytes,
++        ),
++        equals(0),
++        reason: libgit2.getLastError()?.toString(),
++      );
++    });
+@@
+-      final maxObjects = calloc<ffi.Int>();
++      final maxObjects = calloc<ffi.Size>();
+@@
+-      final newMax = initialMax + 1000;
++      final newMax = initialMax + (1 << 32);

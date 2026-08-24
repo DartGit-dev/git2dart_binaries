@@ -1,0 +1,3 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BUG-20260817-AAKR — Fix Plan</title></head>
+<body><h1>Native error pointer encapsulation</h1><p>Make the pointer constructor library-private. Move the nullable last-error extension into the same Dart library so it remains the sole constructor path and rejects null pointers before wrapping. Add a public-API regression test that asserts this encapsulation.</p></body></html>

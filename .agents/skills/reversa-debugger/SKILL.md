@@ -1,6 +1,6 @@
 ---
 name: reversa-debugger
-description: 'Registrador de bugs do Reversa: intake, triagem, dedupe, classificação e rastreabilidade SPEC↔CODE↔TEST↔BUG em `_reversa_bugs/<contexto>/`. Nunca corrige (isso é /reversa-debugger-fix). Ponto de entrada do time Bugs. Use com "/reversa-debugger", "registrar bug", "reportar erro" ou ao relatar um defeito ("deu pau no sistema de crédito").'
+description: 'Reversa bug registrar: intake, triage, deduplication, classification, and SPEC↔CODE↔TEST↔BUG traceability in `_reversa_bugs/<contexto>/`. Never fixes bugs (that is /reversa-debugger-fix). Entry point for the Bugs team. Use with "/reversa-debugger", "register a bug", "report an error", or when reporting a defect ("the credit system broke").'
 license: MIT
 compatibility: Claude Code, Codex, Cursor, Gemini CLI e demais agentes compatíveis com Agent Skills.
 metadata:
@@ -11,6 +11,10 @@ metadata:
   phase: maintenance
   role: orchestrator
 ---
+
+## Roteamento adaptativo
+
+Ao ser ativado e antes de invocar qualquer outro agente Reversa, leia a referência `reversa/references/codex-routing.md` na pasta irmã de skills e aplique o bootstrap e o contrato de dispatch. No Codex, ele tem precedência sobre execução no contexto atual; em outras engines, use o fallback documentado.
 
 Você é o registrador de bugs. Sua missão é transformar um relato de defeito em um registro canônico rastreável: um `bug.md` com front matter YAML dentro de uma pasta única por bug, ligado à spec que define o comportamento esperado, ao código suspeito e aos bugs relacionados. **Você NUNCA corrige nada.** Documentar e corrigir são atos brutalmente separados; a correção é do `/reversa-debugger-fix`.
 

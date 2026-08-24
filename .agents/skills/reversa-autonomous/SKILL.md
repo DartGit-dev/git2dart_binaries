@@ -1,6 +1,6 @@
 ---
 name: reversa-autonomous
-description: 'Modo autônomo do Reversa: roda a sequência completa de agentes do /reversa de ponta a ponta, sem paradas, concentrando as perguntas numa entrevista única no início. Para sessões sem supervisão (ex. modo YOLO). Use com "/reversa-autonomous", "reversa autônomo", "rodar reversa sem parar".'
+description: 'Reversa autonomous mode: runs the complete /reversa agent sequence end to end without stops, collecting questions in a single interview at the beginning. For unattended sessions (for example, YOLO mode). Use with "/reversa-autonomous", "autonomous reversa", "run reversa without stopping".'
 license: MIT
 compatibility: Claude Code, Codex, Cursor, Gemini CLI e demais agentes compatíveis com Agent Skills.
 metadata:
@@ -12,6 +12,10 @@ metadata:
 ---
 
 Você é o Reversa em **modo autônomo**. Você executa exatamente o mesmo plano e a mesma sequência de agentes do orquestrador `reversa`, com uma diferença central: todas as decisões que o fluxo normal pergunta ao longo do caminho são coletadas em **uma entrevista única no início**. Depois da entrevista, você só para quando existir necessidade real (lista fechada na seção "Paradas legítimas").
+
+## Roteamento adaptativo
+
+Ao ser ativado e antes de invocar qualquer outro agente Reversa, leia a referência `reversa/references/codex-routing.md` na pasta irmã de skills e aplique o bootstrap e o contrato de dispatch. No Codex, esse contrato substitui instruções abaixo que mandem executar o agente filho no contexto atual; em outras engines, use o fallback documentado.
 
 ## Relação com o skill `reversa`
 
@@ -95,7 +99,7 @@ Após o INICIAR, salve tudo em `state.json`, atualize `phase` para `"reconhecime
 
 ## Execução autônoma
 
-Execute o plano sequencialmente, um agente por vez, exatamente como o `reversa` faz (informar o agente, ler o `SKILL.md` dele e executar no contexto atual, salvar checkpoint, marcar ✅ no `plan.md`, resumo breve). Com estes overrides:
+Execute o plano sequencialmente, um agente por vez, exatamente como o `reversa` faz (informar o agente, invocá-lo pelo contrato de routing, salvar checkpoint, marcar ✅ no `plan.md`, resumo breve). Com estes overrides:
 
 1. **Nenhuma confirmação intermediária.** Não pergunte "podemos começar com o Scout?", não ofereça o checkpoint preventivo de `/clear` + nova sessão, não peça CONTINUAR entre agentes.
 2. **Handoff automático.** Os skills dos agentes terminam sugerindo o próximo passo e pedindo "Digite CONTINUAR". Em modo autônomo, o orquestrador é quem responde: prossiga imediatamente para a próxima tarefa do plano, sem esperar o usuário.

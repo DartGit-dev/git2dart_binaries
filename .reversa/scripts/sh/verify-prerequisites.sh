@@ -1,35 +1,35 @@
 #!/usr/bin/env bash
 #
 # verify-prerequisites.sh
-# Helper genérico de pré-condições, chamado pelos skills forward do Reversa.
+# Generic prerequisite helper, called by Reversa forward skills.
 #
-# Saída padrão JSON em uma única linha. O agente lê e age conforme os campos.
-# Sem dependências externas além de bash, jq opcional.
+# Standard JSON output on one line. The agent reads fields and acts accordingly.
+# No external dependencies beyond bash; jq is optional.
 #
 # Uso:
 #   verify-prerequisites.sh [--json] [--require <campo>] [--require <campo>] ...
 #
 # Campos suportados em --require:
 #   active-requirements   Exige que .reversa/active-requirements.json exista.
-#   feature-dir           Exige que a pasta apontada por active-requirements exista.
+#   feature-dir           Requires the directory pointed to by active-requirements.
 #   requirements          Exige feature-dir/requirements.md.
 #   roadmap               Exige feature-dir/roadmap.md.
 #   actions               Exige feature-dir/actions.md.
-#   sdd                   Exige _reversa_sdd/ presente.
+#   sdd                   Requires _reversa_sdd/ to be present.
 #   principles            Exige .reversa/principles.md.
 #
-# Códigos de saída:
-#   0 = todos os requisitos batem
+# Exit codes:
+#   0 = all prerequisites satisfied
 #   1 = pelo menos um requisito faltou (detalhes no JSON)
-#   2 = uso inválido
+#   2 = invalid usage
 
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 REVERSA_DIR="$PROJECT_ROOT/.reversa"
-SDD_DIR="$PROJECT_ROOT/_reversa_sdd"
-FORWARD_DIR="$PROJECT_ROOT/_reversa_forward"
+SDD_DIR="$REVERSA_DIR/_reversa_sdd"
+FORWARD_DIR="$REVERSA_DIR/_reversa_forward"
 ACTIVE="$REVERSA_DIR/active-requirements.json"
 
 JSON_MODE=0

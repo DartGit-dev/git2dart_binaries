@@ -253,7 +253,7 @@ runs:
           --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
           --provenance source-build \
           --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"
-        cp "$BUILD_ROOT/manifest.json" "$BUILD_ROOT/export/provenance-${{ inputs.ios_sdk }}-${{ inputs.architecture }}.json"
+        cp "$cache_root/manifest.json" "$cache_root/export/provenance-${{ inputs.ios_sdk }}-${{ inputs.architecture }}.json"
 
     - name: Save iOS native cache
       if: steps.validate-cache.outputs.valid != 'true'

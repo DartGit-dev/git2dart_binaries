@@ -2,16 +2,16 @@
 # Ganchos opcionais executados antes ou depois dos skills forward do Reversa.
 #
 # Esquema por gancho:
-#   command:     comando que será sugerido (optional: true) ou exigido (optional: false)
-#   description: texto curto exibido ao usuário
+#   command:     command suggested (optional: true) or required (optional: false)
+#   description: short text shown to the user
 #   enabled:     true | false. Sem esse campo, vale como true.
-#   optional:    true (apresenta link clicável) | false (executa automaticamente e aguarda)
+#   optional:    true (shows clickable link) | false (runs automatically and waits)
 #
 # Regras:
-#   YAML inválido aqui é tolerado: o skill segue normalmente, apenas sem ganchos.
-#   Não há DSL de condição neste arquivo. Se um gancho não deve rodar, use enabled: false.
+#   Invalid YAML is tolerated here: the skill continues normally, without hooks.
+#   This file has no condition DSL. If a hook must not run, use enabled: false.
 #
-# Por padrão, todos os ganchos chegam vazios. Adicione apenas os que fazem sentido para o seu projeto.
+# By default, all hooks are empty. Add only those relevant to your project.
 
 schema-version: 1
 

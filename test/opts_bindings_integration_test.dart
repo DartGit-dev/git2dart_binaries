@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:ffi' as ffi;
+import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -41,7 +41,9 @@ runs:
             --libgit2 "${{ inputs.libgit2_version }}" \
             --libssh2 none \
             --openssl none \
-            --toolchain "${{ steps.toolchain.outputs.fingerprint }}"; then
+            --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
+            --provenance source-build \
+            --source-ref "refs/tags/v${{ inputs.libgit2_version }}"; then
           mkdir -p lib/src
           cp "$cache_root/export/bindings.dart" lib/src/bindings.dart
           echo 'valid=true' >> "$GITHUB_OUTPUT"
@@ -103,7 +105,9 @@ runs:
           --libgit2 "${{ inputs.libgit2_version }}" \
           --libssh2 none \
           --openssl none \
-          --toolchain "${{ steps.toolchain.outputs.fingerprint }}"
+          --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
+          --provenance source-build \
+          --source-ref "refs/tags/v${{ inputs.libgit2_version }}"
 
     - name: Save bindings cache
       if: steps.validate-cache.outputs.valid != 'true'

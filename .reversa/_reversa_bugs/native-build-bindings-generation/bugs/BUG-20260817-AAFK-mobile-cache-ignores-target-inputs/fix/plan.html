@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>BUG-20260817-AAFK — Fix Plan</title>
+  <style>body{font:16px system-ui;max-width:900px;margin:3rem auto;line-height:1.5}code{background:#f3f4f6;padding:.1rem .3rem}li{margin:.5rem 0}</style>
+</head>
+<body>
+  <h1>BUG-20260817-AAFK — Mobile native caches ignore target build inputs</h1>
+  <h2>Confirmed cause</h2>
+  <p>Android <code>android_api_level</code>, iOS <code>ios_deployment_target</code>, and iOS <code>openssl_target</code> affect build flags but are missing from their toolchain fingerprints. The fingerprint is already part of both cache identity and manifest validation.</p>
+  <h2>Minimal change</h2>
+  <ol>
+    <li>Add a static regression test requiring each target input in its corresponding fingerprint source.</li>
+    <li>Add Android API level to the Android fingerprint.</li>
+    <li>Add iOS deployment and OpenSSL targets to the iOS fingerprint.</li>
+    <li>Run the focused test. CI remains responsible for real cache miss/hit evidence.</li>
+  </ol>
+  <h2>Acceptance mapping</h2>
+  <ul>
+    <li>Changing Android API level changes fingerprint, cache key, and manifest validation input.</li>
+    <li>Changing either iOS target changes fingerprint, cache key, and manifest validation input.</li>
+    <li>The existing cache schema remains compatible; no generated or native source changes are required.</li>
+  </ul>
+  <h2>Boundary</h2>
+  <p>Local validation is static because Android and iOS builds require their hosted CI toolchains. A clean cache miss and later hit must be demonstrated in GitHub Actions before package closure.</p>
+</body>
+</html>

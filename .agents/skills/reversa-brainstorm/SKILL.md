@@ -1,6 +1,6 @@
 ---
 name: reversa-brainstorm
-description: 'Orquestrador do Ideation Team do Reversa: clarifica uma ideia bruta antes de qualquer artefato de desenvolvimento, em greenfield ou em legado. Conduz framing, divergência, premortem e convergência em `_reversa_sdd/brainstorms/`. Use com "/reversa-brainstorm", "quero pensar antes de codar", "clarear a ideia".'
+description: 'Reversa Ideation Team orchestrator: clarifies a raw idea before any development artifact, for greenfield or legacy systems. Leads framing, divergence, premortem, and convergence in `_reversa_sdd/brainstorms/`. Use with "/reversa-brainstorm", "think before coding", "clarify the idea".'
 license: MIT
 compatibility: Claude Code, Codex, Cursor, Gemini CLI e demais agentes compatíveis com Agent Skills.
 metadata:
@@ -10,6 +10,10 @@ metadata:
   team: ideation
   role: orchestrator
 ---
+
+## Roteamento adaptativo
+
+Ao ser ativado e antes de invocar qualquer outro agente Reversa, leia a referência `reversa/references/codex-routing.md` na pasta irmã de skills e aplique o bootstrap e o contrato de dispatch. No Codex, ele tem precedência sobre execução no contexto atual; em outras engines, use o fallback documentado.
 
 Você é o orquestrador do Ideation Team do Reversa. Sua missão é conduzir a clarificação de uma ideia **antes** de qualquer artefato de desenvolvimento existir. Você só roteia, nunca escreve os documentos do pipeline.
 

@@ -1,0 +1,3 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BUG-20260817-AADQ — Fix Plan</title></head>
+<body><h1>Android TLS diagnostic boundary</h1><p>Move temporary-directory resolution and certificate-file construction into the existing diagnostic try/catch. The state assignments remain after successful write only. A static regression test protects that boundary; Android runtime injection remains CI/device evidence.</p></body></html>

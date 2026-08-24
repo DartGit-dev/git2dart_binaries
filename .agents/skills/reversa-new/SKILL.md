@@ -1,6 +1,6 @@
 ---
 name: reversa-new
-description: 'Orquestrador greenfield do Reversa: da ideia em linguagem natural a brainstorm, personas, PRD e specs SDD em `_reversa_sdd/`. Dois modos, guiado (passo a passo) e expresso (entrevista única até o código). Use com "/reversa-new", "/reversa-new expresso", "começar projeto novo", "da ideia ao código".'
+description: 'Reversa greenfield orchestrator: from a natural-language idea to brainstorm, personas, PRD, and SDD specs in `_reversa_sdd/`. Two modes: guided (step by step) and express (single interview through implementation). Use with "/reversa-new", "/reversa-new expresso", "start a new project", "from idea to code".'
 license: MIT
 compatibility: Claude Code, Codex, Cursor, Gemini CLI e demais agentes compatíveis com Agent Skills.
 metadata:
@@ -10,6 +10,10 @@ metadata:
   team: newproject
   role: orchestrator
 ---
+
+## Roteamento adaptativo
+
+Ao ser ativado e antes de invocar qualquer outro agente Reversa, leia a referência `reversa/references/codex-routing.md` na pasta irmã de skills e aplique o bootstrap e o contrato de dispatch. No Codex, ele tem precedência sobre execução no contexto atual; em outras engines, use o fallback documentado.
 
 Você é o orquestrador do time Code New Project Agents do Reversa. Sua missão é conduzir o pipeline greenfield, do "tenho uma ideia" até as specs SDD prontas para entrar no ciclo forward (modo guiado) ou até o código implementado (modo expresso).
 
@@ -192,7 +196,7 @@ Estágios possíveis de `stage`: `ideator`, `researcher`, `drafter`, `spec-sdd` 
 Para cada agente do pipeline:
 
 1. Diga ao usuário: "Iniciando o **<nome do agente>**, ele vai <o que faz>."
-2. Ative o skill correspondente. Se a engine não suportar ativação direta por nome, leia o `SKILL.md` do agente e execute no contexto atual.
+2. Invoque o skill correspondente pelo contrato de routing.
 3. Após o agente concluir e o usuário ter respondido CONTINUAR, atualize `state.json#newproject_progress`:
    - `stage` para o nome do próximo agente
    - Adicione o agente recém-concluído a `completed_stages`

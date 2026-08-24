@@ -1,0 +1,3 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BUG-20260816-AAFR — Fix Plan</title></head>
+<body><h1>Desktop fallback diagnostic aggregation</h1><p>Wrap package-root resolution, dependency preload, and package-path loading in one fallback handler. Track the active stage and report it together with the original bare-name failure. A static regression test protects the aggregation structure; host-dependent loader paths require CI/runtime validation.</p></body></html>

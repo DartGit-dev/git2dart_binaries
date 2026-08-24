@@ -1,6 +1,6 @@
 # verify-prerequisites.ps1
-# Helper genérico de pré-condições, chamado pelos skills forward do Reversa.
-# Saída padrão JSON em uma única linha.
+# Generic prerequisite helper, called by Reversa forward skills.
+# Standard JSON output on one line.
 #
 # Uso:
 #   verify-prerequisites.ps1 [-Json] [-Require <campo>] [-Require <campo>] ...
@@ -8,7 +8,7 @@
 # Campos suportados:
 #   active-requirements, feature-dir, requirements, roadmap, actions, sdd, principles
 #
-# Códigos de saída: 0 ok, 1 faltando algo, 2 uso inválido.
+# Exit codes: 0 ok, 1 something missing, 2 invalid usage.
 
 [CmdletBinding()]
 param(
@@ -19,10 +19,10 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $scriptDir   = Split-Path -Parent $PSCommandPath
-$projectRoot = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
+$projectRoot = (Resolve-Path (Join-Path $scriptDir '..\..\..')).Path
 $reversaDir  = Join-Path $projectRoot '.reversa'
-$sddDir      = Join-Path $projectRoot '_reversa_sdd'
-$forwardDir  = Join-Path $projectRoot '_reversa_forward'
+$sddDir      = Join-Path $reversaDir '_reversa_sdd'
+$forwardDir  = Join-Path $reversaDir '_reversa_forward'
 $active      = Join-Path $reversaDir 'active-requirements.json'
 
 $missing  = New-Object System.Collections.Generic.List[string]

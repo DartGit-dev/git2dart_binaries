@@ -1,15 +1,21 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/001-libgit2-process-lifecycle",
-  "feature-id": "001",
-  "short-name": "libgit2-process-lifecycle",
-  "started-at": "2026-08-22T04:34:03.7658577Z",
-  "current-stage": "coding",
-  "stages-completed": [
-    "requirements",
-    "clarify",
-    "plan",
-    "to-do"
-  ],
-  "paused-features": []
+  "feature-dir": ".reversa/_reversa_forward/004-all-branch-ci-main-publish",
+  "feature-id": "004",
+  "short-name": "all-branch-ci-main-publish",
+  "started-at": "2026-08-24T12:26:40.9400967+07:00",
+  "current-stage": "requirements",
+  "stages-completed": [],
+  "paused-features": [
+    {
+      "feature-dir": ".reversa/_reversa_forward/002-openssl-source-parity",
+      "feature-id": "002",
+      "short-name": "openssl-source-parity",
+      "started-at": "2026-08-24T11:10:36.9867162+07:00",
+      "current-stage": "requirements",
+      "stages-completed": [],
+      "paused-at": "2026-08-24T11:19:48.7909421+07:00",
+      "paused-from-stage": "plan"
+    }
+  ]
 }

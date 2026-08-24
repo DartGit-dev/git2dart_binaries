@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fix plan — BUG-20260816-AAH2</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#131b31; --line:#2b385d; --text:#e8edff; --muted:#aab7dc; --p0:#ff5b6e; --ok:#56d9a6; --link:#8fc6ff; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 system-ui,sans-serif; }
+    main { max-width:1050px; margin:auto; padding:36px 22px 56px; } h1,h2 { line-height:1.2; } h1 { margin:0 0 6px; } h2 { margin-top:32px; }
+    .meta,.card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px; } .meta { display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); }
+    .tag { border:1px solid var(--line); border-radius:999px; padding:2px 10px; } .p0 { color:#fff; background:var(--p0); border-color:var(--p0); }
+    table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); } th,td { padding:11px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line); } th { color:var(--muted); } code { color:#b5d6ff; } a { color:var(--link); } .ok { color:var(--ok); } .warn { color:#ffd07b; }
+    .graph { display:grid; place-items:center; min-height:150px; } .node { max-width:440px; padding:18px; border:2px solid var(--p0); border-radius:14px; text-align:center; background:#2a1520; }
+  </style>
+</head>
+<body><main>
+  <h1>Correction plan: BUG-20260816-AAH2</h1>
+  <div class="meta"><span class="tag">Context: libgit2-global-options</span><span class="tag p0">Critical / P0</span><span class="tag">2026-08-23</span><span class="tag">Strategy: direct correction</span></div>
+
+  <h2>Defect and confirmed root cause</h2>
+  <section class="card"><p>Eleven <code>git_libgit2_opts</code> wrapper paths encode pointer-width <code>size_t</code> or <code>ssize_t</code> values as 32-bit <code>ffi.Int</code>. On a 64-bit target, getters can write eight bytes into a four-byte allocation and setters pass a mismatched variadic width.</p><p><strong class="ok">Root-cause state: confirmed (static).</strong> The pinned libgit2 1.9.6 header was compared directly with the wrapper declarations. Native replay remains blocked because this checkout lacks generated bindings and native artifacts.</p></section>
+
+  <h2>Chosen strategy</h2>
+  <section class="card"><p><strong>Direct correction.</strong> There is one authoritative ABI contract and no competing repair strategy. The change reuses the package's existing <code>dart:ffi</code> types: unsigned <code>size_t</code> maps to <code>ffi.Size</code> and signed <code>ssize_t</code> maps to <code>ffi.IntPtr</code>. It continues to import the generated <code>lib/src/bindings.dart</code> for libgit2 types such as <code>git_buf</code> and <code>git_object_t</code>. No hand-written aliases or new dependencies are introduced.</p><p><strong>Boundary found during binding audit:</strong> do not route these calls through generated <code>Libgit2.git_libgit2_opts(int option)</code>. The C API is variadic, but ffigen generated an option-only signature. The specialised wrapper remains necessary; this correction makes its declared variadic argument widths exact.</p></section>
+
+  <h2>Proposed correction change set</h2>
+  <table><thead><tr><th>CHG</th><th>Type</th><th>Artifact</th><th>Purpose</th></tr></thead><tbody>
+    <tr><td>CHG-001</td><td>code</td><td><code>lib/src/opts_bindings.dart</code></td><td>Replace the affected mwindow, cache, and pack public signatures and variadic signature families with exact <code>ffi.Size</code>/<code>ffi.IntPtr</code> forms.</td></tr>
+    <tr><td>CHG-002</td><td>test</td><td><code>test/opts_bindings_integration_test.dart</code></td><td>Allocate matching native-width output types and cover every affected getter/setter family on a 64-bit native target.</td></tr>
+  </tbody></table>
+
+  <h2>Planned proof</h2>
+  <table><thead><tr><th>Kind</th><th>What it proves</th></tr></thead><tbody>
+    <tr><td>Reproduction test</td><td>Before the patch, the updated test calls cannot type-check against the old 32-bit pointer signatures; this is a source-level witness of the mismatch.</td></tr>
+    <tr><td>Regression test</td><td>After the patch, each affected getter/setter uses the matching <code>ffi.Size</code> or <code>ffi.IntPtr</code> allocation and round-trips through native libgit2 on 64-bit targets.</td></tr>
+    <tr><td>Validation</td><td>Format and run the focused test suite. If native artifacts remain unavailable locally, record the blocker and retain the test for CI/native verification.</td></tr>
+  </tbody></table>
+
+  <h2>Risk and explicit boundary</h2>
+  <section class="card"><p><strong class="warn">Change risk: medium.</strong> The public FFI wrapper parameter types change to reflect the native contract, which may require downstream callers to use pointer-width allocations. No broad refactor, lifecycle change, generated-binding modification, or unrelated bug fix is included.</p><p>Package closure is not attainable from this patch alone: merge and publication evidence are still required. The plan does not claim a runtime crash replay until the missing native artifacts are available.</p></section>
+
+  <h2>Bug graph and relations</h2>
+  <div class="card graph"><a class="node" href="../bug.md"><strong>#3 BUG-20260816-AAH2</strong><br>ABI width mismatch in global options<br><small>No recorded bug relations</small></a></div>
+</main></body></html>

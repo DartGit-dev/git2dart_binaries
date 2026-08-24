@@ -15,9 +15,9 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $scriptDir   = Split-Path -Parent $PSCommandPath
-$projectRoot = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
+$projectRoot = (Resolve-Path (Join-Path $scriptDir '..\..\..')).Path
 $reversaDir  = Join-Path $projectRoot '.reversa'
-$sddDir      = Join-Path $projectRoot '_reversa_sdd'
+$sddDir      = Join-Path $reversaDir '_reversa_sdd'
 $active      = Join-Path $reversaDir 'active-requirements.json'
 
 if (-not (Test-Path -LiteralPath $active)) {

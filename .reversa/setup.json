@@ -4,14 +4,14 @@
   "installed-at": "2026-08-16T15:43:32.960Z",
   "project-name": "git2dart_binaries",
   "prefix-format": "sequencial",
-  "language": "pt-BR",
+  "language": "en-US",
   "watch": {
     "archive-after": 3,
     "block-on-red": false
   },
   "paths": {
-    "sdd-dir": "_reversa_sdd",
-    "forward-dir": "_reversa_forward",
+    "sdd-dir": ".reversa/_reversa_sdd",
+    "forward-dir": ".reversa/_reversa_forward",
     "config-dir": ".reversa"
   },
   "principles": {

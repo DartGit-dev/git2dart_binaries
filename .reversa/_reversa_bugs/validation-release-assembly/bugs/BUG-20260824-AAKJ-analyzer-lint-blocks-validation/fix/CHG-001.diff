@@ -1,0 +1,6 @@
+--- a/test/opts_bindings_integration_test.dart
++++ b/test/opts_bindings_integration_test.dart
+@@
+-import 'dart:io';
+ import 'dart:ffi' as ffi;
++import 'dart:io';

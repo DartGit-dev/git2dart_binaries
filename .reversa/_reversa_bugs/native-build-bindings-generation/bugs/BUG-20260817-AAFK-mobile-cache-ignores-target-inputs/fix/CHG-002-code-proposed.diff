@@ -1,0 +1,12 @@
+diff --git a/.github/actions/build-android/action.yml b/.github/actions/build-android/action.yml
+--- a/.github/actions/build-android/action.yml
++++ b/.github/actions/build-android/action.yml
+@@
+-        raw="${RUNNER_OS}-${RUNNER_ARCH}-ndk-r26d-$($ANDROID_LLVM_BIN/clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')"
++        raw="${RUNNER_OS}-${RUNNER_ARCH}-ndk-r26d-$($ANDROID_LLVM_BIN/clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-android-api-${{ inputs.android_api_level }}"
+diff --git a/.github/actions/build-ios/action.yml b/.github/actions/build-ios/action.yml
+--- a/.github/actions/build-ios/action.yml
++++ b/.github/actions/build-ios/action.yml
+@@
+-        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(xcrun clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-${{ inputs.ios_sdk }}-${sdk_version}"
++        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(xcrun clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-${{ inputs.ios_sdk }}-${sdk_version}-deployment-${{ inputs.ios_deployment_target }}-openssl-target-${{ inputs.openssl_target }}"
