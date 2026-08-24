@@ -65,6 +65,8 @@ runs:
             --provenance source-build `
             --source-ref 'refs/tags/openssl-${{ inputs.openssl_version }}'
           $valid = $LASTEXITCODE -eq 0
+          # A cache miss is expected and must continue to the source build.
+          $global:LASTEXITCODE = 0
         }
 
         if ($valid) {

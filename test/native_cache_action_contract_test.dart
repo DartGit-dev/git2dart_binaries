@@ -47,6 +47,11 @@ void main() {
               .first;
       expect(restoreStep, isNot(contains('D:/export')));
       expect(saveStep, isNot(contains('D:/export')));
+      expect(
+        windows,
+        contains(r'$global:LASTEXITCODE = 0'),
+        reason: 'an invalid Windows cache must fall through to a source build',
+      );
 
       String artifactUpload(String source, String name) {
         final match = RegExp(
