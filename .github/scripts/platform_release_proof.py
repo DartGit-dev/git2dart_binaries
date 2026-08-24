@@ -109,18 +109,29 @@ def version_text(root: Path) -> str:
     return blobs.decode("latin1", "ignore")
 
 
+def observed_version(text: str, wanted: str) -> str | None:
+    if re.search(re.escape(wanted), text):
+        return wanted
+    fields = {
+        name: re.search(rf"(?m)^{name}\s*=\s*(\d+)\s*$", text)
+        for name in ("MAJOR", "MINOR", "PATCH")
+    }
+    assembled = ".".join(fields[name].group(1) for name in ("MAJOR", "MINOR", "PATCH") if fields[name])
+    return wanted if assembled == wanted else None
+
+
 def observed_versions(root: Path, expected: dict[str, str], evidence: Path | None = None) -> tuple[dict[str, dict[str, str]], list[str]]:
     text = version_text(root)
     evidence_text = version_text(evidence) if evidence and evidence.exists() else ""
     values, failures = {}, []
     for dependency, wanted in expected.items():
-        match = re.search(re.escape(wanted), text)
+        observed = observed_version(text, wanted)
         source = "payload"
-        if not match:
-            match = re.search(re.escape(wanted), evidence_text)
-            source = "build-input" if match else "unavailable"
-        values[dependency] = {"intended": wanted, "observed": match.group(0) if match else "unavailable", "comparison": "match" if match else "unavailable", "evidence": source}
-        if not match:
+        if not observed:
+            observed = observed_version(evidence_text, wanted)
+            source = "build-input" if observed else "unavailable"
+        values[dependency] = {"intended": wanted, "observed": observed or "unavailable", "comparison": "match" if observed else "unavailable", "evidence": source}
+        if not observed:
             failures.append("version-unreadable")
     return values, failures
 

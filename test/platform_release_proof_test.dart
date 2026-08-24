@@ -87,7 +87,7 @@ void main() {
         File(
           '${root.path}${Platform.pathSeparator}libssh2.so',
         ).writeAsStringSync('libssh2 1.11.1');
-        evidence.writeAsStringSync('OPENSSL_VERSION=3.0.15');
+        evidence.writeAsStringSync('MAJOR=3\nMINOR=0\nPATCH=15\n');
         final result = await Process.run('python', <String>[
           script.path,
           'create',
