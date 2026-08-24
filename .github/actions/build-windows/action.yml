@@ -45,6 +45,8 @@ runs:
         path: |
           .native-cache/windows
         key: native-v2-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
+        restore-keys: |
+          native-v2-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-
 
     - name: Validate Windows native cache
       id: validate-cache
@@ -52,7 +54,7 @@ runs:
       run: |
         $valid = $false
         $cacheRoot = Join-Path $env:GITHUB_WORKSPACE '.native-cache/windows'
-        if ('${{ steps.native-cache.outputs.cache-hit }}' -eq 'true') {
+        if ('${{ steps.native-cache.outputs.cache-matched-key }}' -ne '') {
           foreach ($name in @('libssh2', 'libgit2', 'openssl', 'export')) {
             $source = Join-Path $cacheRoot $name
             $destination = Join-Path 'D:\' $name
@@ -199,6 +201,7 @@ runs:
           --provenance source-build `
           --source-ref 'refs/tags/openssl-${{ inputs.openssl_version }}'
         Copy-Item D:/git2dart-windows-manifest.json D:/git2dart-windows-provenance.json
+        Copy-Item D:/git2dart-windows-provenance.json D:/export/openssl-provenance.json
 
     - name: Stage Windows native cache
       if: steps.validate-cache.outputs.valid != 'true'

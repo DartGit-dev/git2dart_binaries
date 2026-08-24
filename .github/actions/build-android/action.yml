@@ -286,6 +286,7 @@ runs:
           --provenance source-build \
           --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"
         cp "$BUILD_ROOT/manifest.json" "$BUILD_ROOT/provenance.json"
+        cp "$BUILD_ROOT/provenance.json" "$BUILD_ROOT/export/openssl-provenance.json"
 
     - name: Save Android native cache
       if: steps.validate-cache.outputs.valid != 'true'

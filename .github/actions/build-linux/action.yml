@@ -172,6 +172,7 @@ runs:
           --provenance source-build \
           --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"
         cp /tmp/git2dart-linux-manifest.json /tmp/git2dart-linux-provenance.json
+        cp /tmp/git2dart-linux-provenance.json /tmp/export/openssl-provenance.json
 
     - name: Save Linux native cache
       if: steps.validate-cache.outputs.valid != 'true'

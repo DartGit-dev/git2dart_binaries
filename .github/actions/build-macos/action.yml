@@ -206,6 +206,7 @@ runs:
           --provenance source-build \
           --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"
         cp /tmp/git2dart-macos-manifest.json /tmp/git2dart-macos-provenance.json
+        cp /tmp/git2dart-macos-provenance.json export/openssl-provenance.json
 
     - name: Save macOS native cache
       if: steps.validate-cache.outputs.valid != 'true'
