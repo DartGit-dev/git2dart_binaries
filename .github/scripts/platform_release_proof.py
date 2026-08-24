@@ -103,13 +103,23 @@ def sanitize_diagnostic(value: str, root: Path) -> str:
     return re.sub(r"(?:[A-Za-z]:)?[/\\][^\s:]+", "<path>", value)
 
 
-def observed_versions(root: Path, expected: dict[str, str]) -> tuple[dict[str, dict[str, str]], list[str]]:
-    blobs = b"\n".join(item.read_bytes() for item in root.rglob("*") if item.is_file() and item.stat().st_size < 128 * 1024 * 1024)
-    text = blobs.decode("latin1", "ignore")
+def version_text(root: Path) -> str:
+    files = root.rglob("*") if root.is_dir() else (root,)
+    blobs = b"\n".join(item.read_bytes() for item in files if item.is_file() and item.stat().st_size < 128 * 1024 * 1024)
+    return blobs.decode("latin1", "ignore")
+
+
+def observed_versions(root: Path, expected: dict[str, str], evidence: Path | None = None) -> tuple[dict[str, dict[str, str]], list[str]]:
+    text = version_text(root)
+    evidence_text = version_text(evidence) if evidence and evidence.exists() else ""
     values, failures = {}, []
     for dependency, wanted in expected.items():
         match = re.search(re.escape(wanted), text)
-        values[dependency] = {"intended": wanted, "observed": match.group(0) if match else "unavailable", "comparison": "match" if match else "unavailable"}
+        source = "payload"
+        if not match:
+            match = re.search(re.escape(wanted), evidence_text)
+            source = "build-input" if match else "unavailable"
+        values[dependency] = {"intended": wanted, "observed": match.group(0) if match else "unavailable", "comparison": "match" if match else "unavailable", "evidence": source}
         if not match:
             failures.append("version-unreadable")
     return values, failures
@@ -122,7 +132,8 @@ def create(args: argparse.Namespace) -> int:
     if not root.is_dir():
         raise ValueError("unavailable")
     present, missing, unexpected = inventory(root, EXPECTED[args.platform])
-    versions, failures = observed_versions(root, {"libgit2": args.libgit2, "libssh2": args.libssh2, "openssl": args.openssl})
+    evidence = Path(args.version_evidence).resolve() if args.version_evidence else None
+    versions, failures = observed_versions(root, {"libgit2": args.libgit2, "libssh2": args.libssh2, "openssl": args.openssl}, evidence)
     linked, diagnostic = linkage(root, args.platform) if not missing else (False, "payload is incomplete")
     diagnostic = sanitize_diagnostic(diagnostic, root)
     if missing: failures.append("missing-payload")
@@ -195,6 +206,7 @@ def main() -> int:
     proof.add_argument("--libgit2", required=True)
     proof.add_argument("--libssh2", required=True)
     proof.add_argument("--openssl", required=True)
+    proof.add_argument("--version-evidence")
     proof.add_argument("--attestation-input")
     check = commands.add_parser("validate")
     check.add_argument("--proofs", required=True)

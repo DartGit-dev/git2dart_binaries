@@ -46,7 +46,7 @@ jobs:
           openssl_version: ${{ env.OPENSSL_VERSION }}
       - name: Prove final Linux payload
         continue-on-error: true
-        run: python3 .github/scripts/platform_release_proof.py create --platform linux --root /tmp/export --output "$RUNNER_TEMP/platform-proof-linux" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+        run: python3 .github/scripts/platform_release_proof.py create --platform linux --root /tmp/export --version-evidence /tmp/openssl/VERSION.dat --output "$RUNNER_TEMP/platform-proof-linux" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
       - uses: actions/upload-artifact@v7
         with:
           name: platform-proof-linux

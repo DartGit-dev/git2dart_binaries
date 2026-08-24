@@ -69,6 +69,66 @@ void main() {
   );
 
   test(
+    'build-input version evidence qualifies an omitted runtime dependency',
+    () async {
+      final sandbox = await Directory.systemTemp.createTemp(
+        'platform-proof-evidence-',
+      );
+      final root = Directory('${sandbox.path}${Platform.pathSeparator}payload')
+        ..createSync();
+      final output = Directory('${sandbox.path}${Platform.pathSeparator}proof');
+      final evidence = File(
+        '${sandbox.path}${Platform.pathSeparator}VERSION.dat',
+      );
+      try {
+        File(
+          '${root.path}${Platform.pathSeparator}libgit2.so',
+        ).writeAsStringSync('libgit2 1.9.6');
+        File(
+          '${root.path}${Platform.pathSeparator}libssh2.so',
+        ).writeAsStringSync('libssh2 1.11.1');
+        evidence.writeAsStringSync('OPENSSL_VERSION=3.0.15');
+        final result = await Process.run('python', <String>[
+          script.path,
+          'create',
+          '--platform',
+          'linux',
+          '--root',
+          root.path,
+          '--version-evidence',
+          evidence.path,
+          '--output',
+          output.path,
+          '--candidate',
+          'fixture',
+          '--libgit2',
+          '1.9.6',
+          '--libssh2',
+          '1.11.1',
+          '--openssl',
+          '3.0.15',
+        ]);
+        expect(
+          result.exitCode,
+          isNot(0),
+          reason: 'fake shared libraries cannot load',
+        );
+        final record =
+            jsonDecode(
+                  File(
+                    '${output.path}${Platform.pathSeparator}proof.json',
+                  ).readAsStringSync(),
+                )
+                as Map<String, dynamic>;
+        expect(record['failure_codes'], isNot(contains('version-unreadable')));
+        expect(record['versions']['openssl']['evidence'], 'build-input');
+      } finally {
+        await sandbox.delete(recursive: true);
+      }
+    },
+  );
+
+  test(
     'aggregate gate rejects unknown schemas, failures, and missing proof scopes',
     () {
       final source = script.readAsStringSync();
