@@ -43,8 +43,7 @@ runs:
       uses: actions/cache/restore@v5
       with:
         path: |
-          libssh2
-          libgit2
+          .native-cache/windows
         key: native-v2-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Validate Windows native cache
@@ -52,7 +51,17 @@ runs:
       shell: pwsh
       run: |
         $valid = $false
+        $cacheRoot = Join-Path $env:GITHUB_WORKSPACE '.native-cache/windows'
         if ('${{ steps.native-cache.outputs.cache-hit }}' -eq 'true') {
+          foreach ($name in @('libssh2', 'libgit2', 'openssl', 'export')) {
+            $source = Join-Path $cacheRoot $name
+            $destination = Join-Path 'D:\' $name
+            if (Test-Path -LiteralPath $source) {
+              Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
+            }
+          }
+          Copy-Item -LiteralPath (Join-Path $cacheRoot 'git2dart-windows-manifest.json') -Destination 'D:\git2dart-windows-manifest.json' -Force -ErrorAction SilentlyContinue
+          Copy-Item -LiteralPath (Join-Path $cacheRoot 'git2dart-windows-provenance.json') -Destination 'D:\git2dart-windows-provenance.json' -Force -ErrorAction SilentlyContinue
           python .github/scripts/native_cache_manifest.py validate `
             --manifest D:/git2dart-windows-manifest.json `
             --export-root D:/export `
@@ -87,6 +96,7 @@ runs:
           }
           Remove-Item -LiteralPath 'D:\git2dart-windows-manifest.json' -Force -ErrorAction SilentlyContinue
           Remove-Item -LiteralPath 'D:\git2dart-windows-provenance.json' -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath $cacheRoot -Recurse -Force -ErrorAction SilentlyContinue
           'valid=false' >> $env:GITHUB_OUTPUT
         }
 
@@ -181,13 +191,24 @@ runs:
           --source-ref 'refs/tags/openssl-${{ inputs.openssl_version }}'
         Copy-Item D:/git2dart-windows-manifest.json D:/git2dart-windows-provenance.json
 
+    - name: Stage Windows native cache
+      if: steps.validate-cache.outputs.valid != 'true'
+      shell: pwsh
+      run: |
+        $cacheRoot = Join-Path $env:GITHUB_WORKSPACE '.native-cache/windows'
+        New-Item -ItemType Directory -Path $cacheRoot -Force | Out-Null
+        foreach ($name in @('libssh2', 'libgit2', 'openssl', 'export')) {
+          Copy-Item -LiteralPath (Join-Path 'D:\' $name) -Destination (Join-Path $cacheRoot $name) -Recurse -Force
+        }
+        Copy-Item -LiteralPath 'D:\git2dart-windows-manifest.json' -Destination (Join-Path $cacheRoot 'git2dart-windows-manifest.json') -Force
+        Copy-Item -LiteralPath 'D:\git2dart-windows-provenance.json' -Destination (Join-Path $cacheRoot 'git2dart-windows-provenance.json') -Force
+
     - name: Save Windows native cache
       if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/cache/save@v5
       with:
         path: |
-          libssh2
-          libgit2
+          .native-cache/windows
         key: native-v2-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Cache git2 library

@@ -47,6 +47,13 @@ void main() {
               .first;
       expect(restoreStep, isNot(contains('D:/export')));
       expect(saveStep, isNot(contains('D:/export')));
+      expect(windows, contains('.native-cache/windows'));
+      expect(windows, contains('Stage Windows native cache'));
+      expect(
+        windows,
+        contains(r'Copy-Item -LiteralPath $source -Destination $destination'),
+        reason: 'a valid workspace cache must be staged before validation',
+      );
       expect(
         windows,
         contains(r'$global:LASTEXITCODE = 0'),
