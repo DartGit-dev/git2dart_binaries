@@ -121,7 +121,7 @@ runs:
       shell: pwsh
       run: |
         cd openssl
-        perl Configure VC-WIN64A shared no-apps no-tests --prefix=D:/openssl/install --openssldir=D:/openssl/install/ssl
+        perl Configure VC-WIN64A shared no-tests --prefix=D:/openssl/install --openssldir=D:/openssl/install/ssl
         nmake
         nmake install_sw
         if (-not (Test-Path D:/openssl/install/include/openssl/ssl.h)) { throw 'OpenSSL source build did not install headers' }
