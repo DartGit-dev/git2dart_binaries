@@ -159,8 +159,16 @@ runs:
         cmake --build build --parallel --target install
 
     - name: Run libgit2 tests
+      if: steps.validate-cache.outputs.valid != 'true'
       shell: pwsh
       run: .\libgit2\build\libgit2_tests.exe
+
+    - name: Verify cached Windows libraries load
+      if: steps.validate-cache.outputs.valid == 'true'
+      shell: pwsh
+      run: |
+        $env:PATH = "D:\export;$env:PATH"
+        python -c "import ctypes; ctypes.WinDLL(r'D:\export\libgit2.dll')"
 
     - name: Export git2 library
       if: steps.validate-cache.outputs.valid != 'true'

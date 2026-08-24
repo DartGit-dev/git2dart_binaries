@@ -49,6 +49,7 @@ void main() {
       expect(saveStep, isNot(contains('D:/export')));
       expect(windows, contains('.native-cache/windows'));
       expect(windows, contains('Stage Windows native cache'));
+      expect(windows, contains('Verify cached Windows libraries load'));
       expect(
         windows,
         contains('VC-WIN64A shared no-tests'),
