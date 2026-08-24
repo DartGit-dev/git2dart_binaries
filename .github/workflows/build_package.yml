@@ -833,8 +833,8 @@ jobs:
           pub-cache: true
           pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
 
-      - name: Stage generated bindings for package validation
-        run: git add --force lib/src/bindings.dart
+      - name: Ignore generated bindings checkout delta during package validation
+        run: git update-index --assume-unchanged lib/src/bindings.dart
 
       - name: Validate publish package
         shell: bash
