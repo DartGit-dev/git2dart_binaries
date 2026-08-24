@@ -227,5 +227,4 @@ runs:
         name: cache-macos
         path: |
           export/**
-          /tmp/git2dart-macos-provenance.json
         retention-days: 1

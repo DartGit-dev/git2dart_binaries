@@ -300,5 +300,4 @@ runs:
         name: cache-android-${{ inputs.architecture }}
         path: |
           /tmp/git2dart-android-${{ inputs.architecture }}/export/**
-          /tmp/git2dart-android-${{ inputs.architecture }}/provenance.json
         retention-days: 1

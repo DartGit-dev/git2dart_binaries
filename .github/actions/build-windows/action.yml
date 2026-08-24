@@ -194,5 +194,4 @@ runs:
         name: cache-windows
         path: |
           D:/export/**
-          D:/git2dart-windows-provenance.json
         retention-days: 1

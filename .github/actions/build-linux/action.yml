@@ -192,5 +192,4 @@ runs:
         name: cache-linux
         path: |
           /tmp/export/**
-          /tmp/git2dart-linux-provenance.json
         retention-days: 1

@@ -1,0 +1,1 @@
+Test-delivery artifact uploads now contain only `export/**` for Android, Linux, macOS, Windows, and assembled iOS artifacts. Provenance files remain available to their build jobs and release-proof steps, but no longer make the artifact archive retain an extra `export/` directory.

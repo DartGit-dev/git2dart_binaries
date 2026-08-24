@@ -14,6 +14,14 @@ void main() {
           File('.github/actions/build-ios/action.yml').readAsStringSync();
       final windows =
           File('.github/actions/build-windows/action.yml').readAsStringSync();
+      final android =
+          File('.github/actions/build-android/action.yml').readAsStringSync();
+      final linux =
+          File('.github/actions/build-linux/action.yml').readAsStringSync();
+      final macos =
+          File('.github/actions/build-macos/action.yml').readAsStringSync();
+      final workflow =
+          File('.github/workflows/build_package.yml').readAsStringSync();
 
       expect(bindings, contains('--provenance source-build'));
       expect(
@@ -39,6 +47,31 @@ void main() {
               .first;
       expect(restoreStep, isNot(contains('D:/export')));
       expect(saveStep, isNot(contains('D:/export')));
+
+      String artifactUpload(String source, String name) {
+        final match = RegExp(
+          'name: ${RegExp.escape(name)}\\r?\\n',
+        ).firstMatch(source);
+        expect(match, isNotNull, reason: 'missing $name upload');
+        final start = match!.start;
+        final end = source.indexOf('retention-days: 1', start);
+        expect(end, isNonNegative, reason: 'missing $name retention');
+        return source.substring(start, end);
+      }
+
+      for (final entry in <(String, String)>[
+        (android, r'cache-android-${{ inputs.architecture }}'),
+        (linux, 'cache-linux'),
+        (macos, 'cache-macos'),
+        (windows, 'cache-windows'),
+        (workflow, 'cache-ios'),
+      ]) {
+        expect(
+          artifactUpload(entry.$1, entry.$2),
+          isNot(contains('provenance')),
+          reason: '${entry.$2} must deliver native export contents directly',
+        );
+      }
     },
   );
 }
