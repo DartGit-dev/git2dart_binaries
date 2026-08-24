@@ -201,7 +201,6 @@ runs:
           --provenance source-build `
           --source-ref 'refs/tags/openssl-${{ inputs.openssl_version }}'
         Copy-Item D:/git2dart-windows-manifest.json D:/git2dart-windows-provenance.json
-        Copy-Item D:/git2dart-windows-provenance.json D:/export/openssl-provenance.json
 
     - name: Stage Windows native cache
       if: steps.validate-cache.outputs.valid != 'true'
@@ -222,6 +221,10 @@ runs:
         path: |
           .native-cache/windows
         key: native-v2-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
+    - name: Include Windows OpenSSL provenance in release artifact
+      shell: pwsh
+      run: Copy-Item -LiteralPath D:/git2dart-windows-provenance.json -Destination D:/export/openssl-provenance.json -Force
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7

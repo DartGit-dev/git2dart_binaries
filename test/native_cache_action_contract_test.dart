@@ -43,7 +43,7 @@ void main() {
               .substring(
                 windows.indexOf('    - name: Save Windows native cache'),
               )
-              .split('    - name: Cache git2 library')
+              .split('    - name: Include Windows OpenSSL provenance in release artifact')
               .first;
       expect(restoreStep, isNot(contains('D:/export')));
       expect(saveStep, isNot(contains('D:/export')));
