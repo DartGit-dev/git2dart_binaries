@@ -14,6 +14,10 @@ void main() {
       expect(action, contains('libcrypto*.dll'));
       expect(action, contains('libssl*.dll'));
       expect(action, contains('Copy-Item -Destination D:/export'));
+      expect(action, contains('openssl_version:'));
+      expect(action, contains(r'refs/tags/openssl-${{ inputs.openssl_version }}'));
+      expect(action, contains('VC-WIN64A shared'));
+      expect(action, isNot(contains('Get-Command openssl')));
     });
 
     test('bundles versioned OpenSSL runtime libraries in Flutter apps', () {

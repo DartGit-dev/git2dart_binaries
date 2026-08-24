@@ -15,6 +15,7 @@ void main() {
       expect(workflow, contains('linux/libssh2.so'));
       expect(workflow, contains('windows/libssh2.dll'));
       expect(workflow, contains('lib/src/bindings.dart'));
+      expect(workflow, contains('Qualify OpenSSL provenance before package eligibility'));
     },
   );
 }

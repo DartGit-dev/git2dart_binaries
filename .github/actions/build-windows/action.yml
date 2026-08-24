@@ -7,6 +7,9 @@ inputs:
   libssh2_version:
     description: Version of libssh2 to build
     required: true
+  openssl_version:
+    description: Pinned OpenSSL version to build from source
+    required: true
 runs:
   using: composite
   steps:
@@ -15,54 +18,13 @@ runs:
       with:
         arch: x64
 
-    - name: Verify dependencies
+    - name: Verify source-build prerequisites
       shell: pwsh
       run: |
         cmake --version
         ninja --version
-        openssl version
-
-        $openssl = Get-Command openssl -ErrorAction Stop
-        $opensslBinRoot = Split-Path (Split-Path $openssl.Source -Parent) -Parent
-        $opensslRoot = @(
-          $opensslBinRoot,
-          'C:/Program Files/OpenSSL',
-          'C:/Program Files/OpenSSL-Win64'
-        ) | Where-Object {
-          $libcrypto = @(
-            "$_/lib/libcrypto.lib",
-            "$_/lib/VC/x64/MD/libcrypto.lib"
-          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-          $libssl = @(
-            "$_/lib/libssl.lib",
-            "$_/lib/VC/x64/MD/libssl.lib"
-          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-          (Test-Path "$_/include/openssl/ssl.h") -and
-          $libcrypto -and
-          $libssl
-        } | Select-Object -First 1
-
-        if (-not $opensslRoot) {
-          Write-Error 'Could not find OpenSSL headers and import libraries'
-          exit 1
-        }
-
-        $opensslCryptoLibrary = @(
-          "$opensslRoot/lib/libcrypto.lib",
-          "$opensslRoot/lib/VC/x64/MD/libcrypto.lib"
-        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-        $opensslSslLibrary = @(
-          "$opensslRoot/lib/libssl.lib",
-          "$opensslRoot/lib/VC/x64/MD/libssl.lib"
-        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-        "OPENSSL_ROOT_DIR=$opensslRoot" >> $env:GITHUB_ENV
-        "OPENSSL_CRYPTO_LIBRARY=$opensslCryptoLibrary" >> $env:GITHUB_ENV
-        "OPENSSL_SSL_LIBRARY=$opensslSslLibrary" >> $env:GITHUB_ENV
-        Write-Host "OpenSSL root: $opensslRoot"
-        Write-Host "OpenSSL crypto library: $opensslCryptoLibrary"
-        Write-Host "OpenSSL ssl library: $opensslSslLibrary"
+        Get-Command perl -ErrorAction Stop
+        Get-Command nmake -ErrorAction Stop
 
     - name: Fingerprint Windows toolchain
       id: toolchain
@@ -70,12 +32,11 @@ runs:
       run: |
         $compiler = (Get-Item (Get-Command cl.exe -ErrorAction Stop).Source).VersionInfo.FileVersion
         $cmake = cmake --version | Select-Object -First 1
-        $opensslVersion = (openssl version).Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)[1]
-        $raw = "$env:RUNNER_OS-$env:RUNNER_ARCH-$compiler-$cmake-openssl-$opensslVersion"
+        $raw = "$env:RUNNER_OS-$env:RUNNER_ARCH-$compiler-$cmake-openssl-${{ inputs.openssl_version }}"
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($raw)
         $fingerprint = [Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
         "fingerprint=$fingerprint" >> $env:GITHUB_OUTPUT
-        "openssl_version=$opensslVersion" >> $env:GITHUB_OUTPUT
+        "openssl_version=${{ inputs.openssl_version }}" >> $env:GITHUB_OUTPUT
 
     - name: Restore Windows native cache
       id: native-cache
@@ -87,8 +48,10 @@ runs:
           D:/libssh2
           D:/libgit2
           D:/export
+          D:/openssl
           D:/git2dart-windows-manifest.json
-        key: native-v1-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ steps.toolchain.outputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
+          D:/git2dart-windows-provenance.json
+        key: native-v2-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Validate Windows native cache
       id: validate-cache
@@ -104,7 +67,9 @@ runs:
             --libgit2 '${{ inputs.libgit2_version }}' `
             --libssh2 '${{ inputs.libssh2_version }}' `
             --openssl '${{ steps.toolchain.outputs.openssl_version }}' `
-            --toolchain '${{ steps.toolchain.outputs.fingerprint }}'
+            --toolchain '${{ steps.toolchain.outputs.fingerprint }}' `
+            --provenance source-build `
+            --source-ref 'refs/tags/openssl-${{ inputs.openssl_version }}'
           $valid = $LASTEXITCODE -eq 0
         }
 
@@ -119,12 +84,13 @@ runs:
               Remove-Item -LiteralPath $path -Recurse -Force
             }
           }
-          foreach ($path in @('D:\libssh2', 'D:\libgit2', 'D:\export')) {
+          foreach ($path in @('D:\libssh2', 'D:\libgit2', 'D:\openssl', 'D:\export')) {
             if (Test-Path -LiteralPath $path) {
               Remove-Item -LiteralPath $path -Recurse -Force
             }
           }
           Remove-Item -LiteralPath 'D:\git2dart-windows-manifest.json' -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath 'D:\git2dart-windows-provenance.json' -Force -ErrorAction SilentlyContinue
           'valid=false' >> $env:GITHUB_OUTPUT
         }
 
@@ -136,6 +102,28 @@ runs:
         ref: refs/tags/libssh2-${{ inputs.libssh2_version }}
         path: ./libssh2
 
+    - name: Checkout and build OpenSSL
+      if: steps.validate-cache.outputs.valid != 'true'
+      uses: actions/checkout@v6
+      with:
+        repository: openssl/openssl
+        ref: refs/tags/openssl-${{ inputs.openssl_version }}
+        path: ./openssl
+
+    - name: Build and test OpenSSL
+      if: steps.validate-cache.outputs.valid != 'true'
+      shell: pwsh
+      run: |
+        cd openssl
+        perl Configure VC-WIN64A shared --prefix=D:/openssl/install --openssldir=D:/openssl/install/ssl
+        nmake
+        nmake test
+        nmake install_sw
+        if (-not (Test-Path D:/openssl/install/include/openssl/ssl.h)) { throw 'OpenSSL source build did not install headers' }
+        "OPENSSL_ROOT_DIR=D:/openssl/install" >> $env:GITHUB_ENV
+        "OPENSSL_CRYPTO_LIBRARY=D:/openssl/install/lib/libcrypto.lib" >> $env:GITHUB_ENV
+        "OPENSSL_SSL_LIBRARY=D:/openssl/install/lib/libssl.lib" >> $env:GITHUB_ENV
+
     - name: Build libssh2
       if: steps.validate-cache.outputs.valid != 'true'
       shell: pwsh
@@ -145,7 +133,7 @@ runs:
         cmake --build build --parallel --target install
         mkdir -p D:/export
         copy D:/libssh2/install/bin/libssh2.dll D:/export/libssh2.dll
-        Get-ChildItem "$env:OPENSSL_ROOT_DIR/bin/libcrypto*.dll", "$env:OPENSSL_ROOT_DIR/bin/libssl*.dll" -File | Copy-Item -Destination D:/export
+        Get-ChildItem "D:/openssl/install/bin/libcrypto*.dll", "D:/openssl/install/bin/libssl*.dll" -File | Copy-Item -Destination D:/export
 
     - name: Checkout libgit2
       if: steps.validate-cache.outputs.valid != 'true'
@@ -192,7 +180,10 @@ runs:
           --libgit2 '${{ inputs.libgit2_version }}' `
           --libssh2 '${{ inputs.libssh2_version }}' `
           --openssl '${{ steps.toolchain.outputs.openssl_version }}' `
-          --toolchain '${{ steps.toolchain.outputs.fingerprint }}'
+          --toolchain '${{ steps.toolchain.outputs.fingerprint }}' `
+          --provenance source-build `
+          --source-ref 'refs/tags/openssl-${{ inputs.openssl_version }}'
+        Copy-Item D:/git2dart-windows-manifest.json D:/git2dart-windows-provenance.json
 
     - name: Save Windows native cache
       if: steps.validate-cache.outputs.valid != 'true'
@@ -203,13 +194,17 @@ runs:
           libgit2
           D:/libssh2
           D:/libgit2
+          D:/openssl
           D:/export
           D:/git2dart-windows-manifest.json
-        key: native-v1-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ steps.toolchain.outputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
+          D:/git2dart-windows-provenance.json
+        key: native-v2-windows-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-windows/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7
       with:
         name: cache-windows
-        path: D:/export/**
+        path: |
+          D:/export/**
+          D:/git2dart-windows-provenance.json
         retention-days: 1
