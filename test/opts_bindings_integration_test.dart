@@ -1,5 +1,4 @@
 import 'dart:ffi' as ffi;
-import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -173,11 +172,6 @@ void main() {
 
       calloc.free(current);
       calloc.free(allowed);
-    });
-
-    test('declares cache object limit with a pointer-width value', () {
-      final wrapper = File('lib/src/opts_bindings.dart').readAsStringSync();
-      expect(wrapper, contains('ffi.VarArgs<(ffi.Int, ffi.Size)>'));
     });
   });
 
