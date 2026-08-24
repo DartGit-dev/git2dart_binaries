@@ -46,6 +46,14 @@ jobs:
         with:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
+      - name: Prove final Linux payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform linux --root /tmp/export --output "$RUNNER_TEMP/platform-proof-linux" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-linux
+          path: ${{ runner.temp }}/platform-proof-linux
+          retention-days: 7
 
   build_libgit2_macos:
     runs-on: macos-latest
@@ -59,6 +67,14 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Prove final macOS payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform macos --root export --attestation-input /tmp/git2dart-macos --output "$RUNNER_TEMP/platform-proof-macos" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-macos
+          path: ${{ runner.temp }}/platform-proof-macos
+          retention-days: 7
 
   build_libgit2_ios:
     runs-on: macos-latest
@@ -137,6 +153,14 @@ jobs:
           name: cache-ios
           path: /tmp/git2dart-ios/export/**
           retention-days: 1
+      - name: Prove final iOS XCFramework payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform ios --root /tmp/git2dart-ios/export --attestation-input /tmp/git2dart-ios/slices --output "$RUNNER_TEMP/platform-proof-ios" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-ios
+          path: ${{ runner.temp }}/platform-proof-ios
+          retention-days: 7
 
   build_libgit2_windows:
     runs-on: windows-latest
@@ -149,6 +173,15 @@ jobs:
         with:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
+      - name: Prove final Windows payload
+        continue-on-error: true
+        shell: pwsh
+        run: python .github/scripts/platform_release_proof.py create --platform windows --root D:/export --output "$env:RUNNER_TEMP/platform-proof-windows" --candidate "$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT" --libgit2 "$env:LIBGIT2_VERSION" --libssh2 "$env:LIBSSH2_VERSION" --openssl "$env:OPENSSL_VERSION"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-windows
+          path: ${{ runner.temp }}/platform-proof-windows
+          retention-days: 7
 
   build_libgit2_android_x86_64:
     runs-on: ubuntu-latest
@@ -163,6 +196,14 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Prove final Android x86_64 payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform android --abi x86_64 --root /tmp/git2dart-android-x86_64/export --output "$RUNNER_TEMP/platform-proof-android-x86_64" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-android-x86_64
+          path: ${{ runner.temp }}/platform-proof-android-x86_64
+          retention-days: 7
 
   build_libgit2_android_other:
     runs-on: ubuntu-latest
@@ -180,6 +221,14 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Prove final Android payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform android --abi "${{ matrix.os }}" --root "/tmp/git2dart-android-${{ matrix.os }}/export" --output "$RUNNER_TEMP/platform-proof-android-${{ matrix.os }}" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-android-${{ matrix.os }}
+          path: ${{ runner.temp }}/platform-proof-android-${{ matrix.os }}
+          retention-days: 7
 
   run_linux_tests:
     needs: [generate_bindings, build_libgit2_linux]
@@ -649,6 +698,14 @@ jobs:
           path: ./android/src/main/jniLibs/armeabi-v7a
           name: cache-android-armeabi-v7a
 
+      - name: Download same-run platform proofs
+        uses: actions/download-artifact@v7
+        with:
+          pattern: platform-proof-*
+          path: .platform-proofs
+          merge-multiple: false
+      - name: Qualify same-run platform proofs before release eligibility
+        run: python3 .github/scripts/platform_release_proof.py validate --proofs .platform-proofs
       - name: Verify native release inventory
         shell: bash
         run: |
