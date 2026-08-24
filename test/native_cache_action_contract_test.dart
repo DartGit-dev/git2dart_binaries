@@ -92,7 +92,7 @@ void main() {
       }
       expect(
         workflow,
-        contains('/tmp/git2dart-ios/export/provenance/openssl-provenance.json'),
+        contains(r'$output_dir/provenance/openssl-provenance.json'),
         reason: 'cache-ios must create its OpenSSL provenance sidecar inside the uploaded export tree',
       );
     },
