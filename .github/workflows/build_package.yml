@@ -3,10 +3,7 @@ on:
   push:
     # tags:
     # - "v[0-9]+.[0-9]+.[0-9]+*"
-    branches:
-      - "main"
-      - "1.11.2"
-      # - "**"
+    branches: ['**']
   pull_request:
     branches:
       - "main"
@@ -865,7 +862,7 @@ jobs:
             pubspec.yaml
 
       - name: Publish package
-        if: ${{ github.event_name != 'pull_request' }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: k-paxian/dart-package-publisher@v.1.6.2
         with:
           accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
