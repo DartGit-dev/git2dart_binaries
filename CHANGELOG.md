@@ -1,3 +1,14 @@
+## [1.12.2] - 2026-08-26
+### Added
+- Added an explicit managed libgit2 runtime lifecycle to the public API, with
+  exact-once release and safe fallback finalization.
+
+### Changed
+- Hardened native-package assembly and release validation with per-platform
+  provenance and behavior proofs before publication eligibility.
+- Run the release-validation workflow for pushes to every branch; publishing
+  remains restricted to pushes to `main`.
+
 ## [1.12.1] - 2026-07-21
 ### Added
 - Added typed `Libgit2Opts` getters and setters for the maximum declared object

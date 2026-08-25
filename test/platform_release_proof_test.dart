@@ -298,15 +298,9 @@ Future<void> _writeCompleteProofs(
     final present = <Object>[];
     for (final expectedPath in expected) {
       final actualPath = expectedPath.replaceAll('*', '-3');
-      final payload =
-          File(
-              p.joinAll(<String>[
-                payloadDirectory.path,
-                ...p.split(actualPath),
-              ]),
-            )
-            ..parent.createSync(recursive: true)
-            ..writeAsStringSync('abc');
+      File(p.joinAll(<String>[payloadDirectory.path, ...p.split(actualPath)]))
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync('abc');
       present.add(<String, Object>{
         'path': actualPath,
         'sha256': _abcSha256,
@@ -384,8 +378,8 @@ Future<String> _inventorySha256(
     root.path,
     ...present.map((item) => item['path']! as String),
   ]);
-  if (result.exitCode != 0) throw StateError(result.stderr);
-  return result.stdout.trim();
+  if (result.exitCode != 0) throw StateError(result.stderr as String);
+  return (result.stdout as String).trim();
 }
 
 (String, File)? _hostLoadableRoute() {
