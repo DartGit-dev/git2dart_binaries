@@ -20,3 +20,9 @@ Generate bindings, implement helpers, assemble exports, then run consumer compil
 
 ## Pending Gaps
 🔴 Confirm which exported symbols are used by `F:\git2dart` before declaring compatibility complete.
+
+## 2026-08-25 Completion Gates
+
+- [ ] DFF-T-04, Generate the ABI only from pinned libgit2 1.9.6 headers and inject it from the same workflow run. Origin: `ffigen.yaml:1`, `.github/actions/generate-bindings/action.yml`. Done when checkout fallback is rejected and artifact origin is recorded. Confidence: 🟢 contract; 🔴 hosted observation.
+- [ ] DFF-T-05, Run a disposable consumer through the public barrel without internal imports. Origin: `tool/package_consumer_bundle.dart:138`. Done when package-config resolves exactly to the injected bundle and public compilation succeeds. Confidence: 🟢 local mechanism; 🔴 current same-run run.
+- [ ] DFF-T-06, Record borrowed-pointer lifetime boundaries. Origin: `lib/src/error.dart:73`, `lib/src/extensions.dart:41`. Done when tests cover null projections without freeing borrowed memory. Confidence: 🟢.

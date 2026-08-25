@@ -44,6 +44,36 @@ To generate bindings with ffigen use (adjust paths to yours):
 dart run ffigen --compiler-opts "-I/path/to/git2dart/libgit2/headers/ -I/lib64/clang/12.0.1/include"
 ```
 
+## Validation evidence
+
+The validation suite distinguishes evidence instead of treating an unavailable
+native prerequisite as a pass:
+
+- Host-independent tests execute the cache-manifest and platform-proof CLIs,
+  Android TLS state transitions, the exact-pinned analyzer AST policy, and the
+  parsed workflow graph.
+- Native ABI, loader, and expanded-package tests require an explicitly injected
+  binding and matching platform payload. A missing payload is reported as
+  `unavailable`; it is not native success.
+- The `build_package` workflow is authoritative for same-run evidence. It
+  downloads the generated binding and Linux payload, assembles a disposable
+  package bundle, compiles a clean public consumer, and loads the bundled native
+  library before publish dry-run or publication can be eligible.
+
+Focused local commands:
+
+```bash
+flutter test -j 1 test/native_cache_manifest_cli_test.dart test/platform_release_proof_test.dart
+flutter test -j 1 test/android_ssl_helper_test.dart test/android_ssl_helper_diagnostic_test.dart
+flutter test -j 1 test/architecture_policy_ast_test.dart test/workflow_policy_graph_test.dart
+flutter test -j 1 test/package_consumer_bundle_test.dart
+flutter analyze
+```
+
+Set `GIT2DART_FIXTURE_PACKAGE_ROOT` only to an explicit expanded fixture package
+when running local consumer/native proof. CI does not use a global-cache or
+checkout fallback: its bundle inputs come from artifacts produced by that run.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE) file for more information.

@@ -1,22 +1,27 @@
 import 'dart:io';
 
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:git2dart_binaries/src/android_ssl_helper.dart';
 
 void main() {
-  test('temporary directory resolution shares the TLS diagnostic boundary', () {
-    final source = File(
-      'lib/src/android_ssl_helper.dart',
-    ).readAsStringSync().replaceAll('\r\n', '\n');
+  test(
+    'temporary-directory failure is observable and does not cache success',
+    () async {
+      AndroidSSLHelper.resetForTesting();
+      addTearDown(AndroidSSLHelper.resetForTesting);
+      final dependencies = AndroidSSLDependencies(
+        temporaryDirectory:
+            () => throw const FileSystemException('unavailable'),
+        loadCertificateAsset: () => throw StateError('must not load'),
+        writeCertificate: (_, _) => throw StateError('must not write'),
+      );
 
-    expect(source, contains("try {\n      // Get the app's cache directory"));
-    expect(source, contains('final cacheDir = await getTemporaryDirectory();'));
-    expect(
-      source,
-      contains("stderr.write('Android cert initialization failed.');"),
-    );
-    expect(
-      source.indexOf('try {'),
-      lessThan(source.indexOf('getTemporaryDirectory()')),
-    );
-  });
+      await expectLater(
+        AndroidSSLHelper.initializeWith(dependencies),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(AndroidSSLHelper.isInitialized, isFalse);
+      expect(AndroidSSLHelper.certPath, isNull);
+    },
+  );
 }

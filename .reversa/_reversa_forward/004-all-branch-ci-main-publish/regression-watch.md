@@ -13,6 +13,15 @@
 
 ## Re-extraction history
 
+### Re-extração 2026-08-25 17:46
+
+| ID | Veredito | Observação |
+|----|----------|------------|
+| W001 | 🟢 verde | BR-055 and the parsed deployment graph preserve validation for every branch push and PR-to-main. |
+| W002 | 🟢 verde | BR-055 preserves credential-bearing publication only for exact `push` to `refs/heads/main`. |
+| W003 | 🟢 verde | BR-056/BR-057 preserve platform dependencies plus proof, inventory, provenance, size, consumer, and dry-run gates. |
+| W004 | 🟢 verde | `publish_package` remains broadly available for validation, PR release-package archival remains present, and only the publisher action is exact-main guarded. |
+
 None.
 
 ## Archived

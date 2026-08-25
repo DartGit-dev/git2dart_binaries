@@ -29,3 +29,11 @@ Packaging holds no runtime domain state. Build-system inventories and platform t
 - 🔴 Current native artifacts are absent from the tracked checkout.
 - 🟡 Duplicate CA copies may drift without an explicit synchronization check.
 - 🔴 Signing, notarization, and platform security review are external controls.
+
+## 2026-08-25 Artifact and Evidence Boundary
+
+The artifact-name/path/link mode contract forms HC-02 across platform builders, package metadata, runtime loader, release inventory, and disposable bundle. 🟢
+
+Linux local bundle/native evidence can validate only its declared fixture; iOS/Android device routes and current Windows/macOS/Linux hosted outputs require current platform jobs. 🟢 bounded evidence; 🔴 hosted/device matrix
+
+The disposable assembler requires an empty destination, binding outside checkout, caller label `same-run`, and minimum platform basenames; the label itself is not cryptographic provenance. 🟢 source; 🔴 identity proof

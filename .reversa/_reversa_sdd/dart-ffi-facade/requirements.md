@@ -39,3 +39,11 @@ Must: stable export barrel and error conversion. Should: validation helpers. Cou
 
 ## Code Traceability
 `lib/git2dart_binaries.dart`, `lib/src/error.dart`, `lib/src/extensions.dart`, `ffigen.yaml`. 🟢
+
+## 2026-08-25 Re-extraction Contract
+
+- The current barrel exports Android TLS support, generated bindings, errors, extensions, option adapters, the managed runtime, and the compatibility `util.dart` path. 🟢
+- Generated `lib/src/bindings.dart` is intentionally absent from the checkout and must be supplied by the same workflow run as the native payload. 🟢 source policy; 🔴 current bytes
+- Borrowed native error pointers remain valid only under libgit2's last-error lifetime; the facade must not free them. 🟢
+- A clean public consumer compile is the minimum evidence for export reachability; a definition or export statement alone is insufficient. 🟢 evidence policy
+- The local SHA/ref/object predicates are source-confirmed, while exact external `git2dart` usage remains unobserved. 🟢 local; 🔴 external consumer

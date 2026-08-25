@@ -8,6 +8,8 @@
 
 Vigente desde 2026-08-24.
 
+Superado pela re-extração de 2026-08-25.
+
 ## Resumo da entrega
 
 This feature adds fail-closed, same-run evidence that the expanded release payload

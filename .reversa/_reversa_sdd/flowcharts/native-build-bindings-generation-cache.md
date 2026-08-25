@@ -2,13 +2,20 @@
 
 ```mermaid
 flowchart TD
-  Restore["Restore cache key"] --> Present{"Manifest and export present?"}
-  Present -- no --> Rebuild["Clear partial cache and rebuild"]
-  Present -- yes --> Validate["native_cache_manifest.py validates versions, fingerprint, files"]
+  Facts["Collect versions, platform facts, toolchain fingerprint and recipe hashes"] --> Key["Compose exact cache key"]
+  Key --> Restore["Restore cache"]
+  Restore --> Present{"Export and manifest present?"}
+  Present -- no --> Clear["Clear partial state"]
+  Present -- yes --> Validate["CLI validate metadata, provenance, file set, sizes and SHA-256"]
   Validate --> Good{"Valid?"}
-  Good -- no --> Rebuild
   Good -- yes --> Reuse["Reuse export"]
-  Rebuild --> Manifest["Generate new manifest"]
-  Manifest --> Save["Save cache"]
+  Good -- no --> Clear
+  Clear --> Build["Build pinned sources and qualify export"]
+  Build --> Create["CLI create manifest"]
+  Create --> Save["Save exact-key cache"]
+  Save --> Sidecar["Copy/upload provenance sidecar with export"]
+  Reuse --> Sidecar
+  Windows["🔴 Windows restore prefix omits recipe hash"] -. "older recipe can still self-validate" .-> Restore
+  IOS["🔴 iOS adds provenance JSON after manifest creation"] -. "next exact file-set validation fails" .-> Validate
+  Sidecar --> Boundary["🟡 Upload declaration is not same-run hosted or publication proof"]
 ```
-

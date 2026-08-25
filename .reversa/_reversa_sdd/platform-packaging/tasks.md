@@ -22,3 +22,9 @@ Freeze names, build artifacts, configure package managers, register plugins, the
 
 ## Pending Gaps
 🔴 Define signing/notarization ownership. Version divergence is release-blocking under the confirmed validation policy. 🟢 user-confirmed policy
+
+## 2026-08-25 Completion Gates
+
+- [ ] PPK-T-06, Validate the exact artifact inventory for every platform/ABI/slice. Origin: `.github/workflows/build_package.yml:723`. Done when current same-run payloads match the release inventory. Confidence: 🟢 recipe; 🔴 run.
+- [ ] PPK-T-07, Run clean consumer resolution/load through the injected bundle. Origin: `tool/package_consumer_bundle.dart:31`. Done when package-config resolves exactly to the bundle and handle origin is recorded. Confidence: 🟢 mechanism; 🔴 origin/current run.
+- [ ] PPK-T-08, Synchronize release metadata versions. Origin: `pubspec.yaml:3`, Apple podspecs. Done when the release gate rejects any three-way mismatch. Confidence: 🟢 observed mismatch; 🟢 target policy.

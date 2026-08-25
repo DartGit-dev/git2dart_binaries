@@ -1,81 +1,155 @@
 # Build, Deployment, and Distribution Topology
 
-The repository has no deployed server runtime. Its deployment is the construction and publication of a multi-platform pub package through GitHub Actions.
+## Applicability
+
+Detailed deployment documentation is applicable because `.github/workflows/build_package.yml` and composite GitHub Actions are cloud execution configuration. The repository has **no Dockerfile, docker-compose, Kubernetes, Terraform, deployed server, or long-lived cloud runtime**. “Deployment” here means hosted construction, validation, and pub.dev distribution of a multi-platform package.
+
+This document describes the checked-in workflow graph. It does not claim a current feature-005 run, GitHub setting, secret authorization, publisher execution, or registry acceptance.
+
+## Fourteen-job GitHub Actions DAG
 
 ```mermaid
 flowchart TB
-  subgraph GitHub["GitHub-hosted CI"]
-    Source["git2dart_binaries source checkout"]
-    Upstream["Pinned upstream tags: libgit2/libssh2/OpenSSL"]
-    Bindings["Ubuntu binding generation"]
-    LinuxBuild["Ubuntu Linux build"]
-    AndroidBuild["Ubuntu Android ABI builds"]
-    AppleBuild["macOS iOS/macOS builds"]
-    WindowsBuild["Windows native build"]
-    Fabric["Validated caches + workflow artifacts"]
-    Tests["Linux/macOS/Windows tests + iOS simulator + Android emulator"]
-    Assemble["Linux release assembler"]
-    Gates["256 MiB gate + pub dry-run"]
-  end
+  Trigger["push to any branch OR pull request targeting main"]
 
-  Source --> Bindings
-  Source --> LinuxBuild
-  Source --> AndroidBuild
-  Source --> AppleBuild
-  Source --> WindowsBuild
-  Upstream --> Bindings
-  Upstream --> LinuxBuild
-  Upstream --> AndroidBuild
-  Upstream --> AppleBuild
-  Upstream --> WindowsBuild
-  Bindings --> Fabric
-  LinuxBuild --> Fabric
-  AndroidBuild --> Fabric
-  AppleBuild --> Fabric
-  WindowsBuild --> Fabric
-  Fabric --> Tests
-  Tests --> Assemble
-  Fabric --> Assemble
-  Assemble --> Gates
-  Gates -->|pull request| PRArtifact["7-day release-package artifact"]
-  Gates -->|configured branch push| PubDev["pub.dev"]
-  PubDev --> Consumer["Dart/Flutter consumer package cache/app build"]
+  Trigger --> G["1 generate_bindings<br/>ubuntu"]
+  Trigger --> BL["2 build_libgit2_linux<br/>ubuntu"]
+  Trigger --> BM["3 build_libgit2_macos<br/>macos"]
+  Trigger --> BI["4 build_libgit2_ios<br/>macos matrix"]
+  Trigger --> BW["6 build_libgit2_windows<br/>windows"]
+  Trigger --> BA64["7 build_libgit2_android_x86_64<br/>ubuntu"]
+  Trigger --> BAO["8 build_libgit2_android_other<br/>ubuntu matrix: 3 ABIs"]
+
+  BI --> AI["5 assemble_libgit2_ios"]
+
+  G --> TL["9 run_linux_tests"]
+  BL --> TL
+  G --> TM["10 run_macos_tests"]
+  BM --> TM
+  G --> TW["11 run_windows_tests"]
+  BW --> TW
+  G --> TI["12 run_ios_tests"]
+  AI --> TI
+  G --> TA["13 run_android_tests"]
+  BA64 --> TA
+
+  TL --> P["14 publish_package<br/>ubuntu release assembler"]
+  TM --> P
+  TW --> P
+  TI --> P
+  TA --> P
+  BAO --> P
 ```
 
-## Runner topology
+The `publish_package.needs` list contains the five platform test jobs plus `build_libgit2_android_other`. It cannot become eligible while any required dependency fails. 🟢 checked-in graph; 🔴 current hosted execution.
 
-| Workload | Runner/tooling | Output |
+## Producer and runner topology
+
+| Job route | Runner/tooling | Primary output / proof |
 |---|---|---|
-| Bindings | Ubuntu, Flutter, libclang, ffigen | `bindings.dart` |
-| Linux | Ubuntu, clang/CMake/OpenSSL | `libgit2.so`, `libssh2.so` |
-| Android | Ubuntu, NDK/OpenSSL/CMake, four ABIs | four shared-library sets |
-| iOS | macOS/Xcode/OpenSSL/CMake | device/simulator XCFramework slices |
-| macOS | macOS/clang/CMake | self-contained `libgit2.dylib` |
-| Windows | Windows/MSVC/Ninja/CMake/OpenSSL | libgit2/libssh2/OpenSSL DLLs |
-| Final assembly | Ubuntu/Flutter/pub tooling | expanded publishable package |
+| `generate_bindings` | Ubuntu, Flutter 3.44.0, libclang, ffigen | `cache-bindings` with untracked `bindings.dart` |
+| Linux build | Ubuntu, CMake/compiler/OpenSSL | `cache-linux`, manifest/provenance/proof |
+| macOS build | macOS, Xcode/clang/CMake | `cache-macos`, self-contained `libgit2.dylib`, proof/attestation |
+| iOS build + assemble | macOS matrix/Xcode/CMake | slice artifacts then `cache-ios` XCFrameworks/proof |
+| Windows build | Windows, MSVC/Ninja/CMake/OpenSSL | `cache-windows` DLL set/provenance/proof |
+| Android x86_64 build | Ubuntu, NDK/CMake | emulator payload/proof |
+| Android other matrix | Ubuntu, NDK/CMake | arm64-v8a, x86, armeabi-v7a payloads/proofs |
+| Platform tests | corresponding host/simulator/emulator | injected binding/native behavior and platform proof artifacts |
+| `publish_package` | Ubuntu, Flutter/Dart/Python | expanded package, consumer evidence, PR artifact or publisher input |
 
-## Environment and secrets
+## Release assembly and gate order
 
-- Versions are workflow environment values; cache keys also include fingerprints and recipe hashes.
-- Publication references pub.dev access/refresh token secrets.
-- Pull requests cannot execute the publisher step by the local workflow condition.
-- 🔴 GitHub environment protection, secret scopes, branch protection, artifact attestations, and token rotation are external and unverified.
+```mermaid
+flowchart TD
+  Eligible["All six publish dependencies green"] --> Download["Download same-run binding + 5-platform payloads"]
+  Download --> Proofs["Download and validate 8 unique platform-proof scopes"]
+  Proofs --> Inventory["Verify required binding, desktop, 4 Android ABI, and 4 iOS framework inventory"]
+  Inventory --> Provenance["Qualify OpenSSL 3.0.15 provenance across 5 platforms"]
+  Provenance --> Size["Expanded selected payload <= 256 MiB"]
+  Size --> Toolchain["Set up pinned Flutter and resolve package"]
+  Toolchain --> Assemble["Assemble disposable Linux bundle with injected binding/payload"]
+  Assemble --> Public["Clean consumer: compile public API"]
+  Public --> Native["Clean consumer: load native payload"]
+  Native --> IgnoreDelta["Ignore generated binding checkout delta for validation"]
+  IgnoreDelta --> DryRun["flutter pub get + dart pub publish --dry-run"]
+  DryRun --> Route{"Event/ref route"}
+  Route -->|pull_request| PR["Upload release-package, retention 7 days"]
+  Route -->|push, ref != main| Validated["Validation complete; no publication step"]
+  Route -->|push, refs/heads/main| Publish["Publisher action with pub.dev tokens"]
+  Publish --> Registry["pub.dev external acceptance"]
+```
 
-## Deployment gates
+## Artifact and proof routing
 
-1. Native build/test and essential symbol validation.
-2. Generated bindings plus platform artifacts injected into test jobs.
-3. Desktop tests and mobile simulator/emulator tests.
-4. Expanded package assembly with every supported platform.
-5. Expanded size not greater than 256 MiB.
-6. `dart pub publish --dry-run` succeeds.
-7. Event route selects PR artifact or real publication.
+| Artifact/fabric item | Producer | Consumer | Authority boundary |
+|---|---|---|---|
+| `cache-bindings` | `generate_bindings` | every platform test and release assembly | same workflow graph; current artifact not inspected |
+| `cache-{linux,macos,windows,ios}` | platform builders | platform tests and release assembly | recipe/route confirmed; current bytes absent |
+| `cache-android-<ABI>` | Android builders | emulator/matrix release assembly | four ABI routes |
+| `platform-proof-*` | platform producer/test routes | release proof validator | eight unique scopes; aggregate semantic/hash gaps remain |
+| provenance sidecars | platform builders/cache restore | OpenSSL qualification | must cover Windows/Linux/macOS/Android/iOS |
+| disposable bundle | `publish_package` | clean public/native consumer | Linux only; `same-run` label is not an attestation |
+| `release-package` | `publish_package` on PR | human/download consumer | seven-day inspection artifact; not publication |
 
-## Recovery characteristics
+Cache reuse is not a green gate by itself. Restored content must satisfy the manifest/provenance contract before upload/consumption.
 
-- Failed jobs stop the dependency DAG; no partial publication path is defined.
-- Invalid caches are cleared and rebuilt.
-- PRs preserve a short-lived assembled package for inspection.
-- There is no documented automated rollback/unpublish mechanism after pub.dev publication.
-- 🔴 A release run/result for the current local commit was not verified in this extraction.
+## Evidence authority across deployment
 
+| Observation | Maximum claim |
+|---|---|
+| Local source and parsed workflow facts | job/step/condition shape and bounded reachability |
+| Local fixture or cached published package | exact fixture/host behavior only |
+| Current hosted job logs and downloaded artifacts | observed run/platform/same-run routing |
+| Publisher action result | attempted/accepted upload as reported by action |
+| pub.dev lookup and external consumer | registry availability and consumability |
+
+The 39/39 safe local result and cached 1.12.1 Windows fixture are not substitutes for this topology’s current hosted execution. Historical run `32750817127` belongs to a predecessor revision.
+
+## Trigger, concurrency, and authorization
+
+- Push validation is configured for every branch (`branches: ['**']`).
+- Pull-request validation is configured for pull requests targeting `main`.
+- PR runs use a concurrency group and cancel an earlier in-progress PR run for the same key.
+- The credential-bearing publisher step requires both `github.event_name == 'push'` and `github.ref == 'refs/heads/main'`.
+- PR and non-main push routes can validate but cannot reach the publisher condition.
+- The publisher uses referenced pub.dev access/refresh secrets and `skipTests: true`; correctness therefore depends on all prior gates.
+
+🟢 These are checked-in policy facts. 🔴 Branch protection, required checks, environments, approvals, secret scopes/rotation, fork behavior, action integrity, and organization permissions are external.
+
+## Version and package identity
+
+| Input | Pinned/declared value | Role |
+|---|---:|---|
+| libgit2 | 1.9.6 | generated ABI and every native builder |
+| libssh2 | 1.11.1 | SSH native dependency |
+| OpenSSL | 3.0.15 | TLS/crypto build input and release provenance gate |
+| Flutter | 3.44.0 | hosted Flutter toolchain |
+| pub package | 1.12.1 | package metadata |
+| iOS/macOS podspec | 1.11.2 | current metadata mismatch; release risk |
+
+The intended identity chain is:
+
+`workflow revision + pinned inputs → generated binding/native exports → proofs/provenance → downloaded release payload → disposable bundle → dry-run → publication`.
+
+The workflow routes these items from one run, but it does not yet provide a cryptographic/hash join across every arrow.
+
+## Failure and recovery characteristics
+
+- A failed required job prevents `publish_package` eligibility.
+- Invalid caches are cleared/rebuilt by producer routes rather than accepted as hits.
+- Proof, inventory, provenance, size, consumer, or dry-run failure stops the release job before publication.
+- Bounded fixture/consumer processes fail on timeout; a declared missing native prerequisite is `unavailable`, not a behavior pass.
+- PR output is recoverable for seven days through the release artifact.
+- There is no checked-in automated pub.dev rollback/unpublish route.
+- GitHub Actions can rerun jobs/workflows, but rerun identity and artifact replacement semantics were not observed here.
+
+## Deployment red gaps
+
+1. Current feature-005 hosted run and all same-run platform artifacts.
+2. Hash/identity join from proof/provenance to payload, bundle and published package.
+3. Actual native handle origin in successful consumer/loader runs.
+4. Android default TLS/HTTPS and concurrency behavior.
+5. Current external `git2dart` selected-pair coordinator run.
+6. Current publisher execution and pub.dev registry acceptance.
+7. GitHub protections, approvals, secrets/token scopes and action trust.
+8. Generated binding/native bytes absent from the checked-out source snapshot.

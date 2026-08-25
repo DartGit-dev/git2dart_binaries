@@ -10,6 +10,14 @@
 
 ## Historico de re-extracoes
 
+### Re-extração 2026-08-25 17:46
+
+| ID | Veredito | Observação |
+|----|----------|------------|
+| W001 | 🟢 verde | BR-053/BR-057 and `deployment.md` preserve eight same-run scopes and proof qualification before inventory, provenance, size, consumer, dry-run, handoff, or publication. |
+| W002 | 🔴 vermelho | Fresh extraction confirms aggregate validation can accept `status=passed` with empty inventory/versions and null attestation, and does not join proof hashes to payload bytes (`domain.md` BR-054; `code-analysis.md` aggregate validation). This matches the recorded violation signal. |
+| W003 | 🟢 verde | Proof creation still records Apple input/output hashes and toolchain/SDK metadata, and BR-029–BR-035 preserve loader semantics; current hosted Apple execution remains unobserved. |
+
 None yet.
 
 ## Arquivadas

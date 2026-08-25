@@ -18,6 +18,15 @@
 
 ## Re-extraction history
 
+### Re-extração 2026-08-25 17:46
+
+| ID | Veredito | Observação |
+|----|----------|------------|
+| W001 | 🟢 verde | The NBG requirements preserve the explicit OpenSSL 3.0.15 source pin; the current Windows action is documented as source-building that input. |
+| W002 | 🟢 verde | BR-049–BR-051 preserve exact cache validation and mutually exclusive source-build/approved-exception provenance. |
+| W003 | 🟢 verde | The release topology still qualifies Windows, Linux, macOS, Android, and iOS provenance before eligibility; current hosted execution remains a separate gap. |
+| W004 | 🟢 verde | BR-046 preserves version-agnostic `libcrypto*.dll` and `libssl*.dll` package exports; current expanded bytes remain unobserved. |
+
 None.
 
 ## Archived

@@ -25,7 +25,8 @@
 - [x] ✅ **Archaeologist** — Analyze `android-tls-bootstrap`
 - [x] ✅ **Archaeologist** — Analyze `platform-packaging`
 - [x] ✅ **Archaeologist** — Analyze `native-build-bindings-generation`
-- [x] ✅ **Archaeologist** — Analyze `validation-release-assembly`
+- [x] **Archaeologist** — Analyze `validation-release-assembly` ✅
+- [x] ✅ **Archaeologist** — Analyze `behavior-proving-tests`
 
 ## Phase 3: Interpretation 🧠
 
@@ -38,16 +39,17 @@
 
 ## Phase 4: Generation 📝
 
-- [x] ✅ **Writer** — SDD specifications by component (7 feature folders, 21 canonical files)
-- [x] ✅ **Writer** — OpenAPI (not applicable; no HTTP API found)
-- [x] ✅ **Writer** — User stories (not applicable; package behavior is specified as technical feature acceptance scenarios)
-- [x] ✅ **Writer** — Code/specification matrix (47/47 tracked files mapped)
+- [x] ✅ **Writer** — SDD specifications by component
+- [x] ✅ **Writer** — OpenAPI applicability
+- [x] ✅ **Writer** — User stories applicability
+- [x] ✅ **Writer** — Code/specification matrix
 
 ## Phase 5: Review ✅
 
-- [x] ✅ **Reviewer** — Cross-review specifications (independent Codex pass incorporated)
-- [x] ✅ **Reviewer** — Record unresolved gaps (10 questions; awaiting user validation)
-- [x] ✅ **Reviewer** — Final confidence report (80.5% weighted confidence; 10 decisions retained as lacunae)
+- [x] ✅ **Reviewer** — Cross-review specifications (plugin transport unavailable; full cross-unit review completed)
+- [x] ✅ **Reviewer** — Record unresolved gaps
+- [x] ✅ **Reviewer** — Final confidence report
+- [x] ✅ **Reversa** — Semantic regression check and addendum reconciliation
 
 ---
 
@@ -55,10 +57,10 @@
 
 > Run only when their required evidence exists.
 
-- [ ] **Visor** — Screenshot interface analysis (not applicable in current evidence)
-- [ ] **Data Master** — Database analysis (not applicable; no database found)
-- [ ] **Design System** — Design token extraction (not applicable)
-- [ ] **Tracer** — Dynamic analysis (requires an accessible built system)
+- [x] ⏭️ **Visor** — Screenshot interface analysis (not applicable in current evidence)
+- [x] ⏭️ **Data Master** — Database analysis (not applicable; no database found)
+- [x] ⏭️ **Design System** — Design token extraction (not applicable)
+- [x] ⏭️ **Tracer** — Dynamic analysis (not selected; native expanded product unavailable)
 
 ---
 

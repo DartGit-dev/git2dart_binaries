@@ -26,6 +26,13 @@ EXPECTED = {
     "android": ("libgit2.so", "libssh2.so", "libcrypto.so", "libssl.so"),
     "ios": tuple(f"{name}.xcframework/Info.plist" for name in ("libcrypto", "libssl", "libssh2", "libgit2")),
 }
+VERSION_KEYS = {"libgit2", "libssh2", "openssl"}
+PAYLOAD_SEGMENTS = {
+    "linux": ("linux",),
+    "macos": ("macos",),
+    "windows": ("windows",),
+    "ios": ("ios",),
+}
 
 
 def sha256(path: Path) -> str:
@@ -38,7 +45,10 @@ def sha256(path: Path) -> str:
 
 def tree_sha256(root: Path) -> str:
     digest = hashlib.sha256()
-    for item in sorted(path for path in root.rglob("*") if path.is_file()):
+    for item in sorted(
+        (path for path in root.rglob("*") if path.is_file()),
+        key=lambda path: path.relative_to(root).as_posix(),
+    ):
         digest.update(item.relative_to(root).as_posix().encode("utf-8"))
         digest.update(sha256(item).encode("ascii"))
     return digest.hexdigest()
@@ -49,6 +59,107 @@ def safe_relative(value: str) -> str:
     if path.is_absolute() or ".." in path.parts or "\\" in value:
         raise ValueError("invalid-path")
     return path.as_posix()
+
+
+def payload_directory(root: Path, platform: str, abi: str) -> Path:
+    segments = PAYLOAD_SEGMENTS.get(platform)
+    if platform == "android":
+        segments = ("android", "src", "main", "jniLibs", abi)
+    if not segments:
+        raise ValueError("unexpected proof scope")
+    result = root.joinpath(*segments)
+    if not result.is_dir():
+        raise ValueError("unavailable payload root")
+    return result
+
+
+def validate_inventory(record: dict, platform: str) -> list[dict]:
+    inventory_record = record["inventory"]
+    if not isinstance(inventory_record, dict) or set(inventory_record) != {"expected", "present", "missing", "unexpected"}:
+        raise ValueError("invalid inventory")
+    expected = EXPECTED[platform]
+    if inventory_record["expected"] != list(expected) or inventory_record["missing"] or inventory_record["unexpected"]:
+        raise ValueError("incomplete inventory")
+    present = inventory_record["present"]
+    if not isinstance(present, list) or not present:
+        raise ValueError("empty inventory")
+    paths: set[str] = set()
+    for item in present:
+        if not isinstance(item, dict) or set(item) != {"path", "sha256", "size"}:
+            raise ValueError("invalid inventory item")
+        path = item["path"]
+        if not isinstance(path, str) or path in paths:
+            raise ValueError("invalid inventory item")
+        safe_relative(path)
+        if not isinstance(item["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", item["sha256"]):
+            raise ValueError("invalid inventory digest")
+        if not isinstance(item["size"], int) or item["size"] <= 0:
+            raise ValueError("invalid inventory digest")
+        paths.add(path)
+    if any(not any(Path(path).match(pattern) for path in paths) for pattern in expected):
+        raise ValueError("incomplete inventory")
+    if any(not any(Path(path).match(pattern) for pattern in expected) for path in paths):
+        raise ValueError("unexpected inventory item")
+    return present
+
+
+def validate_semantics(record: dict, platform: str) -> list[dict]:
+    present = validate_inventory(record, platform)
+    linkage_record = record["linkage"]
+    if not isinstance(linkage_record, dict) or linkage_record.get("result") != "passed" or not isinstance(linkage_record.get("diagnostic"), str) or not linkage_record["diagnostic"]:
+        raise ValueError("invalid linkage")
+    versions = record["versions"]
+    if not isinstance(versions, dict) or set(versions) != VERSION_KEYS:
+        raise ValueError("invalid versions")
+    for version in versions.values():
+        if not isinstance(version, dict) or set(version) != {"intended", "observed", "comparison", "evidence"}:
+            raise ValueError("invalid version evidence")
+        if not all(isinstance(value, str) and value for value in version.values()) or version["comparison"] != "match" or version["intended"] != version["observed"]:
+            raise ValueError("invalid version evidence")
+    if not isinstance(record["attestation"], dict) or not record["attestation"]:
+        raise ValueError("invalid attestation")
+    return present
+
+
+def validate_attestation(attestation: object, platform: str, versions: object) -> None:
+    if not isinstance(attestation, dict):
+        raise ValueError("invalid attestation")
+
+    required = {"emitted_payload_sha256"}
+    if platform in {"macos", "ios"}:
+        required.update({"input_sha256", "emitted_sha256", "toolchain", "sdk", "compiled_metadata"})
+    if set(attestation) != required:
+        raise ValueError("invalid attestation fields")
+
+    hashes = {"emitted_payload_sha256"}
+    if platform in {"macos", "ios"}:
+        hashes.update({"input_sha256", "emitted_sha256"})
+    for name in hashes:
+        if not isinstance(attestation[name], str) or not re.fullmatch(r"[0-9a-f]{64}", attestation[name]):
+            raise ValueError(f"invalid attestation {name}")
+
+    if platform in {"macos", "ios"}:
+        if not isinstance(attestation["toolchain"], str) or not attestation["toolchain"]:
+            raise ValueError("invalid attestation toolchain")
+        if not isinstance(attestation["sdk"], str) or not attestation["sdk"]:
+            raise ValueError("invalid attestation sdk")
+        if attestation["compiled_metadata"] != versions:
+            raise ValueError("invalid attestation compiled metadata")
+
+
+def validate_payload_identity(
+    root: Path, platform: str, abi: str, present: list[dict], attestation: dict
+) -> None:
+    payload = payload_directory(root, platform, abi)
+    payload_sha256 = tree_sha256(payload)
+    if attestation["emitted_payload_sha256"] != payload_sha256:
+        raise ValueError("attestation payload digest mismatch")
+    if platform in {"macos", "ios"} and attestation["emitted_sha256"] != payload_sha256:
+        raise ValueError("attestation emitted digest mismatch")
+    for item in present:
+        actual = payload / safe_relative(item["path"])
+        if not actual.is_file() or actual.stat().st_size != item["size"] or sha256(actual) != item["sha256"]:
+            raise ValueError("payload proof digest mismatch")
 
 
 def inventory(root: Path, expected: tuple[str, ...]) -> tuple[list[dict], list[str], list[str]]:
@@ -76,7 +187,10 @@ def inventory(root: Path, expected: tuple[str, ...]) -> tuple[list[dict], list[s
 
 def _run(command: list[str], env: dict[str, str] | None = None) -> tuple[bool, str]:
     result = subprocess.run(command, text=True, capture_output=True, env=env, check=False)
-    return result.returncode == 0, (result.stdout + result.stderr).strip()[-400:]
+    diagnostic = (result.stdout + result.stderr).strip()[-400:]
+    if result.returncode == 0 and not diagnostic:
+        diagnostic = "probe completed successfully"
+    return result.returncode == 0, diagnostic
 
 
 def linkage(root: Path, platform: str) -> tuple[bool, str]:
@@ -130,9 +244,20 @@ def observed_versions(root: Path, expected: dict[str, str], evidence: Path | Non
         if not observed:
             observed = observed_version(evidence_text, wanted)
             source = "build-input" if observed else "unavailable"
-        values[dependency] = {"intended": wanted, "observed": observed or "unavailable", "comparison": "match" if observed else "unavailable", "evidence": source}
+        comparison = "match" if observed else "unavailable"
         if not observed:
-            failures.append("version-unreadable")
+            mismatch = re.search(
+                rf"(?i){re.escape(dependency)}(?:\s+version)?\s*[:= ]\s*(\d+\.\d+\.\d+)",
+                evidence_text,
+            )
+            if mismatch:
+                observed = mismatch.group(1)
+                comparison = "mismatch"
+                source = "build-input"
+                failures.append("version-mismatch")
+            else:
+                failures.append("version-unreadable")
+        values[dependency] = {"intended": wanted, "observed": observed or "unavailable", "comparison": comparison, "evidence": source}
     return values, failures
 
 
@@ -150,18 +275,18 @@ def create(args: argparse.Namespace) -> int:
     if missing: failures.append("missing-payload")
     if unexpected: failures.append("unexpected-payload")
     if not linked: failures.append("linkage-failed" if args.platform in {"ios", "macos"} else "loader-failed")
-    attestation = None
+    attestation = {"emitted_payload_sha256": tree_sha256(root)}
     if args.platform in {"ios", "macos"}:
         input_root = Path(args.attestation_input).resolve() if args.attestation_input else None
         toolchain_ok, toolchain = _run(["xcrun", "clang", "--version"])
         sdk_ok, sdk = _run(["xcrun", "--show-sdk-version"])
-        attestation = {
+        attestation.update({
             "input_sha256": tree_sha256(input_root) if input_root and input_root.is_dir() else "unavailable",
             "emitted_sha256": tree_sha256(root),
             "toolchain": toolchain if toolchain_ok else "unavailable",
             "sdk": sdk if sdk_ok else "unavailable",
             "compiled_metadata": versions,
-        }
+        })
         if "unavailable" in attestation.values(): failures.append("unavailable")
     failures = sorted(set(failures))
     record = {
@@ -182,7 +307,12 @@ def create(args: argparse.Namespace) -> int:
 def validate(args: argparse.Namespace) -> int:
     expected_scopes = {"linux/default", "macos/default", "windows/default", "ios/default", *(f"android/{abi}" for abi in ("x86_64", "arm64-v8a", "x86", "armeabi-v7a"))}
     seen: set[str] = set()
-    for path in Path(args.proofs).rglob("proof.json"):
+    candidate: str | None = None
+    proofs_root = Path(args.proofs).resolve()
+    payload_root = Path(args.payload_root).resolve() if args.payload_root else None
+    if payload_root and not payload_root.is_dir():
+        raise ValueError("unavailable payload root")
+    for path in proofs_root.rglob("proof.json"):
         try:
             record = json.loads(path.read_text(encoding="utf-8"))
             required = {"schema", "candidate", "platform", "abi", "status", "inventory", "linkage", "versions", "attestation", "failure_codes"}
@@ -190,12 +320,23 @@ def validate(args: argparse.Namespace) -> int:
                 raise ValueError("unknown schema")
             if record["status"] != "passed" or record["failure_codes"]:
                 raise ValueError("failed proof")
+            if not isinstance(record["candidate"], str) or not record["candidate"]:
+                raise ValueError("invalid candidate")
+            if candidate is None:
+                candidate = record["candidate"]
+            elif candidate != record["candidate"]:
+                raise ValueError("candidate mismatch")
             scope = f"{record['platform']}/{record['abi']}"
             if scope in seen or scope not in expected_scopes:
                 raise ValueError("unexpected proof scope")
+            present = validate_semantics(record, record["platform"])
+            validate_attestation(record["attestation"], record["platform"], record["versions"])
+            if payload_root:
+                validate_payload_identity(payload_root, record["platform"], record["abi"], present, record["attestation"])
             seen.add(scope)
         except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
-            print(f"Platform proof rejected: {path}: {error}", file=sys.stderr)
+            relative = path.relative_to(proofs_root).as_posix()
+            print(f"Platform proof rejected: {relative}: {error}", file=sys.stderr)
             return 1
     missing = expected_scopes - seen
     if missing:
@@ -221,6 +362,7 @@ def main() -> int:
     proof.add_argument("--attestation-input")
     check = commands.add_parser("validate")
     check.add_argument("--proofs", required=True)
+    check.add_argument("--payload-root")
     args = parser.parse_args()
     try:
         return create(args) if args.command == "create" else validate(args)

@@ -6,12 +6,28 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
 
 SCHEMA = "native-v2"
 PROVENANCE_KINDS = ("source-build", "approved-exception")
+
+
+def safe_relative(value: str) -> str:
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts or "\\" in value:
+        raise ValueError("Unsafe exported file path")
+    return path.as_posix()
+
+
+def sanitized_error(error: object, *roots: Path) -> str:
+    value = str(error)
+    for root in roots:
+        value = value.replace(str(root.resolve()), "<fixture>")
+        value = value.replace(str(root), "<fixture>")
+    return re.sub(r"(?:[A-Za-z]:)?[/\\][^\s:]+", "<path>", value)
 
 
 def metadata(args: argparse.Namespace) -> dict[str, str]:
@@ -82,6 +98,10 @@ def validate(args: argparse.Namespace) -> int:
         recorded = manifest.get("files")
         if not isinstance(recorded, dict) or not recorded:
             raise ValueError("Manifest contains no exported files")
+        for relative in recorded:
+            if not isinstance(relative, str):
+                raise ValueError("Manifest file paths must be strings")
+            safe_relative(relative)
 
         current = exported_files(root)
         if set(current) != set(recorded):
@@ -119,7 +139,10 @@ def main() -> int:
         args = parser().parse_args()
         return create(args) if args.command == "create" else validate(args)
     except ValueError as error:
-        print(f"Native cache validation failed: {error}", file=sys.stderr)
+        print(
+            f"Native cache validation failed: {sanitized_error(error, root, manifest_path)}",
+            file=sys.stderr,
+        )
         return 1
 
 

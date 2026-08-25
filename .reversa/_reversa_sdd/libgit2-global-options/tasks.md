@@ -20,3 +20,9 @@ Generate constants, define signature families, add wrappers, then run isolated s
 
 ## Pending Gaps
 🔴 Validate every exposed wrapper with complete native coverage and define consumer concurrency policy for global mutations. The ABI artifact source and production-shipping boundary are confirmed. 🟢 user-confirmed policy
+
+## 2026-08-25 Completion Gates
+
+- [ ] LGO-T-05, Prove W001 on a 64-bit matching payload. Origin: `test/fixtures/abi_probe/abi_probe.dart:8`. Done when submitted and observed `0x100000011` match and the original value is restored. Confidence: 🟢 mechanism; 🔴 current all-platform result.
+- [ ] LGO-T-06, Classify unavailable prerequisites separately from pass. Origin: `test/opts_bindings_integration_test.dart:20`. Done when reports cannot promote unavailable to ABI success. Confidence: 🟢.
+- [ ] LGO-T-07, Validate all discriminator values against the same-run generated binding. Origin: `lib/src/opts_bindings.dart:29`. Done when every method/signature/header tuple is covered natively. Confidence: 🔴 current completion.

@@ -24,8 +24,8 @@ On desktop platforms, first try the bare library name. If that fails, resolve th
 - Positive: application loader behavior remains the fast/primary path.
 - Negative: package-config resolution adds multiple fallback branches and failure modes.
 - Negative: compiled Flutter apps may not have a usable package config, so platform packaging must still make the first bare-name open work where required.
+- Negative: the current success probe reports the supplied package root but not the actual opened handle path, so fallback origin still needs stronger observation.
 
 ## Evidence
 
-`lib/src/util.dart`; commits `3ec5df2`, `4e2ab6d`, `ff30d32`; macOS and Windows plain-Dart loader regression tests.
-
+`lib/src/runtime.dart`; commits `3ec5df2`, `4e2ab6d`, `ff30d32`; feature-005 isolated loader and disposable-consumer probes. Missing-root failure and Android plan are locally observed; current same-run positive origin remains a gap.

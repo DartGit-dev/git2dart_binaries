@@ -6,6 +6,7 @@ import 'dart:isolate';
 import 'package:git2dart_binaries/src/bindings.dart';
 import 'package:git2dart_binaries/src/error.dart';
 import 'package:git2dart_binaries/src/opts_bindings.dart';
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
 export 'error.dart' show Libgit2LifecycleException, Libgit2LifecycleOperation;
@@ -356,17 +357,29 @@ void _reportFinalizerError(Object error, StackTrace stackTrace) {
   stderr.writeln('libgit2 finalizer cleanup failed: $error\n$stackTrace');
 }
 
+@visibleForTesting
+final class NativeLoaderPlan {
+  const NativeLoaderPlan(this.libraryName, this.packageSubdirectory);
+
+  final String libraryName;
+  final String? packageSubdirectory;
+
+  bool get hasPackageFallback => packageSubdirectory != null;
+}
+
+@visibleForTesting
+NativeLoaderPlan nativeLoaderPlanForTesting(String operatingSystem) =>
+    switch (operatingSystem) {
+      'windows' => const NativeLoaderPlan('libgit2.dll', 'windows'),
+      'macos' => const NativeLoaderPlan('libgit2.dylib', 'macos'),
+      'linux' => const NativeLoaderPlan('libgit2.so', 'linux'),
+      'android' => const NativeLoaderPlan('libgit2.so', null),
+      _ => throw UnsupportedError('Not supported platform: $operatingSystem'),
+    };
+
 ({String name, String? subDir}) _platformTarget() {
-  if (Platform.isWindows) {
-    return (name: 'libgit2.dll', subDir: 'windows');
-  } else if (Platform.isMacOS) {
-    return (name: 'libgit2.dylib', subDir: 'macos');
-  } else if (Platform.isLinux) {
-    return (name: 'libgit2.so', subDir: 'linux');
-  } else if (Platform.isAndroid) {
-    return (name: 'libgit2.so', subDir: null);
-  }
-  throw UnsupportedError('Not supported platform');
+  final plan = nativeLoaderPlanForTesting(Platform.operatingSystem);
+  return (name: plan.libraryName, subDir: plan.packageSubdirectory);
 }
 
 DynamicLibrary _loadLibrary() {

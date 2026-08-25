@@ -20,4 +20,11 @@
 Implement artifact contracts, dependency preload, root resolution, then lazy globals and explicit lifecycle tests. 🟢
 
 ## Pending Gaps
-🔴 Verify that a failed init return aborts bootstrap. Automatic teardown and removal of public shutdown are explicitly out of scope under the confirmed compatibility decision. 🟢 user-confirmed policy
+🔴 Verify production owner drainage, cross-isolate balance, actual loaded-handle origin, and current Android device loading. 🟢 The managed runtime already rejects failed initialization and attempts one compensating rollback.
+
+## 2026-08-25 Completion Gates
+
+- [ ] NLL-T-07, Preserve the four-phase checked lifecycle and compensating rollback. Origin: `lib/src/runtime.dart:112`. Done when positive, zero, negative, thrown-init, rollback-failure, and retry transitions pass. Confidence: 🟢.
+- [ ] NLL-T-08, Preserve exact transient and persistent pin accounting. Origin: `lib/src/runtime.dart:163`, `lib/src/runtime.dart:337`. Done when callback/destructor failures retain correct pins and shutdown blocks. Confidence: 🟢.
+- [ ] NLL-T-09, Emit successful handle-origin evidence. Origin: `test/fixtures/loader_probe.dart:16`. Done when bare versus package path is observed, not inferred from a supplied root. Confidence: 🔴 current gap.
+- [ ] NLL-T-10, Validate external owner drainage and cross-isolate shutdown. Origin: architectural HC-03. Done when the real `git2dart` consumer balances ownership and terminal shutdown. Confidence: 🔴.

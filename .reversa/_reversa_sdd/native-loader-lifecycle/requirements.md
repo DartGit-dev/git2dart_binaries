@@ -40,4 +40,13 @@ Then loading fails with UnsupportedError
 Must: platform selection, package resolution, managed initialization, fail-closed errors, and preservation of the existing public lifecycle API. Won't introduce: automatic teardown or an isolate-lifetime policy. 🟢 user-confirmed compatibility decision
 
 ## Code Traceability
-`lib/src/util.dart`; packaging tests in `test/windows_packaging_test.dart` and `test/macos_dylib_packaging_test.dart`. 🟢
+`lib/src/runtime.dart`; `lib/src/util.dart`; `test/libgit2_runtime_test.dart`; `test/runtime_loader_process_test.dart`; `test/fixtures/loader_probe.dart`. 🟢
+
+## 2026-08-25 Re-extraction Contract
+
+- One isolate-local runtime owns the selected handle, generated bindings view, option view, phase, call pins, and owner pins. 🟢
+- Initialization succeeds only on a positive native count; every other result attempts one compensating shutdown. 🟢
+- Shutdown is blocked by active calls or live owners, becomes terminal after success/fault, and is idempotent after successful completion. 🟢
+- Desktop loading is bare-name then package fallback; Android has no package fallback; iOS uses process symbols. 🟢
+- W002 proves isolated failure stages and declared payload loading locally, but does not observe the origin of a successful handle or real Android loading. 🟢 local; 🔴 platform outcome
+- W006 proves bounded source structure, not process-global coordination with external consumers. 🟢 local; 🔴 external lifecycle

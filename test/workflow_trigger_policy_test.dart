@@ -1,19 +1,26 @@
-import 'dart:io';
-
 import 'package:test/test.dart';
 
+import '../tool/workflow_policy_facts.dart';
+
 void main() {
-  final workflow = File(
+  final facts = WorkflowPolicyFacts.fromFile(
     '.github/workflows/build_package.yml',
-  ).readAsStringSync().replaceAll('\r\n', '\n');
+  );
 
   test(
     'validates pushes from every branch while retaining main pull requests',
     () {
-      expect(workflow, contains("branches: ['**']"));
       expect(
-        workflow,
-        contains('pull_request:\n    branches:\n      - "main"'),
+        facts.eventAccepted(event: 'push', ref: 'refs/heads/feature'),
+        isTrue,
+      );
+      expect(
+        facts.eventAccepted(event: 'pull_request', ref: 'refs/heads/main'),
+        isTrue,
+      );
+      expect(
+        facts.eventAccepted(event: 'pull_request', ref: 'refs/heads/feature'),
+        isFalse,
       );
     },
   );
@@ -22,27 +29,22 @@ void main() {
     'keeps package validation available while guarding only publication',
     () {
       expect(
-        workflow,
-        isNot(
-          contains("""  publish_package:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'"""),
+        facts.validationReachable(
+          event: 'pull_request',
+          ref: 'refs/heads/main',
         ),
+        isTrue,
       );
       expect(
-        workflow,
-        contains('''  publish_package:
-    needs:'''),
-      );
-      expect(workflow, contains('Validate publish package'));
-      expect(
-        workflow,
-        contains(r"""      - name: Zip package into cache
-        if: ${{ github.event_name == 'pull_request' }}"""),
+        facts.publicationReachable(
+          event: 'pull_request',
+          ref: 'refs/heads/main',
+        ),
+        isFalse,
       );
       expect(
-        workflow,
-        contains("""      - name: Publish package
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'"""),
+        facts.publicationReachable(event: 'push', ref: 'refs/heads/main'),
+        isTrue,
       );
     },
   );

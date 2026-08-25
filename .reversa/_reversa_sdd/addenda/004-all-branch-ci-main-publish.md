@@ -8,6 +8,8 @@
 
 Vigente desde 2026-08-24.
 
+Superado pela re-extração de 2026-08-25.
+
 ## Resumo da entrega
 
 The package release factory now validates every branch push while preserving

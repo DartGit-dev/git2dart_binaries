@@ -40,3 +40,11 @@ Must: plugin declarations, artifact sets, loader-name alignment, Apple linkage, 
 
 ## Code Traceability
 `pubspec.yaml`; `android/`, `ios/`, `linux/`, `macos/`, and `windows/` manifests and shims. 🟢
+
+## 2026-08-25 Re-extraction Contract
+
+- Flutter declares Android, iOS, Linux, macOS, and Windows as FFI plugin targets; registration shims do not implement Git operations. 🟢
+- Android requires four libraries for each of four ABIs; iOS requires four XCFrameworks; desktop basenames must match loader plans. 🟢 recipe
+- W002 connects loader names and fallback behavior; W005 connects injected payload layout to a clean disposable consumer. 🟢 local mechanisms; 🔴 current same-run multi-platform outcome
+- Package versions are currently divergent: pub 1.12.1, both Apple podspecs 1.11.2, Android module 1.0. 🟢
+- Native payload bytes, signing/notarization, and current five-platform assembly are not present in this checkout. 🔴

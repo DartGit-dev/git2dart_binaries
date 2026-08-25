@@ -121,34 +121,6 @@
       "stale": false
     },
     {
-      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/plan.html_1787456803482",
-      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/plan.html",
-      "operation": {
-        "type": "unpin"
-      },
-      "scope": "project",
-      "before_hash": "",
-      "author": {
-        "agent": "mcp"
-      },
-      "created_at": "2026-08-23T03:46:43.482278800Z",
-      "stale": false
-    },
-    {
-      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.proposed.diff_1787456803876",
-      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.proposed.diff",
-      "operation": {
-        "type": "unpin"
-      },
-      "scope": "project",
-      "before_hash": "",
-      "author": {
-        "agent": "mcp"
-      },
-      "created_at": "2026-08-23T03:46:43.876130Z",
-      "stale": false
-    },
-    {
       "id": "ov_file:F:/git2dart/test/libgit2_test.dart_1787456804541",
       "target": "file:F:/git2dart/test/libgit2_test.dart",
       "operation": {
@@ -202,20 +174,6 @@
         "agent": "mcp"
       },
       "created_at": "2026-08-23T03:46:47.569884700Z",
-      "stale": false
-    },
-    {
-      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.diff_1787456809062",
-      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.diff",
-      "operation": {
-        "type": "unpin"
-      },
-      "scope": "project",
-      "before_hash": "",
-      "author": {
-        "agent": "mcp"
-      },
-      "created_at": "2026-08-23T03:46:49.062476Z",
       "stale": false
     },
     {
@@ -412,6 +370,102 @@
         "agent": "mcp"
       },
       "created_at": "2026-08-23T03:47:41.216192800Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/plan.html_1787569050798",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/plan.html",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:30.798303100Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.diff_1787569056170",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.diff",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:36.170455900Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.proposed.diff_1787569071009",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.proposed.diff",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:51.009978500Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_binaries/test/opts_bindings_integration_test.dart_1787569074275",
+      "target": "file:F:/git2dart_binaries/test/opts_bindings_integration_test.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:54.275039Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/bug.md_1787569077684",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/bug.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:57.684881900Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_binaries/.reversa/_reversa_forward/005-behavior-proving-tests/audit/cross-check.md_1787657388000",
+      "target": "file:F:/git2dart_binaries/.reversa/_reversa_forward/005-behavior-proving-tests/audit/cross-check.md",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-25T11:29:48.000524400Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_binaries/.github/actions/build-ios/action.yml_1787657390137",
+      "target": "file:F:/git2dart_binaries/.github/actions/build-ios/action.yml",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-25T11:29:50.137969800Z",
       "stale": false
     }
   ]

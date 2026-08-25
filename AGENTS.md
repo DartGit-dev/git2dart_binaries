@@ -29,14 +29,3 @@ Profiles in `.codex/agents/reversa-*.toml` are derived configuration and the sou
 
 Every Reversa orchestrator must read `.agents/skills/reversa/references/codex-routing.md` before invoking another agent. When the runtime has no custom-profile selector, reproduce the profile with `spawn_agent`, `fork_turns: "none"`, and the model and reasoning overrides declared in its TOML. A valid `compute_escalation` may use only the generated `recommended_profile` for the next Compute Class and only once per logical task. Never select `max` automatically or create an escalation loop. If dispatch fails, use the local fallback without duplicating partial side effects.
 
-## Non-negotiable rule
-
-Never delete, modify, or overwrite pre-existing legacy project files.
-
-Exception: files in `.agents/skills/reversa*/` may be edited solely to translate
-human-facing text into English. Preserve all commands, paths, identifiers,
-schemas, state literals, and behavior.
-
-Reversa writes only inside `.reversa/`, including `.reversa/_reversa_sdd/`,
-`.reversa/_reversa_docs/`, `.reversa/_reversa_forward/`, and
-`.reversa/_reversa_bugs/`.

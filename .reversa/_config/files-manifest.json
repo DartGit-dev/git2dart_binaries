@@ -46,7 +46,7 @@
   ".agents/skills/reversa-debugger/references/bugs-readme-template.md": "64856c4764d85dd3b14dc517d5c8a1d3f81b18d39b7d5f569fa6d4b55e1aad80",
   ".agents/skills/reversa-debugger/SKILL.md": "7797352b2fc57eb42b53f8536ddb30b480b1868ad9397ef84addedc55aaed8ef",
   ".agents/skills/reversa-debugger-fix/agents/openai.yaml": "2f9754f7e4d39e5cde995efc76a1adadb34b117719777386a1846793c1f422ef",
-  ".agents/skills/reversa-debugger-fix/SKILL.md": "d7333b53570a5a9d1d68d4f52431bc81f424c04da10d2def085b2ef152c20138",
+  ".agents/skills/reversa-debugger-fix/SKILL.md": "d1ad1766977cfc919bc458a1b93ff435ad8765cdfb38caf0eefd8e57cb6af1e8",
   ".agents/skills/reversa-debugger-debate/agents/openai.yaml": "4697485e4eb4d8c34723800421bbf0739300d8937fb85ace1838230330f0d037",
   ".agents/skills/reversa-debugger-debate/references/debate-protocol.md": "10c963146e892c1b35f70b2ca3dbe13f3f23f6a0df72c352792c3e9dae0b01d0",
   ".agents/skills/reversa-debugger-debate/SKILL.md": "f29a07141eb311e2b3debd0b431bf1da0df47ea2600380067ac7185046629413",
@@ -249,7 +249,7 @@
   ".reversa/scripts/ps/verify-prerequisites.ps1": "b457451fc06500a3e1b43ed953371b546cde1c56aefe8a771bfaeb60f8e0619e",
   ".reversa/hooks.yml": "0d8652e1b7c890a5dc33b2e703724809824133969b98f11812897067fa65788a",
   ".reversa/setup.json": "a2a63793193006a41d576b85ead05cef4d5bd806e2eebdf58834a48dc25ef794",
-  ".reversa/state.json": "dfa71dd715df2633607ed206644b9cbf83219ca763a698c5576781f0bcac239b",
+  ".reversa/state.json": "37e4f091a404c17f30a6d46f059f1b8e4cd475adcc5eff915d8985ad164fa442",
   ".reversa/config.toml": "7dc3f10f35e276a488f00651ddc110b0f2d3cde2ab7c26451f93cde27a083b41",
   ".reversa/config.user.toml": "59a1a98ae308ad6799e831e51fad9cc2af8941ef3cc08712c361544224ef5561",
   ".reversa/plan.md": "9644379ad381bb1017192a87b25b37290f04c79399184a680cdd2a5ccc9bc8e8",
@@ -286,7 +286,7 @@
   ".codex/agents/reversa-reconstructor.toml": "6998104dfb69f0934e79ad936bc0203df5ff9f00df297e8c636285dc1fa27bc8",
   ".codex/agents/reversa-reconstructor-t2.toml": "69087874168f62b42fbc0e261a9350471bc5b86e0f999808a15d6404295a12be",
   ".codex/agents/reversa-debugger.toml": "1fd7fb6831013243576e48a2653076e2fb450c2150d305054a2f885bd11cbcd8",
-  ".codex/agents/reversa-debugger-fix.toml": "951aae92619cdde697b39a731e41028ebe7dd69e2ee4a315879642cd07a4410c",
+  ".codex/agents/reversa-debugger-fix.toml": "ceed1168c97f7327fb973e091f1bbd80ec3ab98d0cad7b831f3d0395ce544517",
   ".codex/agents/reversa-debugger-debate.toml": "7d7cb7475ee83eae616a9e0c12c578128643cdde4b33a6270379208905d46f4b",
   ".codex/agents/reversa-depth-inspection.toml": "b59a5e39fba5c1dedec020a0f2f1b31bfabdbeb7b0487c017e1e93a29c815b94",
   ".codex/agents/reversa-debugger-graph.toml": "b864e4cb8767e55c33f88a85762d1a52c4d197858a5067a149c8d5ea2b4d42f0",
@@ -388,5 +388,6 @@
   ".codex/agents/reversa-extract-soul-t3.toml": "b2122252c53d0ee37fb5636fef0e847de1cb0db61aab26b7d4de308b3411ab4d",
   ".codex/agents/reversa-n8n.toml": "135e0245e7101d586948e1f4f55ce7c616d28bfa31bdc0707fc26fb988bf5620",
   ".codex/agents/reversa-n8n-t2.toml": "dddbafb3ff6ff3138aeb117e2a931e59728d4200bd3d264aa910e1afb0d6a6bc",
-  ".reversa/_config/codex-routing.lock.json": "6aaa09ddb4d7cd43cabb547cb43902a5bb2a3f870c1a5a4f99981d4d2cbc0f65"
+  ".reversa/_config/codex-routing.lock.json": "1c7efb3ccd1583b7cd9d8cc575c724f346a2007258ba3d922e5bb2ecac8a70ad",
+  ".codex/agents/reversa-debugger-fix-t3.toml": "d08b6be15e1c7d03914a74ca4bef92dc01d3658dc18a247d7e6fb5bbb1ade087"
 }

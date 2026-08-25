@@ -10,7 +10,7 @@ The package exports generated Dart declarations whose layouts, enums, and functi
 
 ## Decision
 
-Use one workflow-level `LIBGIT2_VERSION` for header checkout, ffigen generation, and every platform's native build. Enable experimental SHA-256 in both generation and compilation. Treat `bindings.dart` as a CI artifact injected into tests and the release payload.
+Use one workflow-level `LIBGIT2_VERSION` for header checkout, ffigen generation, and every platform's native build. Enable experimental SHA-256 in both generation and compilation. Treat `bindings.dart` as a CI-owned, untracked artifact transferred from the generating job into same-run tests and release assembly. A tracked, checkout-local, stale, or ambient cached copy is not an authoritative fallback.
 
 ## Alternatives considered
 
@@ -24,8 +24,8 @@ Use one workflow-level `LIBGIT2_VERSION` for header checkout, ffigen generation,
 - Positive: the repository avoids a large generated file in the tracked source snapshot.
 - Negative: the source checkout is not independently runnable without the generated artifact.
 - Negative: CI is a required part of package construction, not merely validation.
+- Negative: local source-only validation cannot compile the complete public ABI without an explicitly declared external fixture.
 
 ## Evidence
 
-`ffigen.yaml`; `.github/actions/generate-bindings/action.yml`; workflow environment; commits `bb32c30`, `fd3463f`, `9f8d21f`, `513d0b6`.
-
+`ffigen.yaml`; `.github/actions/generate-bindings/action.yml`; `.github/workflows/build_package.yml`; addendum `005-ci-owned-generated-bindings.md`; commits `bb32c30`, `fd3463f`, `9f8d21f`, `513d0b6`, `b372be1`.

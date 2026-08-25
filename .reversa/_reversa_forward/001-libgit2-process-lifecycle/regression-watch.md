@@ -29,6 +29,17 @@ The following implemented feature rules originated as new requirements or a form
 
 ## Re-extraction history
 
+### Re-extração 2026-08-25 17:46
+
+| ID | Veredito | Observação |
+|----|----------|------------|
+| W001 | 🟢 verde | Platform selection and package-owned loading remain explicit in `_reversa_sdd/domain.md` BR-029–BR-034 and the runtime components. |
+| W002 | 🟢 verde | BR-033 and BR-035 preserve terminal two-stage diagnostics, rethrow, and fail-closed loader behavior. |
+| W003 | 🟢 verde | BR-034 preserves Windows preload order: version-agnostic crypto/SSL families, then `libssh2.dll`, then libgit2. |
+| W004 | 🟢 verde | BR-037 preserves init-before-certificate ordering; the terminal lifecycle rules reject post-shutdown managed re-entry. |
+| W005 | 🟢 verde | BR-009–BR-015 preserve the pinned libgit2 ABI/binary identity and required lifecycle surface. |
+| W006 | 🟢 verde | BR-010/BR-011 and the evidence specs preserve generated bindings/native payloads as declared build/release inputs, not silent checkout prerequisites. |
+
 None.
 
 ## Archived

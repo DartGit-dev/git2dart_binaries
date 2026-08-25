@@ -1,11 +1,12 @@
 {
-  "version": "1.2.58",
+  "version": "1.2.60",
   "project": "git2dart_binaries",
   "user_name": "Viktor",
   "chat_language": "ru",
   "doc_language": "English",
   "answer_mode": "chat",
   "doc_level": "detalhado",
+  "doc_level_confirmed_at": "2026-08-25T14:51:12+07:00",
   "output_folder": ".reversa/_reversa_sdd",
   "forward_folder": ".reversa/_reversa_forward",
   "phase": "revisao",
@@ -17,15 +18,24 @@
     "revisao"
   ],
   "pending": [],
+  "redator_progress": {
+    "status": "completed",
+    "completed_at": "2026-08-25T17:18:59+07:00",
+    "organization": "feature-folder",
+    "detail_level": "detailed",
+    "units_completed": 8,
+    "files_completed": 65,
+    "last_file": "_reversa_sdd/traceability/code-spec-matrix.md"
+  },
   "checkpoints": {
     "scout": {
-      "completed_at": "2026-08-16T22:46:11+07:00",
+      "completed_at": "2026-08-25T14:49:13+07:00",
       "files": [
         "_reversa_sdd/inventory.md",
         "_reversa_sdd/dependencies.md",
         ".reversa/context/surface.json"
       ],
-      "modules_identified": 7
+      "modules_identified": 8
     },
     "archaeologist": {
       "modules_analyzed": [
@@ -35,42 +45,47 @@
         "android-tls-bootstrap",
         "platform-packaging",
         "native-build-bindings-generation",
-        "validation-release-assembly"
+        "validation-release-assembly",
+        "behavior-proving-tests"
       ],
       "modules_pending": [],
-      "completed_at": "2026-08-16T15:59:16Z",
+      "completed_at": "2026-08-25T16:27:51+07:00",
+      "reextraction_started_at": "2026-08-25T14:49:13+07:00",
       "files": [
         "_reversa_sdd/code-analysis.md",
         "_reversa_sdd/data-dictionary.md",
         ".reversa/context/modules.json",
         "_reversa_sdd/flowcharts/"
       ],
-      "entity_count": 8,
-      "flowchart_count": 16
+      "entity_count": 49,
+      "flowchart_count": 56,
+      "last_module_completed_at": "2026-08-25T16:27:51+07:00"
     },
     "detective": {
-      "completed_at": "2026-08-16T16:03:44Z",
+      "completed_at": "2026-08-25T16:41:32+07:00",
       "files": [
         "_reversa_sdd/domain.md",
         "_reversa_sdd/state-machines.md",
         "_reversa_sdd/permissions.md",
         "_reversa_sdd/adrs/"
       ],
-      "rules_identified": 36,
-      "adrs_generated": 8,
-      "state_machines": 5,
+      "rules_identified": 60,
+      "adrs_generated": 11,
+      "state_machines": 9,
       "rbac_status": "not-applicable",
       "red_gaps": [
-        "cross-repository consumer dependency and import sites",
-        "production libgit2 shutdown ownership",
-        "consumer-side Android TLS application sequence",
-        "two-repository version compatibility and release coordination",
-        "current CI and expanded-package proof",
-        "publication token scopes and external repository protections"
+        "current hosted feature-005 run and five-platform same-run artifacts",
+        "hash and identity join between proof, payload, consumer bundle, and publication",
+        "observable origin of the successfully loaded native handle",
+        "real Android TLS/HTTPS path and concurrent initialization",
+        "lifecycle integration with the external git2dart consumer",
+        "current pub.dev publication and registry acceptance",
+        "external GitHub protections, token scopes, and approvals",
+        "generated binding and native payload bytes absent from checkout"
       ]
     },
     "architect": {
-      "completed_at": "2026-08-16T16:07:50Z",
+      "completed_at": "2026-08-25T16:59:25+07:00",
       "files": [
         "_reversa_sdd/architecture.md",
         "_reversa_sdd/c4-context.md",
@@ -81,83 +96,103 @@
         "_reversa_sdd/deployment.md"
       ],
       "runtime_supply_planes": 2,
-      "internal_components": 15,
-      "feature_boundaries": 7,
+      "internal_containers": 10,
+      "internal_components": 24,
+      "feature_boundaries": 8,
       "external_integrations": 9,
-      "technical_debt_items": 11,
-      "high_risk_coupled_contracts": 5
+      "conceptual_entities": 49,
+      "technical_debt_items": 16,
+      "high_risk_coupled_contracts": 8,
+      "red_gaps": 8,
+      "validation": "static-fences-counts-relations-diff-check; mmdc-and-markdownlint-unavailable"
     },
     "writer": {
-      "completed_at": "2026-08-16T16:24:00Z",
+      "completed_at": "2026-08-25T17:18:59+07:00",
       "organization": "feature-folder",
       "detail_level": "detailed",
-      "features_specified": 7,
-      "canonical_feature_files": 21,
+      "features_specified": 8,
+      "canonical_feature_files": 24,
+      "optional_feature_files": 40,
+      "writer_files_total": 65,
       "code_spec_matrix": "_reversa_sdd/traceability/code-spec-matrix.md",
-      "tracked_files_mapped": 47,
-      "tracked_files_total": 47,
+      "tracked_files_mapped": 59,
+      "tracked_files_total": 59,
       "openapi_status": "not-applicable-no-http-api",
       "user_stories_status": "not-applicable-technical-package",
       "red_gaps": [
-        "generated bindings and native artifacts absent from tracked checkout",
-        "production libgit2 shutdown ownership",
-        "consumer-side Android TLS application sequence",
-        "two-repository compatibility and release coordination",
-        "current CI and expanded-package proof",
-        "external publication and supply-chain controls"
+        "current hosted feature-005 run and five-platform same-run artifacts",
+        "hash and identity join between proof, payload, consumer bundle, and publication",
+        "observable origin of the successfully loaded native handle",
+        "real Android TLS/HTTPS path and concurrent initialization",
+        "lifecycle integration with the external git2dart consumer",
+        "current pub.dev publication and registry acceptance",
+        "external GitHub protections, token scopes, and approvals",
+        "generated binding and native payload bytes absent from checkout"
       ]
     },
     "reviewer": {
-      "status": "completed-after-interview",
-      "started_at": "2026-08-16T16:30:00Z",
-      "spec_files_reviewed": 21,
-      "feature_units_reviewed": 7,
+      "status": "completed-no-new-questions",
+      "started_at": "2026-08-25T17:21:00+07:00",
+      "spec_files_reviewed": 64,
+      "writer_artifacts_reviewed": 65,
+      "feature_units_reviewed": 8,
       "cross_review": {
-        "performed": true,
-        "engine": "codex",
-        "findings_recorded": 5,
-        "findings_accepted": 5,
-        "findings_rejected": 0,
-        "additional_independent_corrections": 8,
-        "file": "_reversa_sdd/cross-review-result.md"
+        "performed": false,
+        "reason": "codex-plugin-transport-unavailable",
+        "prior_result_preserved": "_reversa_sdd/cross-review-result.md"
       },
       "matrix_validation": {
-        "tracked_files_mapped": 47,
-        "tracked_files_total": 47,
-        "feature_count_corrections": 2,
-        "impact_boundary_note_added": true
+        "tracked_files_mapped": 59,
+        "tracked_files_total": 59,
+        "writer_artifacts_present": 65,
+        "open_findings": 0,
+        "historical_section_explicitly_superseded": true
       },
-      "questions_generated": 10,
-      "questions_answered": 10,
-      "questions_finalized_as_lacunae": 0,
+      "questions_generated": 0,
+      "questions_answered": 0,
+      "prior_questions_revalidated": 10,
+      "questions_unanswered": 0,
       "questions_file": "_reversa_sdd/questions.md",
       "gaps_file": "_reversa_sdd/gaps.md",
+      "gap_counts": {
+        "critical": 5,
+        "moderate": 5,
+        "cosmetic": 2
+      },
       "confidence_report_status": "completed",
       "confidence_report": "_reversa_sdd/confidence-report.md",
       "confidence_counts": {
-        "confirmed": 286,
-        "inferred": 12,
-        "gaps": 32,
-        "total": 330,
-        "weighted_percent": 88.5
+        "confirmed": 681,
+        "inferred": 16,
+        "gaps": 222,
+        "total": 919,
+        "weighted_percent": 75.0
       },
       "reclassifications": {
-        "confirmed_to_gap": 6,
-        "confirmed_to_inferred": 2,
-        "upgrades": 0
+        "gap_to_confirmed": 1,
+        "split_source_confirmed_hosted_gap": 5,
+        "wording_corrections": 8
       },
       "semantic_regression_check": {
-        "status": "not-applicable",
-        "regression_watch_features": 0,
-        "watch_items_checked": 0,
-        "addenda_reconciled": 0
+        "status": "completed-with-regression",
+        "completed_at": "2026-08-25T17:47:51+07:00",
+        "regression_watch_features": 5,
+        "watch_items_checked": 23,
+        "green": 22,
+        "yellow": 0,
+        "red": 1,
+        "red_items": [
+          "003-platform-release-proof/W002"
+        ],
+        "addenda_reconciled": 5,
+        "archived_items": 0
       },
-      "completed_at": "2026-08-24T00:00:00+07:00",
+      "completed_at": "2026-08-25T17:47:51+07:00",
       "interactive_validation": {
-        "completed_at": "2026-08-24T00:00:00+07:00",
-        "questions_answered": 10,
+        "completed_at": "2026-08-25T17:47:51+07:00",
+        "questions_answered": 0,
         "questions_unanswered": 0,
-        "scope": "Reviewer chat-mode validation questionnaire"
+        "scope": "No new user-answerable questions; ten prior decisions revalidated"
       }
     }
   },
@@ -537,6 +572,7 @@
     ".codex/agents/reversa-extract-soul-t3.toml",
     ".codex/agents/reversa-n8n.toml",
     ".codex/agents/reversa-n8n-t2.toml",
-    ".reversa/_config/codex-routing.lock.json"
+    ".reversa/_config/codex-routing.lock.json",
+    ".codex/agents/reversa-debugger-fix-t3.toml"
   ]
 }

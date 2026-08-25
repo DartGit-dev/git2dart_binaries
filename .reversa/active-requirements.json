@@ -1,9 +1,9 @@
 {
   "schema-version": 1,
-  "feature-dir": ".reversa/_reversa_forward/004-all-branch-ci-main-publish",
-  "feature-id": "004",
-  "short-name": "all-branch-ci-main-publish",
-  "started-at": "2026-08-24T12:26:40.9400967+07:00",
+  "feature-dir": ".reversa/_reversa_forward/005-behavior-proving-tests",
+  "feature-id": "005",
+  "short-name": "behavior-proving-tests",
+  "started-at": "2026-08-25T12:05:55.4397593+07:00",
   "current-stage": "requirements",
   "stages-completed": [],
   "paused-features": [

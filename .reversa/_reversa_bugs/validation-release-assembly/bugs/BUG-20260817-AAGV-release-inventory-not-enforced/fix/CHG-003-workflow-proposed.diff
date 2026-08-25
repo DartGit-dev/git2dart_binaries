@@ -1,0 +1,7 @@
+diff --git a/.github/workflows/build_package.yml b/.github/workflows/build_package.yml
+--- a/.github/workflows/build_package.yml
++++ b/.github/workflows/build_package.yml
+@@
+       - name: Qualify same-run platform proofs before release eligibility
+-        run: python3 .github/scripts/platform_release_proof.py validate --proofs .platform-proofs
++        run: python3 .github/scripts/platform_release_proof.py validate --proofs .platform-proofs --payload-root .

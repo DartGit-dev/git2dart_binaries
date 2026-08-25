@@ -16,7 +16,7 @@
 
 ## Dependencies and Decisions
 - Depends on generated enums/structs and the loaded native symbol. 🟢
-- Production bindings derive reproducibly from official libgit2 1.9.6 headers. The matching official artifact is acquired from the server first and downloaded at the exact version when unavailable locally; a pre-generated bindings file is debug/verification-only and must not ship in the production package. 🟢 user-confirmed ABI artifact policy
+- Production bindings derive from official libgit2 1.9.6 headers in CI. The matching official artifact is acquired from the server first and downloaded at the exact version when unavailable locally. `lib/src/bindings.dart` is never tracked or committed; validation and production assembly consume only the generated artifact from that same workflow run, with no local or source-controlled fallback. 🟢 user-confirmed ABI artifact policy
 - Multiple FFI typedefs over one variadic symbol trade abstraction for ABI-specific type safety at Dart call sites. 🟢
 - No global-option values are cached in Dart; libgit2 is the source of state. 🟢
 
@@ -28,3 +28,11 @@ No logging or metrics are emitted. Status codes and `git_error_last()` are the o
 - 🟢 Most integer arguments lack Dart-side range or enum validation.
 - 🟢 Current direct integration coverage is incomplete; complete native coverage is mandatory before the full option set is accepted as supported. 🟢 user-confirmed coverage gate
 - 🟡 Global mutations can leak between consumers if not restored.
+
+## 2026-08-25 ABI Shape
+
+The 14 shapes cover `Int`, `Size`, `IntPtr`, `git_buf`, C strings, search-level pairs, object-type plus size, two signed outputs, two strings, `git_strarray`, and pointer-array plus size. 🟢
+
+HC-04 couples every discriminator to exactly one variadic tuple and native ownership rule; source types alone do not prove header or runtime agreement. 🟢 contract; 🔴 generated values/current matrix
+
+W001 supplies one strong pointer-width observation when its declared native fixture is available; it does not establish all 33 wrappers or five platforms. 🟢 bounded evidence

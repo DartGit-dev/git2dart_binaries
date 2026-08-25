@@ -719,7 +719,7 @@ jobs:
           path: .platform-proofs
           merge-multiple: false
       - name: Qualify same-run platform proofs before release eligibility
-        run: python3 .github/scripts/platform_release_proof.py validate --proofs .platform-proofs
+        run: python3 .github/scripts/platform_release_proof.py validate --proofs .platform-proofs --payload-root .
       - name: Verify native release inventory
         shell: bash
         run: |
@@ -832,6 +832,26 @@ jobs:
           cache: true
           pub-cache: true
           pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
+
+      - name: Assemble disposable same-run consumer bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          mkdir -p "$RUNNER_TEMP/same-run-bindings"
+          cp lib/src/bindings.dart "$RUNNER_TEMP/same-run-bindings/bindings.dart"
+          dart run tool/package_consumer_bundle.dart assemble \
+            --source . \
+            --binding "$RUNNER_TEMP/same-run-bindings/bindings.dart" \
+            --payload linux \
+            --platform linux \
+            --output "$RUNNER_TEMP/git2dart-consumer-bundle"
+
+      - name: Compile public API from disposable consumer bundle
+        run: dart run tool/package_consumer_bundle.dart run --bundle "$RUNNER_TEMP/git2dart-consumer-bundle" --mode compile-public-api
+
+      - name: Load native payload from disposable consumer bundle
+        run: dart run tool/package_consumer_bundle.dart run --bundle "$RUNNER_TEMP/git2dart-consumer-bundle" --mode load-native
 
       - name: Ignore generated bindings checkout delta during package validation
         run: git update-index --assume-unchanged lib/src/bindings.dart

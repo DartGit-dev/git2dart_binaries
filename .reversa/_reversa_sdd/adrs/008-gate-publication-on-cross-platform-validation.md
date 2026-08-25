@@ -10,7 +10,7 @@ The deliverable is an assembled multi-platform package, not the tracked source t
 
 ## Decision
 
-Build and test all supported platform families before the publish job. Inject generated bindings and native artifacts into each test environment. Assemble every release artifact, enforce an expanded-package ceiling, perform a pub dry-run, and publish only for non-pull-request events. Preserve PR packages as short-lived artifacts for inspection.
+Build and test all supported platform families before the publish job. Inject generated bindings and native artifacts into each test environment. Aggregate eight platform proofs, validate release inventory and five-platform OpenSSL provenance, enforce an expanded-package ceiling, compile/load a disposable Linux consumer bundle, and perform a pub dry-run. The credential-bearing publisher is reachable only for an exact push to `refs/heads/main`; PRs preserve a short-lived expanded package artifact and other branch pushes stop after validation.
 
 ## Alternatives considered
 
@@ -23,11 +23,12 @@ Build and test all supported platform families before the publish job. Inject ge
 
 - Positive: publication is downstream of platform-specific packaging evidence.
 - Positive: PRs can inspect the actual expanded package without accessing publishing secrets.
+- Positive: validation is broad while credential-bearing publication has a narrow event/ref guard.
 - Positive: size regressions fail with diagnostics.
 - Negative: the release critical path is long and sensitive to simulator/emulator stability.
 - Negative: timeout/retry process management becomes part of release correctness.
+- Negative: aggregate proofs and bundle evidence are not cryptographically joined to the downloaded payload; current hosted feature-005 execution remains unobserved.
 
 ## Evidence
 
-`.github/workflows/build_package.yml`; commits `40c398d`, `e9664db`, `dc6df78`, `f5410de`, `f85882c`, `513d0b6`.
-
+`.github/workflows/build_package.yml`; feature-005 workflow/consumer fact tests; commits `40c398d`, `e9664db`, `dc6df78`, `f5410de`, `f85882c`, `513d0b6`, `9af8df2`, `cedc8af`.

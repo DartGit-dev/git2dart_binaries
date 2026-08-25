@@ -1,0 +1,11 @@
+# CHG-002 applied diff
+
+The approved source delta in `CHG-002-code-proposed.diff` was applied without
+semantic variance. The production artifact now contains `VERSION_KEYS`,
+`PAYLOAD_SEGMENTS`, `payload_directory`, `validate_inventory`,
+`validate_semantics`, and `validate_payload_identity`; `create` now emits a
+non-null payload attestation for every platform; `validate` enforces candidate,
+inventory, linkage, versions, attestation, and optional payload byte identity;
+and the CLI accepts `validate --payload-root`.
+
+The applied behavior is independently verified by `evidence/gate-2-green.md`.

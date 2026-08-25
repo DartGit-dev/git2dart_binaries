@@ -1,0 +1,160 @@
+diff --git a/test/platform_release_proof_test.dart b/test/platform_release_proof_test.dart
+--- a/test/platform_release_proof_test.dart
++++ b/test/platform_release_proof_test.dart
+@@
+   setUp(() async {
+     fixture = await BehaviorProofFixture.create('platform-proof-cli-');
+     proofs = Directory(p.join(fixture.root.path, 'proofs'))..createSync();
+     payload = Directory(p.join(fixture.root.path, 'payload'))..createSync();
+-    _writeCompleteProofs(proofs, payload);
++    await _writeCompleteProofs(fixture, proofs, payload);
+   });
+@@
+     'null-attestation',
+    'arbitrary-attestation',
+    'incomplete-apple-attestation',
+    'attestation-digest-mismatch',
+     'payload-byte-mismatch',
+@@
+       } else {
+-        final record =
+-            jsonDecode(target.readAsStringSync()) as Map<String, dynamic>;
++        final appleTarget = File(
++          p.join(proofs.path, 'macos-default', 'proof.json'),
++        );
++        final selected = corruption == 'incomplete-apple-attestation'
++            ? appleTarget
++            : target;
++        final record =
++            jsonDecode(selected.readAsStringSync()) as Map<String, dynamic>;
+@@
+          case 'arbitrary-attestation':
+            record['attestation'] = <String, Object>{'subject': 'fixture'};
+            break;
+          case 'incomplete-apple-attestation':
+            record['attestation'] = <String, Object>{
+              'emitted_payload_sha256': _abcSha256,
+            };
+            break;
+          case 'attestation-digest-mismatch':
+            (record['attestation'] as Map<String, dynamic>)
+                ['emitted_payload_sha256'] = 'f' * 64;
+            break;
+@@
+        target.writeAsStringSync(jsonEncode(record));
++        selected.writeAsStringSync(jsonEncode(record));
+@@
++  test('producer proof with silent successful linkage round-trips', () async {
++    final route = _hostLoadableRoute();
++    if (route == null) return;
++    final (platform, source) = route;
++    final root = Directory(
++      p.joinAll(<String>[payload.path, ..._payloadSegments(platform, 'default')]),
++    );
++    if (root.existsSync()) root.deleteSync(recursive: true);
++    root.createSync(recursive: true);
++    for (final template in _expectedInventory[platform]!) {
++      final target = File(
++        p.joinAll(<String>[root.path, ...p.split(template.replaceAll('*', '-3'))]),
++      )..parent.createSync(recursive: true);
++      source.copySync(target.path);
++    }
++    final versions = fixture.file('round-trip-versions.txt')
++      ..writeAsStringSync('1.9.6\n1.11.1\n3.0.15\n');
++    final result = await _create(
++      fixture,
++      platform: platform,
++      root: root,
++      output: Directory(p.join(proofs.path, '$platform-default')),
++      versionEvidence: versions,
++      attestationInput: platform == 'macos' ? root : null,
++    );
++    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
++    final aggregate = await _validate(fixture, proofs, payloadRoot: payload);
++    expect(aggregate.exitCode, 0, reason: '${aggregate.stdout}\n${aggregate.stderr}');
++  });
++
+@@
+-void _writeCompleteProofs(Directory root, Directory payloadRoot) {
++Future<void> _writeCompleteProofs(
++  BehaviorProofFixture fixture,
++  Directory root,
++  Directory payloadRoot,
++) async {
+@@
++    final versions = _fixtureVersions();
++    final emittedPayloadSha256 = await _treeSha256(fixture, payloadDirectory);
++    final attestation = <String, Object>{
++      'emitted_payload_sha256': emittedPayloadSha256,
++    };
++    if (platform == 'macos' || platform == 'ios') {
++      attestation.addAll(<String, Object>{
++        'input_sha256': _abcSha256,
++        'emitted_sha256': emittedPayloadSha256,
++        'toolchain': 'fixture',
++        'sdk': 'fixture',
++        'compiled_metadata': versions,
++      });
++    }
+@@
+-        'versions': <String, Object>{ ... },
+-        'attestation': <String, Object>{'subject': '$platform/$abi', 'kind': 'fixture'},
++        'versions': versions,
++        'attestation': attestation,
+@@
++Map<String, Object> _fixtureVersions() => <String, Object>{
++  for (final version in <String, String>{
++    'libgit2': '1.9.6', 'libssh2': '1.11.1', 'openssl': '3.0.15',
++  }.entries)
++    version.key: <String, Object>{
++      'intended': version.value, 'observed': version.value,
++      'comparison': 'match', 'evidence': 'fixture',
++    },
++};
++
++Future<String> _treeSha256(BehaviorProofFixture fixture, Directory root) async {
++  final result = await fixture.runBounded(_pythonExecutable(), <String>[
++    '-c',
++    "import hashlib,pathlib,sys;root=pathlib.Path(sys.argv[1]);d=hashlib.sha256();files=sorted((p for p in root.rglob('*') if p.is_file()),key=lambda p:p.relative_to(root).as_posix());[(d.update(p.relative_to(root).as_posix().encode()),d.update(hashlib.sha256(p.read_bytes()).hexdigest().encode())) for p in files];print(d.hexdigest())",
++    root.path,
++  ]);
++  if (result.exitCode != 0) throw StateError(result.stderr);
++  return result.stdout.trim();
++}
++
++(String, File)? _hostLoadableRoute() {
++  final candidates = switch (Platform.operatingSystem) {
++    'windows' => <(String, String)>[
++      ('windows', p.join(Platform.environment['SystemRoot'] ?? r'C:\Windows', 'System32', 'kernel32.dll')),
++    ],
++    'linux' => <(String, String)>[
++      ('linux', '/lib/x86_64-linux-gnu/libc.so.6'), ('linux', '/lib64/libc.so.6'),
++    ],
++    'macos' => <(String, String)>[('macos', '/usr/lib/libSystem.B.dylib')],
++    _ => const <(String, String)>[],
++  };
++  for (final candidate in candidates) {
++    final file = File(candidate.$2);
++    if (file.existsSync()) return (candidate.$1, file);
++  }
++  return null;
++}
+@@
+ Future<ProcessResult> _create(
+   BehaviorProofFixture fixture, {
++  String platform = 'linux',
+   required Directory root,
+   required Directory output,
+   File? versionEvidence,
++  Directory? attestationInput,
+@@
+-  'linux',
++  platform,
+@@
+   if (versionEvidence != null) ...<String>[
+     '--version-evidence', versionEvidence.path,
+   ],
++  if (attestationInput != null) ...<String>[
++    '--attestation-input', attestationInput.path,
++  ],
+ ]);

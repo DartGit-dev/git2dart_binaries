@@ -31,3 +31,11 @@ The facade owns no persistent state. It depends on loader globals initialized in
 - 🟡 Ref-name validation is a local subset and may not exactly match every libgit2 rule.
 - 🟢 The intended meaning of `isValidRefName` and `isValidGitObjectType` is fixed: they enforce complete Git-valid ref-name validation and strict finite object-type membership. The permissive implementation is a defect. [User validation; Codex cross-review]
 - 🔴 Consumer usage and compatibility are outside this repository.
+
+## 2026-08-25 Evidence Boundary
+
+The facade is container C01 with R01-R03 ownership: the export barrel, handwritten diagnostics/conversions, and the generated libgit2 view. 🟢 `architecture.md`; 🟢 local source
+
+The generated view and native payload form HC-01; source compatibility is not runtime ABI proof unless the exact generated binding and payload are observed together. 🟢 architectural contract; 🔴 current same-run artifact
+
+W006 can reject prohibited lifecycle structure through parsed AST facts, but it does not prove native execution or external consumer compatibility. 🟢 local structural evidence; 🔴 external outcome

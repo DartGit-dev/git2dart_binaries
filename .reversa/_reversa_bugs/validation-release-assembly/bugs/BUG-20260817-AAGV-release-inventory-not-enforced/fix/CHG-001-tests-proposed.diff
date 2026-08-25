@@ -1,0 +1,217 @@
+diff --git a/test/platform_release_proof_test.dart b/test/platform_release_proof_test.dart
+--- a/test/platform_release_proof_test.dart
++++ b/test/platform_release_proof_test.dart
+@@
+ const _scopes = <(String, String)>[
+@@
+   ('android', 'armeabi-v7a'),
+ ];
+
++const _expectedInventory = <String, List<String>>{
++  'linux': <String>['libgit2.so', 'libssh2.so'],
++  'macos': <String>['libgit2.dylib'],
++  'windows': <String>[
++    'libgit2.dll',
++    'libssh2.dll',
++    'libcrypto*.dll',
++    'libssl*.dll',
++  ],
++  'android': <String>[
++    'libgit2.so',
++    'libssh2.so',
++    'libcrypto.so',
++    'libssl.so',
++  ],
++  'ios': <String>[
++    'libcrypto.xcframework/Info.plist',
++    'libssl.xcframework/Info.plist',
++    'libssh2.xcframework/Info.plist',
++    'libgit2.xcframework/Info.plist',
++  ],
++};
++
++const _abcSha256 =
++    'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
++
+ void main() {
+   late BehaviorProofFixture fixture;
+   late Directory proofs;
++  late Directory payload;
+ 
+   setUp(() async {
+     fixture = await BehaviorProofFixture.create('platform-proof-cli-');
+     proofs = Directory(p.join(fixture.root.path, 'proofs'))..createSync();
+-    _writePassingProofs(proofs);
++    payload = Directory(p.join(fixture.root.path, 'payload'))..createSync();
++    _writeCompleteProofs(proofs, payload);
+   });
+   tearDown(() => fixture.dispose());
+ 
+-  test('schema-valid complete proof set passes the aggregate CLI', () async {
+-    final result = await _validate(fixture, proofs);
++  test('complete payload-backed proof set passes the aggregate CLI', () async {
++    final result = await _validate(fixture, proofs, payloadRoot: payload);
+     expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+   });
+ 
+@@
+-    'unexpected-scope',
++    'unexpected-scope',
++    'empty-inventory',
++    'empty-versions',
++    'null-attestation',
++    'payload-byte-mismatch',
+   ]) {
+     test('$corruption aggregate input fails closed', () async {
+       final target = File(p.join(proofs.path, 'linux-default', 'proof.json'));
+       if (corruption == 'malformed-json') {
+@@
+       } else if (corruption == 'missing-scope') {
+         target.parent.deleteSync(recursive: true);
++      } else if (corruption == 'payload-byte-mismatch') {
++        File(p.join(payload.path, 'linux', 'libgit2.so'))
++            .writeAsStringSync('tampered');
+       } else {
+         final record =
+             jsonDecode(target.readAsStringSync()) as Map<String, dynamic>;
+         switch (corruption) {
+@@
+           case 'unexpected-scope':
+             record['platform'] = 'freebsd';
+             break;
++          case 'empty-inventory':
++            record['inventory'] = <String, Object>{
++              'expected': <String>[],
++              'present': <Object>[],
++              'missing': <String>[],
++              'unexpected': <String>[],
++            };
++            break;
++          case 'empty-versions':
++            record['versions'] = <String, Object>{};
++            break;
++          case 'null-attestation':
++            record['attestation'] = null;
++            break;
+         }
+         target.writeAsStringSync(jsonEncode(record));
+       }
+ 
+-      final result = await _validate(fixture, proofs);
++      final payloadForValidation = switch (corruption) {
++        'empty-inventory' || 'empty-versions' || 'null-attestation' => null,
++        _ => payload,
++      };
++      final result = await _validate(
++        fixture,
++        proofs,
++        payloadRoot: payloadForValidation,
++      );
+       expect(result.exitCode, isNot(0));
+       expect(result.stderr, contains('Platform proof rejected:'));
+       expect(result.stderr, isNot(contains(fixture.root.absolute.path)));
+@@
+ }
+ 
+-void _writePassingProofs(Directory root) {
++void _writeCompleteProofs(Directory root, Directory payloadRoot) {
+   for (final (platform, abi) in _scopes) {
++    final payloadDirectory = Directory(
++      p.joinAll(<String>[payloadRoot.path, ..._payloadSegments(platform, abi)]),
++    )..createSync(recursive: true);
++    final expected = _expectedInventory[platform]!;
++    final present = <Object>[];
++    for (final expectedPath in expected) {
++      final actualPath = expectedPath.replaceAll('*', '-3');
++      final payload = File(
++        p.joinAll(<String>[payloadDirectory.path, ...p.split(actualPath)]),
++      )
++        ..parent.createSync(recursive: true)
++        ..writeAsStringSync('abc');
++      present.add(<String, Object>{
++        'path': actualPath,
++        'sha256': _abcSha256,
++        'size': 3,
++      });
++    }
+     final directory = Directory(p.join(root.path, '$platform-$abi'))
+       ..createSync();
+     File(p.join(directory.path, 'proof.json')).writeAsStringSync(
+@@
+         'abi': abi,
+         'status': 'passed',
+         'inventory': <String, Object>{
+-          'expected': <String>[],
+-          'present': <Object>[],
++          'expected': expected,
++          'present': present,
+           'missing': <String>[],
+           'unexpected': <String>[],
+         },
+@@
+-        'versions': <String, Object>{},
+-        'attestation': null,
++        'versions': <String, Object>{
++          for (final version in <String, String>{
++            'libgit2': '1.9.6',
++            'libssh2': '1.11.1',
++            'openssl': '3.0.15',
++          }.entries)
++            version.key: <String, Object>{
++              'intended': version.value,
++              'observed': version.value,
++              'comparison': 'match',
++              'evidence': 'fixture',
++            },
++        },
++        'attestation': <String, Object>{
++          'subject': '$platform/$abi',
++          'kind': 'fixture',
++        },
+         'failure_codes': <String>[],
+       }),
+     );
+   }
+ }
+ 
++List<String> _payloadSegments(String platform, String abi) => switch (platform) {
++  'linux' => <String>['linux'],
++  'macos' => <String>['macos'],
++  'windows' => <String>['windows'],
++  'ios' => <String>['ios'],
++  'android' => <String>['android', 'src', 'main', 'jniLibs', abi],
++  _ => throw ArgumentError.value(platform, 'platform'),
++};
++
+ Future<ProcessResult> _validate(
+   BehaviorProofFixture fixture,
+   Directory proofs,
+-) => fixture.runBounded(_pythonExecutable(), <String>[
+-  File('.github/scripts/platform_release_proof.py').absolute.path,
+-  'validate',
+-  '--proofs',
+-  proofs.path,
+-]);
++  {Directory? payloadRoot}
++) => fixture.runBounded(_pythonExecutable(), <String>[
++  File('.github/scripts/platform_release_proof.py').absolute.path,
++  'validate',
++  '--proofs',
++  proofs.path,
++  if (payloadRoot != null) ...<String>['--payload-root', payloadRoot.path],
++]);
+diff --git a/test/platform_release_proof_workflow_facts_test.dart b/test/platform_release_proof_workflow_facts_test.dart
+--- a/test/platform_release_proof_workflow_facts_test.dart
++++ b/test/platform_release_proof_workflow_facts_test.dart
+@@
+     expect(qualify, greaterThan(download));
+     expect(qualify, lessThan(validate));
+     expect(qualify, lessThan(release));
++    expect(
++      publish
++          .step('Qualify same-run platform proofs before release eligibility')
++          .run,
++      contains('--payload-root .'),
++    );
+ 
+     final proofUploads =

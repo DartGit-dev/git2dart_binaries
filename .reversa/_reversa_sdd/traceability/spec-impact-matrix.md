@@ -1,58 +1,149 @@
 # Specification Impact Matrix
 
-## Component-to-component impact
+## Scope
 
-Legend: **H** high/direct contract, **M** meaningful indirect impact, **L** low/validation-only, `—` no material local impact.
+This transverse matrix covers **8 feature boundaries**, **24 internal components**, and W001-W006. It describes architectural blast radius, not direct imports. A high rating means a change can invalidate a contract or release claim; it does not mean every implementation file must change.
 
-The ratings describe change impact, not necessarily a direct code import. In particular, Android TLS ↔ loader/options and every `git2dart` consumer relationship cross an external orchestration boundary and remain 🟡/🔴 until consumer evidence is inspected.
+Legend: **H** direct/high-risk contract, **M** meaningful indirect impact, **L** evidence or packaging check, **—** no material local dependency.
 
-| Change source ↓ / impacted component → | FFI facade | Loader/lifecycle | Global options | Android TLS | Platform packaging | Native builds/bindings | Validation/release |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| FFI facade | H | M | M | M | L | M | M |
-| Loader/lifecycle | M | H | M | M | H | H | H |
-| Global options | M | M | H | H | L | H | H |
-| Android TLS | M | H | H | H | H | M | H |
-| Platform packaging | L | H | L | M | H | H | H |
-| Native builds/bindings | H | H | H | M | H | H | H |
-| Validation/release | L | L | L | L | M | H | H |
+Feature abbreviations:
+
+- DFF — `dart-ffi-facade`
+- NLL — `native-loader-lifecycle`
+- LGO — `libgit2-global-options`
+- ATB — `android-tls-bootstrap`
+- PPK — `platform-packaging`
+- NBG — `native-build-bindings-generation`
+- VRA — `validation-release-assembly`
+- BPT — `behavior-proving-tests`
+
+## Feature-to-feature impact
+
+| Change source ↓ / impacted boundary → | DFF | NLL | LGO | ATB | PPK | NBG | VRA | BPT |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| DFF | H | M | M | L | L | M | M | H |
+| NLL | M | H | M | M | H | H | H | H |
+| LGO | M | M | H | M | L | H | H | H |
+| ATB | L | M | M | H | M | L | H | H |
+| PPK | L | H | L | M | H | H | H | H |
+| NBG | H | H | H | M | H | H | H | H |
+| VRA | M | M | M | M | H | H | H | H |
+| BPT | L | L | L | L | L | M | H | H |
+
+### Interpretation
+
+- NBG and VRA have the widest blast radius because the publishable product is assembled rather than tracked.
+- BPT normally changes evidence rather than public runtime behavior, but weakening its classification can falsely qualify every other feature.
+- NLL ↔ PPK is high because filenames, package paths, dependency preload, and native load mode form one contract.
+- ATB ↔ LGO/NLL is split by an external caller: extraction is local, while applying the returned path after managed initialization is outside the helper.
+
+## Component-to-feature ownership
+
+| Component | Primary feature | Secondary impact | Evidence authority |
+|---|---|---|---|
+| R01 Public Export Barrel | DFF | NLL, LGO, ATB | source and clean public compile |
+| R02 Error/String/Validation Helpers | DFF | BPT | source/local unit; native error lifetime external |
+| R03 Generated Libgit2 View | DFF | NBG, VRA | same-run generated artifact required |
+| R04 Libgit2 Global Options | LGO | ATB, NBG | W001 local/native and hosted platform evidence |
+| R05 Loader Plan Selector | NLL | PPK | W002 source/process/plan evidence |
+| R06 Package Root Resolver | NLL | PPK, VRA | isolated consumer process |
+| R07 Native Dependency Preloader | NLL | PPK, NBG | declared payload/host behavior |
+| R08 Lifecycle State and Owner Leases | NLL | DFF | injected behavior plus W006 AST facts |
+| R09 Runtime Facade | NLL | DFF, LGO | local runtime; external process coordination gap |
+| R10 Android SSL Helper | ATB | NLL, LGO | W003 injected; device/HTTPS external |
+| E01 BehaviorProofFixture | BPT | all executable watches | local fixture only |
+| E02 ABI Probe | BPT | LGO | W001 exact declared payload |
+| E03 Loader Probe | BPT | NLL, PPK | W002 exact process; handle origin gap |
+| E04 TLS Injected Seam | BPT | ATB | W003 deterministic host behavior |
+| E05 Cache Manifest CLI | BPT | NBG | W004 CLI fixture |
+| E06 Platform Proof CLI | BPT | NBG, VRA | W004 CLI and hosted proof producer |
+| E07 Consumer Bundle CLI | BPT | DFF, NLL, PPK, VRA | W005 local or same-run hosted bundle |
+| E08 Architecture AST Facts | BPT | NLL | W006 parsed source structure |
+| E09 Workflow Policy Facts | BPT | NBG, VRA | W006 bounded YAML graph |
+| S01 Binding Generator | NBG | DFF, LGO, VRA | hosted producer required for current identity |
+| S02 Platform Native Builders | NBG | NLL, PPK, VRA | hosted payload producer |
+| S03 Cache/Provenance Publisher | NBG | VRA, BPT | manifest/proof records; cache hit is not acceptance |
+| S04 Platform Validation Matrix | VRA | all runtime/package features | current hosted platform jobs |
+| S05 Release Assembler and Publisher | VRA | NBG, PPK, BPT | current hosted + external registry |
+
+## W001-W006 traceability
+
+| Watch | Feature rule | Producing files/components | Acceptable observation | Does not prove | Red gap |
+|---|---|---|---|---|---|
+| W001 | 64-bit `size_t` preserves `0x100000011` | E02; `test/fixtures/abi_probe/abi_probe.dart`; option integration/bundle tests | available record with submitted=observed on declared 64-bit payload | all platforms or current workflow identity | RG-01, RG-08 |
+| W002 | desktop bare-name→package fallback and terminal stages; Android no fallback | R05-R07, E03; `runtime.dart`, loader probe/process test | isolated error stages, declared load, host-independent Android plan | successful handle path or Android device load | RG-03 |
+| W003 | cache after write; every dependency failure retryable | R10, E04; Android SSL helper/tests | injected directory/asset/write transitions | default Android storage, option apply, HTTPS, concurrency | RG-04 |
+| W004 | artifact CLIs reject corrupt/unsafe/incomplete/mismatched/unreadable inputs | E05-E06; Python CLIs and fixture tests | valid zero plus independent negative non-zero/sanitized cases | current producer bytes, complete symlink/exception semantics | RG-01, RG-02 |
+| W005 | injected binding/payload and bundle-only clean consumer | E07, S05; bundle CLI/test/workflow steps | exact package-config root plus public/native consumer result | authenticated same-run identity, non-Linux consumers, publication | RG-01, RG-02 |
+| W006 | validation broadly reachable; exact-main publication after all gates | E08-E09, S04-S05; fact tools/tests/workflow | analyzer 8.2.0 AST facts and fail-closed YAML graph | GitHub execution/settings/secrets or pub.dev outcome | RG-06, RG-07 |
+
+## Evidence-tier impact
+
+| Change | Minimum acceptable evidence | Higher authority still required |
+|---|---|---|
+| Pure helper/predicate change | source + focused executable unit behavior | native consumer if native semantics are claimed |
+| Lifecycle transition change | parsed AST ownership + injected state machine | external consumer/process balance for product claim |
+| ABI/signature change | native fixture with exact matching payload | same-run hosted platform matrix |
+| Loader/package path change | isolated clean subprocess and declared bundle | observed handle origin and relevant hosted platforms |
+| Android TLS change | injected dependency state machine | emulator/device extraction, option apply and HTTPS |
+| Cache/proof CLI change | exhaustive valid/negative fixture matrix | current producer outputs and release payload identity |
+| Workflow DAG/condition change | fail-closed parsed graph | current GitHub run and external settings |
+| Publication/version change | current all-gate main run | publisher execution and pub.dev registry observation |
 
 ## Change scenarios
 
-| Change | Required specification checks | Code/config surfaces | Required evidence |
+| Change scenario | Impacted features | Required contract checks | Required evidence |
 |---|---|---|---|
-| Upgrade libgit2 | ABI generation, options signatures/enums, artifact filenames, all platform builds | workflow pins, ffigen config, generated bindings, native actions | native tests, essential exports, Dart option tests, all platform jobs |
-| Upgrade libssh2/OpenSSL | platform linkage/runtime dependencies, cache keys, packaging | native actions, podspec/CMake, loader preload | dependency inspection, loader tests, HTTPS/SSH platform tests |
-| Rename a native artifact | loader target, package-manager manifest, build export, tests | `util.dart`, CMake/podspec, action export | packaged application launch/load test |
-| Add a supported platform | public plugin declaration, loader branch, artifact builder, package integration | pubspec, loader, new platform directory/action | native build plus real/simulated app test |
-| Change Android certificate asset | asset declaration/path, extraction behavior, consumer sequence | pubspec, asset files, helper | device HTTPS test after post-init application |
-| Add/modify global option wrapper | discriminator/signature and ownership rules | `opts_bindings.dart`, generated enums/structs | targeted native integration test including error case |
-| Change package-root resolution | transitive/plain-Dart loader contract | `util.dart`, package config parsing | cwd-independent consumer process tests on desktops |
-| Change macOS linkage | install name, podspec, static/dynamic dependency policy | macOS action, podspec, loader | `otool`, symbol lookup, plain Dart and Flutter app tests |
-| Change Windows OpenSSL version | generic runtime discovery and bundling | Windows action/CMake/loader | DLL inventory plus plain-Dart/Flutter loader tests |
-| Change release payload contents | size gate and pub validation | workflow assembly paths | expanded size diagnostics and pub dry-run |
-| Change workflow branch/event triggers | publication trust boundary and `git2dart` coordination gate | workflow `on`, step conditions, `git2dart` coordinator | dry-run of feature vs `main` behavior; selected-pair integration evidence; external permissions review |
-| Change `git2dart_binaries` public API/version | major-line compatibility, libgit2 pin ownership, selected-pair release coordination | binaries pubspec/exports, `git2dart` consumer constraint, `git2dart` GitHub Actions coordinator | full `git2dart` integration suite after resolving the selected pair; feature-green merge gate and post-merge green `main` gate |
+| Upgrade libgit2 | DFF, NLL, LGO, NBG, VRA, BPT | header/binding/native version unity, symbols, option enums/shapes | regenerated ABI, all platform builds/tests, W001, current same-run bundle |
+| Upgrade libssh2/OpenSSL | NLL, PPK, NBG, VRA, BPT | linkage/preload, filenames, provenance, inventory | dependency inspection, loader tests, platform proofs, TLS/SSH behavior |
+| Rename/move native artifact | NLL, PPK, NBG, VRA, BPT | builder export, package metadata, loader and release inventory | clean package load on affected platforms |
+| Change lifecycle ownership | DFF, NLL, BPT | raw transition boundary, rollback, pins, shutdown/re-entry | AST facts, injected machine, isolated processes, external owner-drain evidence |
+| Add/modify global option | DFF, LGO, NBG, BPT | discriminator, variadic shape, width, ownership, restoration | targeted native positive/error/restore test |
+| Change Android CA flow | ATB, NLL, LGO, PPK, BPT | init ordering, asset path, write/commit/retry, apply path | W003 plus Android device HTTPS |
+| Change cache manifest/proof schema | NBG, VRA, BPT | safe paths, exact metadata/files, version, provenance, aggregate scope | W004 matrices plus current producer/aggregate run |
+| Change bundle input/origin | DFF, NLL, PPK, VRA, BPT | checkout rejection, exact root, payload inventory, proof content | W005 negative/positive and current same-run bundle |
+| Change workflow trigger/needs/condition | NBG, VRA, BPT | all validation reachability, gate ordering, exact-main publisher | W006 facts plus observed PR/non-main/main runs |
+| Change public version/exports | DFF, VRA, external `git2dart` | semver/podspec metadata, selected-pair compatibility | package consumer plus `git2dart` coordinator and registry |
 
-## Feature-to-artifact traceability
+## Feature-to-artifact map
 
-| Feature | Primary source evidence | Current Reversa analysis | Writer unit |
+| Feature | Primary implementation/config evidence | Current extraction artifacts | Canonical unit status |
 |---|---|---|---|
-| `dart-ffi-facade` | `lib/git2dart_binaries.dart`, extensions, error | code analysis, data dictionary, C4 components | `_reversa_sdd/dart-ffi-facade/` |
-| `native-loader-lifecycle` | `lib/src/util.dart` | code analysis, loader state machine, ADR-002/004 | `_reversa_sdd/native-loader-lifecycle/` |
-| `libgit2-global-options` | `lib/src/opts_bindings.dart`, option tests | code analysis, option state machine, ADR-001 | `_reversa_sdd/libgit2-global-options/` |
-| `android-tls-bootstrap` | helper, assets, Android packaging | TLS state machine, ADR-003 | `_reversa_sdd/android-tls-bootstrap/` |
-| `platform-packaging` | pubspec, CMake, podspecs | architecture, ADR-004/005/006 | `_reversa_sdd/platform-packaging/` |
-| `native-build-bindings-generation` | composite actions, manifest script | supply architecture, ADR-001/007 | `_reversa_sdd/native-build-bindings-generation/` |
-| `validation-release-assembly` | workflow and tests | release state machine, ADR-008 | `_reversa_sdd/validation-release-assembly/` |
+| DFF | `lib/git2dart_binaries.dart`, `error.dart`, `extensions.dart` | code analysis, flowcharts, entity model | existing feature folder |
+| NLL | `lib/src/runtime.dart`, `util.dart` | lifecycle/loader flowcharts, ADR-002/004/009 | existing feature folder |
+| LGO | `lib/src/opts_bindings.dart`, ABI fixture | option/ABI flowcharts, ADR-001 | existing feature folder |
+| ATB | `android_ssl_helper.dart`, assets, tests | TLS state machine/flowcharts, ADR-003 | existing feature folder |
+| PPK | pubspec, CMake, podspecs, platform shims | artifact dictionary, packaging flowcharts | existing feature folder |
+| NBG | composite actions, ffigen config, cache/proof scripts | generation/cache flowcharts, ADR-001/007/011 | existing feature folder |
+| VRA | `build_package.yml`, release gates | release state machine, deployment, ADR-008/011 | existing feature folder |
+| BPT | `tool/*.dart`, behavior tests/fixtures, replacement ledger | feature-005 unit, addendum, flowcharts, ADR-010 | current eight-file feature folder |
 
-## Cross-repository impact boundary
+## High-risk contract matrix
 
-Any change to public exports, package version/SDK constraints, generated libgit2 ABI, initialization semantics, or Android TLS contract potentially impacts `F:\git2dart`. Direct inspection confirms that `git2dart_binaries` owns/pins libgit2 and `git2dart` selects the compatible binaries major line; minor fixes within that selected libgit2 line do not redefine the boundary. `git2dart` owns the single GitHub Actions release/build coordination point: it receives the selected pair, resolves it as the client uses it, and runs the full client integration suite before feature-branch merge eligibility and again through the post-merge `main` publication gate. 🟢 user-confirmed coordination policy; 🔴 current workflow/run evidence
+| Contract | Primary features | Coupled components | Failure symptom |
+|---|---|---|---|
+| HC-01 ABI coherence | DFF, LGO, NBG | R03, R04, S01, S02 | compile/load/call mismatch |
+| HC-02 artifact identity | NLL, PPK, NBG, VRA | R05-R07, S02-S05 | packaged library missing or wrong dependency |
+| HC-03 lifecycle ownership | DFF, NLL | R08-R09, external consumer | premature shutdown, leak, terminal fault |
+| HC-04 variadic option ABI | LGO, NBG | R04, E02, S01-S02 | truncation/signature corruption |
+| HC-05 Android TLS sequence | ATB, NLL, LGO | R08-R10, external app | extraction succeeds but HTTPS fails |
+| HC-06 evidence classification | BPT, all | E01-E09 | unavailable/static result reported as behavior |
+| HC-07 same-run byte identity | NBG, VRA, BPT | S01-S05, E06-E07 | proof/bundle detached from payload |
+| HC-08 authorization/coordination | VRA, external `git2dart` | E09, S04-S05 | publication bypass or incompatible pair |
 
-## Highest-risk coupled contracts
+## Cross-repository boundary
 
-1. **libgit2 version ↔ generated bindings ↔ native platform binaries**.
-2. **artifact filename ↔ Dart loader ↔ platform packaging manifest**.
-3. **Android init order ↔ certificate extraction ↔ consumer applies native option**.
-4. **all platform outputs/tests ↔ release assembler ↔ pub publication**.
-5. **public package API/version ↔ external `git2dart` dependency** (major-line policy and `git2dart` coordination owner confirmed; fresh coordinator execution remains unobserved).
+`git2dart_binaries` owns/pins the native ABI and package payload. The sibling `git2dart` relationship and its role as selected-pair coordinator are user-confirmed policy, not current evidence from this extraction. Any change to public exports, package version, generated ABI, lifecycle semantics, loader behavior, or Android TLS application requires a fresh `git2dart` consumer/coordinator run before product-level compatibility can be claimed.
+
+## Current red-gap index
+
+| Gap | Impacted contracts/features |
+|---|---|
+| RG-01 current hosted feature-005/five-platform run | HC-01, HC-02, HC-06, HC-07; NBG/VRA/BPT |
+| RG-02 proof→payload→bundle→publication identity join | HC-07; NBG/VRA/BPT |
+| RG-03 loaded handle origin | HC-02; NLL/PPK/BPT |
+| RG-04 real Android TLS/concurrency/recovery | HC-05; ATB/NLL/LGO |
+| RG-05 external `git2dart` lifecycle/coordinator | HC-03, HC-08; DFF/NLL/VRA |
+| RG-06 pub.dev execution/acceptance | HC-08; VRA |
+| RG-07 GitHub protections/tokens/approvals | HC-08; VRA |
+| RG-08 generated/native bytes absent | HC-01, HC-02; DFF/LGO/NBG/VRA |

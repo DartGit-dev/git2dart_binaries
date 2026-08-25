@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:ffi' as ffi;
+import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,128 +8,47 @@ import 'package:git2dart_binaries/src/bindings.dart';
 import 'package:git2dart_binaries/src/extensions.dart';
 import 'package:git2dart_binaries/src/runtime.dart';
 
+import 'support/behavior_proof_fixture.dart';
+
 void main() {
   final libgit2 = libgit2Runtime.bindings;
   final libgit2Opts = libgit2Runtime.options;
 
   tearDownAll(libgit2Runtime.shutdown);
 
-  group('Memory Window Integration Tests', () {
-    test('get and set mwindow size', () {
-      final size = calloc<ffi.Size>();
-      try {
-        // Get initial size
-        expect(
-          libgit2Opts.git_libgit2_opts_get_mwindow_size(size),
-          equals(0),
-          reason: libgit2.getLastError()?.toString(),
-        );
-        final initialSize = size.value;
-        addTearDown(() {
-          expect(
-            libgit2Opts.git_libgit2_opts_set_mwindow_size(initialSize),
-            equals(0),
-            reason: libgit2.getLastError()?.toString(),
-          );
-        });
-
-        // Set new size
-        final newSize = initialSize + (1 << 32);
-        expect(
-          libgit2Opts.git_libgit2_opts_set_mwindow_size(newSize),
-          equals(0),
-          reason: libgit2.getLastError()?.toString(),
-        );
-
-        // Verify size was changed
-        expect(
-          libgit2Opts.git_libgit2_opts_get_mwindow_size(size),
-          equals(0),
-          reason: libgit2.getLastError()?.toString(),
-        );
-        expect(
-          size.value,
-          equals(newSize),
-          reason: libgit2.getLastError()?.toString(),
-        );
-      } finally {
-        calloc.free(size);
+  test('serialized ABI probe preserves a value above uint32', () async {
+    final packageRoot = Platform.environment['GIT2DART_BINARIES_PACKAGE_ROOT'];
+    if (packageRoot == null) {
+      stdout.writeln(
+        'abi-evidence: unavailable (no declared native package payload)',
+      );
+      return;
+    }
+    final fixture = await BehaviorProofFixture.create('abi-proof-');
+    try {
+      final result = await fixture.runBounded(
+        dartExecutable(),
+        <String>[
+          '--packages=${File('.dart_tool/package_config.json').absolute.path}',
+          File('test/fixtures/abi_probe/abi_probe.dart').absolute.path,
+        ],
+        environment: <String, String>{
+          'GIT2DART_BINARIES_PACKAGE_ROOT': packageRoot,
+        },
+      );
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+      final record =
+          jsonDecode((result.stdout as String).trim()) as Map<String, dynamic>;
+      if (record['availability'] == 'unavailable') {
+        expect(record['pointer_width'], isNot(64));
+        return;
       }
-    });
-
-    test('get and set mwindow mapped limit', () {
-      final limit = calloc<ffi.Size>();
-
-      // Get initial limit
-      expect(
-        libgit2Opts.git_libgit2_opts_get_mwindow_mapped_limit(limit),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-      final initialLimit = limit.value;
-      addTearDown(() {
-        expect(
-          libgit2Opts.git_libgit2_opts_set_mwindow_mapped_limit(initialLimit),
-          equals(0),
-          reason: libgit2.getLastError()?.toString(),
-        );
-      });
-
-      // Set new limit
-      final newLimit = initialLimit + (1 << 32);
-      expect(
-        libgit2Opts.git_libgit2_opts_set_mwindow_mapped_limit(newLimit),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-
-      // Verify limit was changed
-      expect(
-        libgit2Opts.git_libgit2_opts_get_mwindow_mapped_limit(limit),
-        equals(0),
-        reason: libgit2.getLastError()?.toString(),
-      );
-      expect(
-        limit.value,
-        equals(newLimit),
-        reason: libgit2.getLastError()?.toString(),
-      );
-
-      calloc.free(limit);
-    });
-
-    test('get and set mwindow file limit with a pointer-width value', () {
-      final limit = calloc<ffi.Size>();
-      try {
-        expect(
-          libgit2Opts.git_libgit2_opts_get_mwindow_file_limit(limit),
-          equals(0),
-          reason: libgit2.getLastError()?.toString(),
-        );
-        final initialLimit = limit.value;
-        addTearDown(() {
-          expect(
-            libgit2Opts.git_libgit2_opts_set_mwindow_file_limit(initialLimit),
-            equals(0),
-            reason: libgit2.getLastError()?.toString(),
-          );
-        });
-        final newLimit = initialLimit + (1 << 32);
-        expect(
-          libgit2Opts.git_libgit2_opts_set_mwindow_file_limit(newLimit),
-          equals(0),
-          reason: libgit2.getLastError()?.toString(),
-        );
-        expect(
-          libgit2Opts.git_libgit2_opts_get_mwindow_file_limit(limit),
-          equals(0),
-          reason: libgit2.getLastError()?.toString(),
-        );
-        expect(limit.value, equals(newLimit));
-      } finally {
-        calloc.free(limit);
-      }
-    });
+      expect(record['submitted_size'], greaterThan(0xffffffff));
+      expect(record['observed_size'], record['submitted_size']);
+      expect(record['pointer_width'], 64);
+    } finally {
+      await fixture.dispose();
+    }
   });
 
   group('Cache Integration Tests', () {
