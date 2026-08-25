@@ -856,7 +856,11 @@ jobs:
         run: dart run tool/package_consumer_bundle.dart run --bundle "$RUNNER_TEMP/git2dart-consumer-bundle" --mode load-native
 
       - name: Ignore generated bindings checkout delta during package validation
-        run: git update-index --assume-unchanged lib/src/bindings.dart
+        shell: bash
+        run: |
+          if git ls-files --error-unmatch lib/src/bindings.dart >/dev/null 2>&1; then
+            git update-index --assume-unchanged lib/src/bindings.dart
+          fi
 
       - name: Validate publish package
         shell: bash
