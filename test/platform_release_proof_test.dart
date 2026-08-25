@@ -52,6 +52,16 @@ void main() {
   tearDown(() => fixture.dispose());
 
   test('complete payload-backed proof set passes the aggregate CLI', () async {
+    File(
+        p.join(
+          payload.path,
+          'macos',
+          'Classes',
+          'Git2dartBinariesPlugin.swift',
+        ),
+      )
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync('// checked-in plugin support, not a native payload');
     final result = await _validate(fixture, proofs, payloadRoot: payload);
     expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
   });
@@ -304,7 +314,11 @@ Future<void> _writeCompleteProofs(
       });
     }
     final versions = _fixtureVersions();
-    final emittedPayloadSha256 = await _treeSha256(fixture, payloadDirectory);
+    final emittedPayloadSha256 = await _inventorySha256(
+      fixture,
+      payloadDirectory,
+      present.cast<Map<String, Object>>(),
+    );
     final attestation = <String, Object>{
       'emitted_payload_sha256': emittedPayloadSha256,
     };
@@ -359,11 +373,16 @@ Map<String, Object> _fixtureVersions() => <String, Object>{
     },
 };
 
-Future<String> _treeSha256(BehaviorProofFixture fixture, Directory root) async {
+Future<String> _inventorySha256(
+  BehaviorProofFixture fixture,
+  Directory root,
+  List<Map<String, Object>> present,
+) async {
   final result = await fixture.runBounded(_pythonExecutable(), <String>[
     '-c',
-    "import hashlib,pathlib,sys;root=pathlib.Path(sys.argv[1]);d=hashlib.sha256();files=sorted((p for p in root.rglob('*') if p.is_file()),key=lambda p:p.relative_to(root).as_posix());[(d.update(p.relative_to(root).as_posix().encode()),d.update(hashlib.sha256(p.read_bytes()).hexdigest().encode())) for p in files];print(d.hexdigest())",
+    "import hashlib,pathlib,sys;root=pathlib.Path(sys.argv[1]);d=hashlib.sha256();paths=sorted(sys.argv[2:]);[(d.update(path.encode()),d.update(hashlib.sha256((root/path).read_bytes()).hexdigest().encode())) for path in paths];print(d.hexdigest())",
     root.path,
+    ...present.map((item) => item['path']! as String),
   ]);
   if (result.exitCode != 0) throw StateError(result.stderr);
   return result.stdout.trim();

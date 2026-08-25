@@ -54,6 +54,16 @@ def tree_sha256(root: Path) -> str:
     return digest.hexdigest()
 
 
+def inventory_sha256(root: Path, present: list[dict]) -> str:
+    """Hash the native payload contract without checked-in platform support files."""
+    digest = hashlib.sha256()
+    for item in sorted(present, key=lambda entry: safe_relative(entry["path"])):
+        relative = safe_relative(item["path"])
+        digest.update(relative.encode("utf-8"))
+        digest.update(sha256(root / relative).encode("ascii"))
+    return digest.hexdigest()
+
+
 def safe_relative(value: str) -> str:
     path = Path(value)
     if path.is_absolute() or ".." in path.parts or "\\" in value:
@@ -151,7 +161,7 @@ def validate_payload_identity(
     root: Path, platform: str, abi: str, present: list[dict], attestation: dict
 ) -> None:
     payload = payload_directory(root, platform, abi)
-    payload_sha256 = tree_sha256(payload)
+    payload_sha256 = inventory_sha256(payload, present)
     if attestation["emitted_payload_sha256"] != payload_sha256:
         raise ValueError("attestation payload digest mismatch")
     if platform in {"macos", "ios"} and attestation["emitted_sha256"] != payload_sha256:
@@ -275,14 +285,15 @@ def create(args: argparse.Namespace) -> int:
     if missing: failures.append("missing-payload")
     if unexpected: failures.append("unexpected-payload")
     if not linked: failures.append("linkage-failed" if args.platform in {"ios", "macos"} else "loader-failed")
-    attestation = {"emitted_payload_sha256": tree_sha256(root)}
+    emitted_payload_sha256 = inventory_sha256(root, present)
+    attestation = {"emitted_payload_sha256": emitted_payload_sha256}
     if args.platform in {"ios", "macos"}:
         input_root = Path(args.attestation_input).resolve() if args.attestation_input else None
         toolchain_ok, toolchain = _run(["xcrun", "clang", "--version"])
         sdk_ok, sdk = _run(["xcrun", "--show-sdk-version"])
         attestation.update({
             "input_sha256": tree_sha256(input_root) if input_root and input_root.is_dir() else "unavailable",
-            "emitted_sha256": tree_sha256(root),
+            "emitted_sha256": emitted_payload_sha256,
             "toolchain": toolchain if toolchain_ok else "unavailable",
             "sdk": sdk if sdk_ok else "unavailable",
             "compiled_metadata": versions,
