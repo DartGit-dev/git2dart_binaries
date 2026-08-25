@@ -399,8 +399,9 @@ jobs:
           File.write(pubspec_path, pubspec.to_yaml)
           RUBY
 
-          mkdir -p "$test_app/test" "$test_app/integration_test" "$test_app/test_driver"
+          mkdir -p "$test_app/test/support" "$test_app/integration_test" "$test_app/test_driver"
           cp "$GITHUB_WORKSPACE/test/opts_bindings_integration_test.dart" "$test_app/test/"
+          cp "$GITHUB_WORKSPACE/test/support/behavior_proof_fixture.dart" "$test_app/test/support/"
           cp "$GITHUB_WORKSPACE/integration_test/"*.dart "$test_app/integration_test/"
           cp "$GITHUB_WORKSPACE/test_driver/integration_test.dart" "$test_app/test_driver/"
 
@@ -631,8 +632,9 @@ jobs:
           File.write(pubspec_path, pubspec.to_yaml)
           RUBY
 
-          mkdir -p "$test_app/test" "$test_app/integration_test"
+          mkdir -p "$test_app/test/support" "$test_app/integration_test"
           cp "$GITHUB_WORKSPACE/test/opts_bindings_integration_test.dart" "$test_app/test/"
+          cp "$GITHUB_WORKSPACE/test/support/behavior_proof_fixture.dart" "$test_app/test/support/"
           cp "$GITHUB_WORKSPACE/integration_test/opts_bindings_integration_test.dart" "$test_app/integration_test/"
 
           cd "$test_app"
