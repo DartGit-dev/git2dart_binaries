@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-25T18:10:00+07:00 a partir de 4 bugs -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-26T13:54:57+07:00 a partir de 4 bugs -->
 
 # Invariant report
 

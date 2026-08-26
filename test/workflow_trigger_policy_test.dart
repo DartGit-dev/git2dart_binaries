@@ -48,4 +48,33 @@ void main() {
       );
     },
   );
+
+  test('skips package build for a docs-tagged push', () {
+    const docsCommit = 'docs: refresh API reference [docs]';
+    expect(
+      facts.validationReachable(
+        event: 'push',
+        ref: 'refs/heads/main',
+        commitMessage: docsCommit,
+      ),
+      isFalse,
+    );
+    final acknowledgement = facts.jobs['docs_commit_acknowledgement']!;
+    expect(
+      acknowledgement.condition.evaluate(
+        event: 'push',
+        ref: 'refs/heads/main',
+        commitMessage: docsCommit,
+      ),
+      isTrue,
+    );
+    expect(
+      acknowledgement.condition.evaluate(
+        event: 'push',
+        ref: 'refs/heads/main',
+        commitMessage: 'docs: refresh API reference',
+      ),
+      isFalse,
+    );
+  });
 }

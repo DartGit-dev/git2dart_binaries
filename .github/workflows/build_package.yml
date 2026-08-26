@@ -20,7 +20,15 @@ concurrency:
 
 
 jobs:
+  docs_commit_acknowledgement:
+    if: ${{ contains(github.event.head_commit.message, '[docs]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm documentation-only update
+        run: echo "[docs] commit detected; package build skipped."
+
   generate_bindings:
+    if: ${{ !contains(github.event.head_commit.message, '[docs]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -33,6 +41,7 @@ jobs:
           flutter_version: ${{ env.FLUTTER_VERSION }}
 
   build_libgit2_linux:
+    if: ${{ !contains(github.event.head_commit.message, '[docs]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -54,6 +63,7 @@ jobs:
           retention-days: 7
 
   build_libgit2_macos:
+    if: ${{ !contains(github.event.head_commit.message, '[docs]') }}
     runs-on: macos-latest
     steps:
       - name: Check out repository
@@ -75,6 +85,7 @@ jobs:
           retention-days: 7
 
   build_libgit2_ios:
+    if: ${{ !contains(github.event.head_commit.message, '[docs]') }}
     runs-on: macos-15
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
@@ -186,6 +197,7 @@ jobs:
           retention-days: 7
 
   build_libgit2_windows:
+    if: ${{ !contains(github.event.head_commit.message, '[docs]') }}
     runs-on: windows-latest
     steps:
       - name: Check out repository
@@ -208,6 +220,7 @@ jobs:
           retention-days: 7
 
   build_libgit2_android_x86_64:
+    if: ${{ !contains(github.event.head_commit.message, '[docs]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -230,6 +243,7 @@ jobs:
           retention-days: 7
 
   build_libgit2_android_other:
+    if: ${{ !contains(github.event.head_commit.message, '[docs]') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:

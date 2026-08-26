@@ -2,7 +2,14 @@ import 'dart:io';
 
 import 'package:yaml/yaml.dart';
 
-enum WorkflowConditionKind { always, pullRequest, mainPush, cacheMiss }
+enum WorkflowConditionKind {
+  always,
+  pullRequest,
+  mainPush,
+  docsCommit,
+  nonDocsCommit,
+  cacheMiss,
+}
 
 final class WorkflowCondition {
   const WorkflowCondition(this.kind, this.source);
@@ -10,11 +17,18 @@ final class WorkflowCondition {
   final WorkflowConditionKind kind;
   final String source;
 
-  bool evaluate({required String event, required String ref}) => switch (kind) {
+  bool evaluate({
+    required String event,
+    required String ref,
+    String commitMessage = '',
+  }) => switch (kind) {
     WorkflowConditionKind.always => true,
     WorkflowConditionKind.pullRequest => event == 'pull_request',
     WorkflowConditionKind.mainPush =>
       event == 'push' && ref == 'refs/heads/main',
+    WorkflowConditionKind.docsCommit =>
+      event == 'push' && commitMessage.contains('[docs]'),
+    WorkflowConditionKind.nonDocsCommit => !commitMessage.contains('[docs]'),
     WorkflowConditionKind.cacheMiss => false,
   };
 
@@ -34,6 +48,12 @@ final class WorkflowCondition {
     if (normalized ==
         "github.event_name == 'push' && github.ref == 'refs/heads/main'") {
       return WorkflowCondition(WorkflowConditionKind.mainPush, normalized);
+    }
+    if (normalized == "contains(github.event.head_commit.message, '[docs]')") {
+      return WorkflowCondition(WorkflowConditionKind.docsCommit, normalized);
+    }
+    if (normalized == "!contains(github.event.head_commit.message, '[docs]')") {
+      return WorkflowCondition(WorkflowConditionKind.nonDocsCommit, normalized);
     }
     if (RegExp(
       r"^steps\.[A-Za-z0-9_-]+\.outputs\.cache-hit != 'true'$",
@@ -158,20 +178,74 @@ final class WorkflowPolicyFacts {
     return values.contains('**') || values.contains(branch);
   }
 
-  bool validationReachable({required String event, required String ref}) {
-    if (!eventAccepted(event: event, ref: ref)) return false;
-    final publish = jobs['publish_package'];
-    if (publish == null ||
-        !publish.condition.evaluate(event: event, ref: ref)) {
+  bool validationReachable({
+    required String event,
+    required String ref,
+    String commitMessage = '',
+  }) {
+    if (!_jobReachable(
+      'publish_package',
+      event: event,
+      ref: ref,
+      commitMessage: commitMessage,
+      visiting: <String>{},
+    ))
       return false;
-    }
+    final publish = jobs['publish_package'];
+    if (publish == null) return false;
     return publish.stepIndex('Validate publish package') >= 0;
   }
 
-  bool publicationReachable({required String event, required String ref}) {
-    if (!validationReachable(event: event, ref: ref)) return false;
+  bool publicationReachable({
+    required String event,
+    required String ref,
+    String commitMessage = '',
+  }) {
+    if (!validationReachable(
+      event: event,
+      ref: ref,
+      commitMessage: commitMessage,
+    ))
+      return false;
     final publishStep = jobs['publish_package']!.step('Publish package');
-    return publishStep.condition.evaluate(event: event, ref: ref);
+    return publishStep.condition.evaluate(
+      event: event,
+      ref: ref,
+      commitMessage: commitMessage,
+    );
+  }
+
+  bool _jobReachable(
+    String jobId, {
+    required String event,
+    required String ref,
+    required String commitMessage,
+    required Set<String> visiting,
+  }) {
+    if (!eventAccepted(event: event, ref: ref) || !visiting.add(jobId)) {
+      return false;
+    }
+    final job = jobs[jobId];
+    if (job == null ||
+        !job.condition.evaluate(
+          event: event,
+          ref: ref,
+          commitMessage: commitMessage,
+        )) {
+      visiting.remove(jobId);
+      return false;
+    }
+    final reachable = job.needs.every(
+      (dependency) => _jobReachable(
+        dependency,
+        event: event,
+        ref: ref,
+        commitMessage: commitMessage,
+        visiting: visiting,
+      ),
+    );
+    visiting.remove(jobId);
+    return reachable;
   }
 }
 

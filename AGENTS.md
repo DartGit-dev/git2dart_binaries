@@ -2,6 +2,17 @@
 
 > Reverse-engineering framework installed in this project.
 
+## Commit tagging
+
+When a commit changes documentation only, include the literal `[docs]` tag in
+its subject. For example: `docs: refresh installation guide [docs]`.
+
+Documentation-only means the commit contains no source code, tests,
+dependencies, generated bindings, build configuration, or release artifacts.
+Do not use `[docs]` when any of those are changed. The GitHub package workflow
+uses this tag to skip the native build and run only its documentation-update
+acknowledgement job.
+
 ## How to use
 
 Use the appropriate workflow in the chat:

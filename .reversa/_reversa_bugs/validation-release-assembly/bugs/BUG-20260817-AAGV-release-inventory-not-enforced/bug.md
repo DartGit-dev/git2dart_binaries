@@ -8,7 +8,7 @@ phase: delivering
 severity: high
 priority: P1
 created: 2026-08-17
-updated: 2026-08-25
+updated: 2026-08-26
 
 origin:
   type: inspection
@@ -119,6 +119,14 @@ change_set:
     purpose: "Require a platform-specific attestation contract, bind emitted digests to the corresponding final payload segment, and make successful silent linkage probes valid producer evidence."
     diff: fix/CHG-005.diff
 
+delivery:
+  confirmation:
+    state: user-confirmed
+    recorded_at: 2026-08-26
+    statement: "All pending deployment tasks have been rolled out."
+  merge: null
+  publication: null
+
 closure:
   policy: package
   satisfied: false
@@ -152,6 +160,7 @@ Artifact download verifies only artifact names. The next gate sums whatever file
 - `evidence/semantic-regression-20260825.md`
 - `evidence/reproduction.md`
 - `../../inspections/20260817-depth-inspection/report.md`
+- User-confirmed delivery statement recorded on 2026-08-26: all pending deployment tasks have been rolled out. This evidence is classified as user-confirmed and scope-limited.
 
 ## Suspected Area
 
@@ -178,6 +187,8 @@ Final package assembly and pre-publication validation in `publish_package`.
 ## Resolution
 
 Root cause is confirmed by deterministic local reproduction and static workflow inspection. The corrective Gate 1 tests demonstrated the reviewer findings in red; corrective Gate 2 applied the approved validator-only update and reached targeted green evidence on 2026-08-25. The fresh mandatory independent high-risk review approved the correction. The user selected spec_verdict: spec-correta. The fix is therefore delivered locally, but this package-policy bug remains active/delivering with closure unsatisfied.
+
+On 2026-08-26 the user confirmed that all pending deployment tasks had been rolled out. This records user-confirmed delivery only. It does not establish a particular CI run, merge, corrected package publication, runtime result, production observation, or any other release detail not stated by the user.
 
 ### Remaining package-delivery evidence
 

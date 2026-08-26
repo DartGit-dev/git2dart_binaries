@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-25T18:20:00+07:00 a partir de 13 bugs -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-26T13:54:57+07:00 a partir de 13 bugs -->
 
 # Bug traceability
 
@@ -96,19 +96,19 @@
 
 ## _reversa_sdd/validation-release-assembly/requirements.md#functional-requirements
 
-- BUG-20260817-AAGV (active/null, P1): Release assembly does not enforce native inventory — .reversa\_reversa_bugs\validation-release-assembly\bugs\BUG-20260817-AAGV-release-inventory-not-enforced\bug.md
+- BUG-20260817-AAGV (active/fixed, P1): Release assembly does not enforce native inventory — .reversa\_reversa_bugs\validation-release-assembly\bugs\BUG-20260817-AAGV-release-inventory-not-enforced\bug.md
 
 ## _reversa_sdd/validation-release-assembly/design.md#main-flow
 
-- BUG-20260817-AAGV (active/null, P1): Release assembly does not enforce native inventory — .reversa\_reversa_bugs\validation-release-assembly\bugs\BUG-20260817-AAGV-release-inventory-not-enforced\bug.md
+- BUG-20260817-AAGV (active/fixed, P1): Release assembly does not enforce native inventory — .reversa\_reversa_bugs\validation-release-assembly\bugs\BUG-20260817-AAGV-release-inventory-not-enforced\bug.md
 
 ## _reversa_sdd/validation-release-assembly/requirements.md#2026-08-25-re-extraction-contract
 
-- BUG-20260817-AAGV (active/null, P1): Release assembly does not enforce native inventory — .reversa\_reversa_bugs\validation-release-assembly\bugs\BUG-20260817-AAGV-release-inventory-not-enforced\bug.md
+- BUG-20260817-AAGV (active/fixed, P1): Release assembly does not enforce native inventory — .reversa\_reversa_bugs\validation-release-assembly\bugs\BUG-20260817-AAGV-release-inventory-not-enforced\bug.md
 
 ## _reversa_sdd/addenda/003-platform-release-proof.md#regras-sob-vigilancia
 
-- BUG-20260817-AAGV (active/null, P1): Release assembly does not enforce native inventory — .reversa\_reversa_bugs\validation-release-assembly\bugs\BUG-20260817-AAGV-release-inventory-not-enforced\bug.md
+- BUG-20260817-AAGV (active/fixed, P1): Release assembly does not enforce native inventory — .reversa\_reversa_bugs\validation-release-assembly\bugs\BUG-20260817-AAGV-release-inventory-not-enforced\bug.md
 
 ## .reversa/_reversa_sdd/validation-release-assembly/requirements.md#Responsibilities-and-Rules
 

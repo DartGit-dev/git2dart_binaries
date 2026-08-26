@@ -8,7 +8,7 @@ phase: delivering
 severity: medium
 priority: P1
 created: 2026-08-24
-updated: 2026-08-24
+updated: 2026-08-26
 
 origin:
   type: manual-report
@@ -79,6 +79,14 @@ change_set:
     purpose: Represent expected workflow newlines and interpolation literally.
     diff: fix/CHG-002.diff
 
+delivery:
+  confirmation:
+    state: user-confirmed
+    recorded_at: 2026-08-26
+    statement: "All pending deployment tasks have been rolled out."
+  merge: null
+  publication: null
+
 closure:
   policy: package
   satisfied: false
@@ -108,6 +116,7 @@ The validation and release assembly specification requires build and test gates 
 ## Evidence
 
 - [Reproduction capsule](evidence/reproduction.md)
+- User-confirmed delivery statement recorded on 2026-08-26: all pending deployment tasks have been rolled out. This evidence is classified as user-confirmed and scope-limited.
 
 ## Suspected Area
 
@@ -140,9 +149,12 @@ The effective specification is correct because it already requires validation
 gates to succeed. The source test code diverged from that requirement, so no
 spec addendum is needed. The user continued with this recommended verdict.
 
-The package closure policy still requires a merge and publication, neither of
-which was requested or performed. The bug therefore remains active in
-`delivering` and has no `DONE.md` lock.
+The package closure policy still requires separately evidenced merge and
+publication. On 2026-08-26 the user confirmed that all pending deployment tasks
+had been rolled out, but did not confirm those closure details. This statement
+is recorded as user-confirmed delivery only and does not establish CI, runtime,
+production observation, merge, or corrected package publication. The bug
+therefore remains active in `delivering` and has no `DONE.md` lock.
 
 Validation evidence:
 
