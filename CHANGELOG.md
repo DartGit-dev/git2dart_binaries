@@ -1,4 +1,4 @@
-## [1.12.2] - 2026-08-26
+## [1.13.0] - 2026-08-26
 ### Added
 - Added an explicit managed libgit2 runtime lifecycle to the public API, with
   exact-once release and safe fallback finalization.
