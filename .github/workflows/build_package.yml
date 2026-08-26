@@ -75,7 +75,9 @@ jobs:
           retention-days: 7
 
   build_libgit2_ios:
-    runs-on: macos-latest
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     strategy:
       fail-fast: false
       matrix:
@@ -105,7 +107,9 @@ jobs:
 
   assemble_libgit2_ios:
     needs: [build_libgit2_ios]
-    runs-on: macos-latest
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -349,7 +353,9 @@ jobs:
 
   run_ios_tests:
     needs: [generate_bindings, assemble_libgit2_ios]
-    runs-on: macos-latest
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     timeout-minutes: 40
     steps:
       - name: Check out repository
