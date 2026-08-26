@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>BUG-20260817-AACM — Fix Plan</title>
+  <style>body{font:16px system-ui;max-width:900px;margin:3rem auto;line-height:1.5}code{background:#f3f4f6;padding:.1rem .3rem}li{margin:.5rem 0}</style>
+</head>
+<body>
+  <h1>BUG-20260817-AACM — Binding cache ignores generator contract</h1>
+  <h2>Confirmed cause</h2>
+  <p>The bindings-cache key only fingerprints the action and manifest utility. A change to <code>ffigen.yaml</code> or the resolved package graph can reuse old generated bindings.</p>
+  <h2>Minimal change</h2>
+  <ol>
+    <li>Add a regression test that requires the cache key to hash <code>ffigen.yaml</code> and <code>pubspec.lock</code>.</li>
+    <li>Extend both restore and save cache keys with those files.</li>
+    <li>Run the focused test. A Linux/GitHub Actions cache-hit run remains delivery evidence, not a local prerequisite.</li>
+  </ol>
+  <h2>Acceptance mapping</h2>
+  <ul>
+    <li>Configuration change → <code>ffigen.yaml</code> changes key.</li>
+    <li>Resolved generator change → <code>pubspec.lock</code> changes key.</li>
+    <li>Cache behavior → restore/save keys use the same contract fingerprint.</li>
+  </ul>
+  <h2>Scope and boundary</h2>
+  <p>No generated binding code, dependencies, or cache-manifest format will change. Local static regression proves the action declaration; CI is required to prove a fresh cache entry and workflow execution.</p>
+</body>
+</html>

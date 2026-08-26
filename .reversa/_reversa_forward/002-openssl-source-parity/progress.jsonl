@@ -1,0 +1,20 @@
+{"ts":"2026-08-24T05:05:00Z","action":"T001","status":"done","files":[".github/scripts/native_cache_manifest.py"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T002","status":"done","files":[".github/openssl-exceptions/README.md",".github/openssl-exceptions/exception.schema.json"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T003","status":"done","files":["test/openssl_provenance_workflow_test.dart"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T004","status":"done","files":["test/windows_packaging_test.dart"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T005","status":"done","files":["test/release_inventory_workflow_test.dart"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T006","status":"done","files":[".github/scripts/native_cache_manifest.py"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T007","status":"done","files":[".github/actions/build-windows/action.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T008","status":"done","files":[".github/actions/build-windows/action.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T009","status":"done","files":[".github/actions/build-windows/action.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T010","status":"done","files":[".github/actions/build-linux/action.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T011","status":"done","files":[".github/actions/build-macos/action.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T012","status":"done","files":[".github/actions/build-android/action.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T013","status":"done","files":[".github/actions/build-ios/action.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T014","status":"done","files":[".github/workflows/build_package.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T015","status":"done","files":[".github/workflows/build_package.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T016","status":"done","files":[".github/workflows/build_package.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T017","status":"done","files":[".github/workflows/build_package.yml"]}
+{"ts":"2026-08-24T05:05:00Z","action":"T018","status":"failed","files":["test/openssl_provenance_workflow_test.dart","test/windows_packaging_test.dart"]}
+{"ts":"2026-08-24T05:12:00Z","action":"T018","status":"open","files":["test/windows_packaging_test.dart"],"reason":"Focused static tests passed, but the expanded Windows artifact/plain-Dart loader proof was skipped because generated bindings and Windows artifacts are unavailable locally; no live Windows CI run was performed."}
+{"ts":"2026-08-24T05:23:00Z","action":"T002","status":"evidence-confirmed","files":[".github/openssl-exceptions/exception.schema.json",".github/openssl-exceptions/README.md",".github/workflows/build_package.yml"],"reason":"Read-only local schema and release-qualification audit proved the checked-in exception contract and fail-closed field enforcement; live Windows artifact evidence remains open under T018/W004."}

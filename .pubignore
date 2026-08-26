@@ -1,0 +1,24 @@
+# Keep pub's exclusions aligned with .gitignore, except generated bindings:
+# they are required by package consumers but must not be versioned.
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+*.iml
+*.ipr
+*.iws
+.idea/
+
+/pubspec.lock
+**/doc/api/
+.dart_tool/
+.packages
+build/
+.artifacts/

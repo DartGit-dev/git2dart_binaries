@@ -1,0 +1,64 @@
+diff --git a/.github/scripts/platform_release_proof.py b/.github/scripts/platform_release_proof.py
+--- a/.github/scripts/platform_release_proof.py
++++ b/.github/scripts/platform_release_proof.py
+@@
+ def validate_semantics(record: dict, platform: str) -> list[dict]:
+     ...
+-    if not isinstance(record["attestation"], dict) or not record["attestation"]:
+-        errors.append("invalid attestation")
++    errors.extend(validate_attestation(record["attestation"], platform, record["versions"]))
+     return present, errors
++
++def validate_attestation(attestation: object, platform: str, versions: dict) -> list[str]:
++    if not isinstance(attestation, dict):
++        return ["invalid attestation"]
++
++    required = {"emitted_payload_sha256"}
++    if platform in {"macos", "ios"}:
++        required.update({"input_sha256", "emitted_sha256", "toolchain", "sdk", "compiled_metadata"})
++    if set(attestation) != required:
++        return ["invalid attestation fields"]
++
++    hashes = {"emitted_payload_sha256"}
++    if platform in {"macos", "ios"}:
++        hashes.update({"input_sha256", "emitted_sha256"})
++    errors = [f"invalid attestation {name}" for name in hashes
++              if not isinstance(attestation[name], str)
++              or not re.fullmatch(r"[0-9a-f]{64}", attestation[name])]
++    if platform in {"macos", "ios"}:
++        if not isinstance(attestation["toolchain"], str) or not attestation["toolchain"]:
++            errors.append("invalid attestation toolchain")
++        if not isinstance(attestation["sdk"], str) or not attestation["sdk"]:
++            errors.append("invalid attestation sdk")
++        if attestation["compiled_metadata"] != versions:
++            errors.append("invalid attestation compiled metadata")
++    return errors
+@@
+-def validate_payload_identity(root: Path, platform: str, abi: str, present: list[dict]) -> None:
++def validate_payload_identity(
++    root: Path, platform: str, abi: str, present: list[dict], attestation: dict
++) -> None:
+     ...
++
++    payload_sha256 = tree_sha256(root)
++    if attestation["emitted_payload_sha256"] != payload_sha256:
++        raise ValueError("attestation payload digest mismatch")
++    if platform in {"macos", "ios"} and attestation["emitted_sha256"] != payload_sha256:
++        raise ValueError("attestation emitted digest mismatch")
+@@
+ def _run(command: list[str], env: dict[str, str] | None = None) -> tuple[bool, str]:
+     result = subprocess.run(command, capture_output=True, text=True, env=env, check=False)
+-    return result.returncode == 0, (result.stdout + result.stderr).strip()[-400:]
++    diagnostic = (result.stdout + result.stderr).strip()[-400:]
++    if result.returncode == 0 and not diagnostic:
++        diagnostic = "probe completed successfully"
++    return result.returncode == 0, diagnostic
+@@
+-                validate_payload_identity(payload_root, record["platform"], record["abi"], present)
++                validate_payload_identity(
++                    payload_root,
++                    record["platform"],
++                    record["abi"],
++                    present,
++                    record["attestation"],
++                )

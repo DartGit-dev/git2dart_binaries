@@ -1,0 +1,1 @@
+The native cache action contract test now rejects a provenance path in any test-delivery artifact upload block. This prevents a nested `export/` directory from returning unnoticed.

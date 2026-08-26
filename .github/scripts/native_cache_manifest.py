@@ -6,15 +6,32 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
 
-SCHEMA = "native-v1"
+SCHEMA = "native-v2"
+PROVENANCE_KINDS = ("source-build", "approved-exception")
+
+
+def safe_relative(value: str) -> str:
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts or "\\" in value:
+        raise ValueError("Unsafe exported file path")
+    return path.as_posix()
+
+
+def sanitized_error(error: object, *roots: Path) -> str:
+    value = str(error)
+    for root in roots:
+        value = value.replace(str(root.resolve()), "<fixture>")
+        value = value.replace(str(root), "<fixture>")
+    return re.sub(r"(?:[A-Za-z]:)?[/\\][^\s:]+", "<path>", value)
 
 
 def metadata(args: argparse.Namespace) -> dict[str, str]:
-    return {
+    result = {
         "schema": SCHEMA,
         "platform": args.platform,
         "abi": args.abi,
@@ -22,7 +39,19 @@ def metadata(args: argparse.Namespace) -> dict[str, str]:
         "libssh2": args.libssh2,
         "openssl": args.openssl,
         "toolchain": args.toolchain,
+        "provenance": args.provenance,
     }
+    if args.provenance == "source-build":
+        if not args.source_ref or args.exception_id:
+            raise ValueError("source-build requires --source-ref and forbids --exception-id")
+        result["source_ref"] = args.source_ref
+    elif args.provenance == "approved-exception":
+        if not args.exception_id or args.source_ref:
+            raise ValueError("approved-exception requires --exception-id and forbids --source-ref")
+        result["exception_id"] = args.exception_id
+    else:
+        raise ValueError(f"Unsupported provenance: {args.provenance}")
+    return result
 
 
 def digest(path: Path) -> str:
@@ -60,6 +89,8 @@ def validate(args: argparse.Namespace) -> int:
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         expected = metadata(args)
+        if set(manifest) != set(expected) | {"files"}:
+            raise ValueError("Manifest fields are missing, contradictory, or unknown")
         for key, value in expected.items():
             if manifest.get(key) != value:
                 raise ValueError(f"Manifest {key} mismatch")
@@ -67,6 +98,10 @@ def validate(args: argparse.Namespace) -> int:
         recorded = manifest.get("files")
         if not isinstance(recorded, dict) or not recorded:
             raise ValueError("Manifest contains no exported files")
+        for relative in recorded:
+            if not isinstance(relative, str):
+                raise ValueError("Manifest file paths must be strings")
+            safe_relative(relative)
 
         current = exported_files(root)
         if set(current) != set(recorded):
@@ -93,12 +128,22 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--libssh2", required=True)
     result.add_argument("--openssl", required=True)
     result.add_argument("--toolchain", required=True)
+    result.add_argument("--provenance", choices=PROVENANCE_KINDS, required=True)
+    result.add_argument("--source-ref")
+    result.add_argument("--exception-id")
     return result
 
 
 def main() -> int:
-    args = parser().parse_args()
-    return create(args) if args.command == "create" else validate(args)
+    try:
+        args = parser().parse_args()
+        return create(args) if args.command == "create" else validate(args)
+    except ValueError as error:
+        print(
+            f"Native cache validation failed: {sanitized_error(error, root, manifest_path)}",
+            file=sys.stderr,
+        )
+        return 1
 
 
 if __name__ == "__main__":

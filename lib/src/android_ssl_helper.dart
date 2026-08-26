@@ -1,8 +1,30 @@
 library;
 
 import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:meta/meta.dart';
 import 'package:path_provider/path_provider.dart';
+
+typedef AndroidTemporaryDirectory = Future<Directory> Function();
+typedef AndroidCertificateAsset = Future<Uint8List> Function();
+typedef AndroidCertificateWriter =
+    Future<void> Function(File file, Uint8List bytes);
+
+/// Internal operation bundle used to prove TLS initialization state changes.
+@visibleForTesting
+final class AndroidSSLDependencies {
+  const AndroidSSLDependencies({
+    required this.temporaryDirectory,
+    required this.loadCertificateAsset,
+    required this.writeCertificate,
+  });
+
+  final AndroidTemporaryDirectory temporaryDirectory;
+  final AndroidCertificateAsset loadCertificateAsset;
+  final AndroidCertificateWriter writeCertificate;
+}
 
 /// Helper class to set up SSL certificates for git2dart on Android.
 ///
@@ -65,23 +87,27 @@ class AndroidSSLHelper {
   /// ```
   ///
   /// Returns the path to the extracted certificate file.
-  static Future<String> initialize() async {
+  static Future<String> initialize() => _initialize(_defaultDependencies);
+
+  @visibleForTesting
+  static Future<String> initializeWith(AndroidSSLDependencies dependencies) =>
+      _initialize(dependencies);
+
+  static Future<String> _initialize(AndroidSSLDependencies dependencies) async {
     if (_initialized && _certPath != null) {
       return _certPath!;
     }
 
-    // Get the app's cache directory
-    final cacheDir = await getTemporaryDirectory();
-    final certFile = File('${cacheDir.path}/cacert.pem');
-
     try {
+      // Get the app's cache directory
+      final cacheDir = await dependencies.temporaryDirectory();
+      final certFile = File('${cacheDir.path}/cacert.pem');
+
       // Extract the CA bundle from assets
-      final certData = await rootBundle.load(
-        'packages/git2dart_binaries/assets/certs/cacert.pem',
-      );
+      final certData = await dependencies.loadCertificateAsset();
 
       // Write to cache directory
-      await certFile.writeAsBytes(certData.buffer.asUint8List(), flush: true);
+      await dependencies.writeCertificate(certFile, certData);
 
       _certPath = certFile.path;
       _initialized = true;
@@ -100,4 +126,24 @@ class AndroidSSLHelper {
 
   /// Check if SSL certificates have been initialized.
   static bool get isInitialized => _initialized;
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _initialized = false;
+    _certPath = null;
+  }
+
+  static final AndroidSSLDependencies _defaultDependencies =
+      AndroidSSLDependencies(
+        temporaryDirectory: getTemporaryDirectory,
+        loadCertificateAsset: () async {
+          final data = await rootBundle.load(
+            'packages/git2dart_binaries/assets/certs/cacert.pem',
+          );
+          return data.buffer.asUint8List();
+        },
+        writeCertificate: (file, bytes) async {
+          await file.writeAsBytes(bytes, flush: true);
+        },
+      );
 }

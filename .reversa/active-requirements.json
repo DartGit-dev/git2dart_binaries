@@ -1,0 +1,21 @@
+{
+  "schema-version": 1,
+  "feature-dir": ".reversa/_reversa_forward/005-behavior-proving-tests",
+  "feature-id": "005",
+  "short-name": "behavior-proving-tests",
+  "started-at": "2026-08-25T12:05:55.4397593+07:00",
+  "current-stage": "requirements",
+  "stages-completed": [],
+  "paused-features": [
+    {
+      "feature-dir": ".reversa/_reversa_forward/002-openssl-source-parity",
+      "feature-id": "002",
+      "short-name": "openssl-source-parity",
+      "started-at": "2026-08-24T11:10:36.9867162+07:00",
+      "current-stage": "requirements",
+      "stages-completed": [],
+      "paused-at": "2026-08-24T11:19:48.7909421+07:00",
+      "paused-from-stage": "plan"
+    }
+  ]
+}

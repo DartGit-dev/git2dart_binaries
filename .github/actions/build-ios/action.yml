@@ -35,7 +35,7 @@ runs:
       run: |
         set -euo pipefail
         sdk_version="$(xcrun --sdk '${{ inputs.ios_sdk }}' --show-sdk-version)"
-        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(xcrun clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-${{ inputs.ios_sdk }}-${sdk_version}"
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(xcrun clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-${{ inputs.ios_sdk }}-${sdk_version}-deployment-${{ inputs.ios_deployment_target }}-openssl-target-${{ inputs.openssl_target }}"
         fingerprint="$(printf '%s' "$raw" | shasum -a 256 | cut -d' ' -f1)"
         echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
 
@@ -44,7 +44,7 @@ runs:
       uses: actions/cache/restore@v5
       with:
         path: /tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}
-        key: native-v1-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-ios/action.yml', '.github/scripts/native_cache_manifest.py') }}
+        key: native-v2-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-ios/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Validate iOS native cache
       id: validate-cache
@@ -61,7 +61,9 @@ runs:
             --libgit2 "${{ inputs.libgit2_version }}" \
             --libssh2 "${{ inputs.libssh2_version }}" \
             --openssl "${{ inputs.openssl_version }}" \
-            --toolchain "${{ steps.toolchain.outputs.fingerprint }}"; then
+            --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
+            --provenance source-build \
+            --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"; then
           echo 'valid=true' >> "$GITHUB_OUTPUT"
         else
           rm -rf "$cache_root"
@@ -248,18 +250,22 @@ runs:
           --libgit2 "${{ inputs.libgit2_version }}" \
           --libssh2 "${{ inputs.libssh2_version }}" \
           --openssl "${{ inputs.openssl_version }}" \
-          --toolchain "${{ steps.toolchain.outputs.fingerprint }}"
+          --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
+          --provenance source-build \
+          --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"
+        cp "$cache_root/manifest.json" "$cache_root/export/provenance-${{ inputs.ios_sdk }}-${{ inputs.architecture }}.json"
 
     - name: Save iOS native cache
       if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/cache/save@v5
       with:
         path: /tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}
-        key: native-v1-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-ios/action.yml', '.github/scripts/native_cache_manifest.py') }}
+        key: native-v2-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-ios/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Upload iOS slice
       uses: actions/upload-artifact@v7
       with:
         name: ${{ inputs.artifact_name }}
-        path: /tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}/export/**
+        path: |
+          /tmp/git2dart-ios-${{ inputs.ios_sdk }}-${{ inputs.architecture }}/export/**
         retention-days: 1

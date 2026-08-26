@@ -3,6 +3,8 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:git2dart_binaries/git2dart_binaries.dart';
 
+export 'error.dart' show GetLastError;
+
 /// Extension methods for String validation and conversion.
 extension IsValidSHA on String {
   /// Validates if the string is a valid Git SHA-1 hash.
@@ -83,16 +85,5 @@ extension IsValidRefName on String {
     if (contains('./')) return false;
 
     return true;
-  }
-}
-
-/// Extension methods for Git object type validation.
-extension GetLastError on Libgit2 {
-  /// Gets the last error that occurred.
-  ///
-  /// Returns null if no error has occurred.
-  LibGit2Error? getLastError() {
-    final error = git_error_last();
-    return error == nullptr ? null : LibGit2Error(error);
   }
 }

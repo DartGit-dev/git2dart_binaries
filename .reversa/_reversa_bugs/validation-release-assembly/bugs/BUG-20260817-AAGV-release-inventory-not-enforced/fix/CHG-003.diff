@@ -1,0 +1,11 @@
+# CHG-003 applied diff
+
+The approved one-line workflow delta in `CHG-003-workflow-proposed.diff` was
+applied without variance:
+
+```diff
+-run: python3 .github/scripts/platform_release_proof.py validate --proofs .platform-proofs
++run: python3 .github/scripts/platform_release_proof.py validate --proofs .platform-proofs --payload-root .
+```
+
+The parsed workflow assertion passes in `evidence/gate-2-green.md`.

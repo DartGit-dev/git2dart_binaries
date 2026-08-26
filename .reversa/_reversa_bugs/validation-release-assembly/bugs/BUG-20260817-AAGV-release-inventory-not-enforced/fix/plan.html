@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUG-20260817-AAGV — Revised correction plan</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1220; --panel:#111c2f; --line:#33445f; --text:#e7edf7; --muted:#a8b3c7; --red:#ef6a6a; --yellow:#eab64d; --green:#54c98f; --blue:#78a9ff; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 system-ui,Segoe UI,sans-serif; }
+    main { max-width:1280px; margin:auto; padding:28px; } h1,h2 { margin:0 0 14px; } h2 { margin-top:28px; } a { color:#9bd7ff; }
+    .meta,.note { color:var(--muted); } .cards { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; margin:22px 0; }
+    .card,.panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; } .card strong { display:block; color:#fff; font-size:20px; }
+    table { width:100%; border-collapse:collapse; margin:12px 0 26px; background:var(--panel); } th,td { border:1px solid var(--line); padding:10px; text-align:left; vertical-align:top; } th { color:#cbd8ea; }
+    .risk { color:var(--red); font-weight:700; } .ok { color:var(--green); font-weight:700; } code { color:#dbe6f7; } .graph-wrap { overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px; }
+    svg { min-width:880px; width:100%; height:auto; display:block; } .edge { fill:none; stroke:var(--yellow); stroke-width:2.5; stroke-dasharray:8 7; } .edge-label { fill:#dbe6f7; font-size:13px; }
+    .node rect { fill:#17253d; stroke-width:3; rx:12; } .node.high rect { stroke:var(--red); } .node .title { fill:#f8fbff; font-weight:700; font-size:14px; } .node .detail { fill:#b8c5d9; font-size:12px; }
+    @media (max-width:900px) { main { padding:18px; } .cards { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Revised correction plan · BUG-20260817-AAGV</h1>
+  <p class="meta">#9 · validation-release-assembly · 2026-08-25 · severity high · priority P1 · package closure policy</p>
+  <section class="cards" aria-label="Plan summary">
+    <div class="card"><strong>Confirmed</strong>root cause</div>
+    <div class="card"><strong class="risk">High</strong>change risk</div>
+    <div class="card"><strong>5</strong>planned/applied source/test artifacts</div>
+    <div class="card"><strong>2 gates</strong>tests, then correction</div>
+  </section>
+
+  <h2>Defect and evidence</h2>
+  <div class="panel">
+    <p>The aggregate validator accepts all required scopes even when every proof has empty inventory and versions, a null attestation, and no cryptographic connection to the assembled payload. <strong>Root cause state: confirmed.</strong></p>
+    <p class="note">Evidence: <a href="../evidence/reproduction.md">deterministic local reproduction</a>, <a href="../evidence/semantic-regression-20260825.md">W002 semantic regression</a>, <code>.github/scripts/platform_release_proof.py:validate</code>, and <code>build_package.yml:721-722</code>.</p>
+  </div>
+
+  <h2>Chosen strategy</h2>
+  <div class="panel">
+    <p><strong>Direct correction.</strong> There is one confirmed causal path and one narrow, discriminating repair: validate a complete proof schema against the actual final release payload before subsequent release gates. A multi-agent debate is not recommended because there are no competing root-cause explanations; it would not reduce the release-boundary risk beyond the two approval gates.</p>
+  </div>
+
+  <h2>Mandatory review follow-up</h2>
+  <div class="panel">
+    <p><strong class="risk">Independent review rejected the first Gate 2.</strong> The producer can emit an empty successful-linkage diagnostic that the aggregate validator rejects, and arbitrary non-empty attestation maps still qualify. The corrective sequence keeps CHG-001 through CHG-003 intact: first add tests for producer-to-validator compatibility and strict platform attestation semantics, then apply only the smallest validator repair required to turn those tests green.</p>
+    <p class="note">Evidence: <a href="../evidence/independent-review.md">independent review rejection</a>. No spec verdict or package closure is available until the corrective Gate 2 and a new independent review approve.</p>
+  </div>
+
+  <h2>Proposed Correction Change Set</h2>
+  <table>
+    <thead><tr><th>CHG</th><th>Type</th><th>Artifact</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>CHG-001</td><td>test</td><td><code>test/platform_release_proof_test.dart</code></td><td>Replace the semantically empty passing fixture with a complete payload-backed fixture; add red cases for empty inventory/versions/null attestation and post-proof byte changes.</td></tr>
+      <tr><td>CHG-002</td><td>code</td><td><code>.github/scripts/platform_release_proof.py</code></td><td>Require complete inventory, linkage, version, and attestation semantics; create an emitted payload digest for every scope; compare each proof to the mapped final payload bytes.</td></tr>
+      <tr><td>CHG-003</td><td>configuration + test</td><td><code>.github/workflows/build_package.yml</code>; <code>test/platform_release_proof_workflow_facts_test.dart</code></td><td>Pass the assembled workspace as the validator payload root and assert that invocation statically, before inventory, size, dry-run, and publication.</td></tr>
+      <tr><td>CHG-004</td><td>test</td><td><code>test/platform_release_proof_test.dart</code></td><td>Prove that a host-loadable producer proof round-trips into aggregate validation and reject arbitrary, incomplete, or digest-mismatched attestations.</td></tr>
+      <tr><td>CHG-005</td><td>code</td><td><code>.github/scripts/platform_release_proof.py</code></td><td>Emit a stable passed-linkage diagnostic; require platform-specific attestation fields; validate their digest formats and bind emitted payload digest to final payload bytes.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Planned tests</h2>
+  <table>
+    <thead><tr><th>Intent</th><th>Proof</th><th>Expected before correction</th><th>Expected after correction</th></tr></thead>
+    <tbody>
+      <tr><td>Reproduction</td><td>Eight passed-scope records with empty inventory and versions plus null attestation.</td><td>Aggregate CLI exits 0.</td><td>Aggregate CLI rejects the proof.</td></tr>
+      <tr><td>Regression</td><td>A structurally complete proof set tied to fixture payload bytes.</td><td>Not represented.</td><td>Aggregate CLI exits 0.</td></tr>
+      <tr><td>Regression</td><td>Mutate one final payload byte after its proof is written.</td><td>Not represented.</td><td>Aggregate CLI rejects the digest mismatch.</td></tr>
+      <tr><td>Workflow contract</td><td>Parsed <code>publish_package</code> qualifying step includes <code>--payload-root .</code>.</td><td>Not represented.</td><td>Static workflow test passes.</td></tr>
+      <tr><td>Producer/consumer regression</td><td>A host-loadable native library is copied into one platform payload, <code>create</code> writes its proof, then aggregate <code>validate</code> consumes it.</td><td>Aggregate rejects the empty successful-linkage diagnostic.</td><td>The round-trip exits 0 with a stable diagnostic.</td></tr>
+      <tr><td>Attestation reproduction</td><td>Replace a valid proof attestation with an arbitrary non-empty map, an incomplete Apple map, or a wrong emitted-payload digest.</td><td>Aggregate accepts the records.</td><td>Aggregate rejects every malformed attestation.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Risk and boundary</h2>
+  <div class="panel">
+    <p><span class="risk">High change risk:</span> this is a final publication gate, so an incorrect platform-path map could halt every candidate. The change is reversible, has no data repair or migration, and is constrained to local proof semantics plus the release invocation.</p>
+    <p><span class="ok">Out of scope:</span> hosted GitHub Actions execution, artifact-store integrity, merge, publication, and registry acceptance. They remain required for package closure after the local gates.</p>
+  </div>
+
+  <h2>Bug relationship graph</h2>
+  <div class="graph-wrap"><svg viewBox="0 0 980 310" role="img" aria-label="AAGV proposed related bugs">
+    <path class="edge" d="M330 155 C440 155 440 60 560 60"></path><text class="edge-label" x="402" y="98">related-to · proposed</text>
+    <path class="edge" d="M330 155 L560 155"></path><text class="edge-label" x="408" y="145">related-to · proposed</text>
+    <path class="edge" d="M330 155 C440 155 440 250 560 250"></path><text class="edge-label" x="402" y="222">related-to · proposed</text>
+    <a class="node high" href="../bug.md"><rect x="50" y="105" width="280" height="100"></rect><text class="title" x="68" y="135">#9 · AAGV · Aggregate proof</text><text class="title" x="68" y="155">semantics not enforced</text><text class="detail" x="68" y="180">active · planning · high / P1</text></a>
+    <a class="node high" href="../../../../native-loader-lifecycle/bugs/BUG-20260816-AAH6-linux-libssh2-sidecar-omitted/bug.md"><rect x="560" y="15" width="340" height="90"></rect><text class="title" x="578" y="45">#1 · AAH6 · Linux sidecar omitted</text><text class="detail" x="578" y="70">related-to · proposed</text></a>
+    <a class="node high" href="../../../../native-build-bindings-generation/bugs/BUG-20260817-AACM-bindings-cache-ignores-generator-contract/bug.md"><rect x="560" y="110" width="340" height="90"></rect><text class="title" x="578" y="140">#7 · AACM · Binding cache contract</text><text class="detail" x="578" y="165">related-to · proposed</text></a>
+    <a class="node high" href="../../../../native-build-bindings-generation/bugs/BUG-20260817-AAFK-mobile-cache-ignores-target-inputs/bug.md"><rect x="560" y="205" width="340" height="90"></rect><text class="title" x="578" y="235">#8 · AAFK · Mobile cache inputs</text><text class="detail" x="578" y="260">related-to · proposed</text></a>
+  </svg></div>
+
+  <h2>Relationship matrix</h2>
+  <table><thead><tr><th>Origin</th><th>Type</th><th>Destination</th><th>State</th></tr></thead><tbody>
+    <tr><td><a href="../bug.md">BUG-20260817-AAGV</a></td><td>related-to</td><td><a href="../../../../native-loader-lifecycle/bugs/BUG-20260816-AAH6-linux-libssh2-sidecar-omitted/bug.md">BUG-20260816-AAH6</a></td><td>proposed</td></tr>
+    <tr><td><a href="../bug.md">BUG-20260817-AAGV</a></td><td>related-to</td><td><a href="../../../../native-build-bindings-generation/bugs/BUG-20260817-AACM-bindings-cache-ignores-generator-contract/bug.md">BUG-20260817-AACM</a></td><td>proposed</td></tr>
+    <tr><td><a href="../bug.md">BUG-20260817-AAGV</a></td><td>related-to</td><td><a href="../../../../native-build-bindings-generation/bugs/BUG-20260817-AAFK-mobile-cache-ignores-target-inputs/bug.md">BUG-20260817-AAFK</a></td><td>proposed</td></tr>
+  </tbody></table>
+
+  <p class="note">Corrective Gate 1 is required next: approval permits only CHG-004 test changes and their red demonstration. Corrective Gate 2 for CHG-005 remains a separate approval; afterwards a fresh independent review is mandatory.</p>
+</main>
+</body>
+</html>

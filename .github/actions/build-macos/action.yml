@@ -34,7 +34,7 @@ runs:
           /tmp/git2dart-macos
           export
           /tmp/git2dart-macos-manifest.json
-        key: native-v1-macos-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-macos/action.yml', '.github/scripts/native_cache_manifest.py') }}
+        key: native-v2-macos-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-macos/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Validate macOS native cache
       id: validate-cache
@@ -50,7 +50,9 @@ runs:
             --libgit2 "${{ inputs.libgit2_version }}" \
             --libssh2 "${{ inputs.libssh2_version }}" \
             --openssl "${{ inputs.openssl_version }}" \
-            --toolchain "${{ steps.toolchain.outputs.fingerprint }}"; then
+            --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
+            --provenance source-build \
+            --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"; then
           echo 'valid=true' >> "$GITHUB_OUTPUT"
         else
           rm -rf openssl libssh2 libgit2 /tmp/git2dart-macos export /tmp/git2dart-macos-manifest.json
@@ -200,7 +202,10 @@ runs:
           --libgit2 "${{ inputs.libgit2_version }}" \
           --libssh2 "${{ inputs.libssh2_version }}" \
           --openssl "${{ inputs.openssl_version }}" \
-          --toolchain "${{ steps.toolchain.outputs.fingerprint }}"
+          --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
+          --provenance source-build \
+          --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"
+        cp /tmp/git2dart-macos-manifest.json /tmp/git2dart-macos-provenance.json
 
     - name: Save macOS native cache
       if: steps.validate-cache.outputs.valid != 'true'
@@ -213,11 +218,17 @@ runs:
           /tmp/git2dart-macos
           export
           /tmp/git2dart-macos-manifest.json
-        key: native-v1-macos-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-macos/action.yml', '.github/scripts/native_cache_manifest.py') }}
+          /tmp/git2dart-macos-provenance.json
+        key: native-v2-macos-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-macos/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
+    - name: Include macOS OpenSSL provenance in release artifact
+      shell: bash
+      run: cp /tmp/git2dart-macos-provenance.json export/openssl-provenance.json
 
     - name: Cache git2 library
       uses: actions/upload-artifact@v7
       with:
         name: cache-macos
-        path: export/**
+        path: |
+          export/**
         retention-days: 1

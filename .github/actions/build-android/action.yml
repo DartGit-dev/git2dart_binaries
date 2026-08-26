@@ -120,7 +120,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        raw="${RUNNER_OS}-${RUNNER_ARCH}-ndk-r26d-$($ANDROID_LLVM_BIN/clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')"
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-ndk-r26d-$($ANDROID_LLVM_BIN/clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-android-api-${{ inputs.android_api_level }}"
         fingerprint="$(printf '%s' "$raw" | sha256sum | cut -d' ' -f1)"
         echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
 
@@ -129,7 +129,7 @@ runs:
       uses: actions/cache/restore@v5
       with:
         path: /tmp/git2dart-android-${{ inputs.architecture }}
-        key: native-v1-android-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-android/action.yml', '.github/scripts/native_cache_manifest.py') }}
+        key: native-v2-android-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-android/action.yml', '.github/scripts/native_cache_manifest.py') }}
 
     - name: Validate Android native cache
       id: validate-cache
@@ -146,7 +146,9 @@ runs:
             --libgit2 "${{ inputs.libgit2_version }}" \
             --libssh2 "${{ inputs.libssh2_version }}" \
             --openssl "${{ inputs.openssl_version }}" \
-            --toolchain "${{ steps.toolchain.outputs.fingerprint }}"; then
+            --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
+            --provenance source-build \
+            --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"; then
           echo 'valid=true' >> "$GITHUB_OUTPUT"
         else
           rm -rf "$cache_root"
@@ -280,18 +282,26 @@ runs:
           --libgit2 "${{ inputs.libgit2_version }}" \
           --libssh2 "${{ inputs.libssh2_version }}" \
           --openssl "${{ inputs.openssl_version }}" \
-          --toolchain "${{ steps.toolchain.outputs.fingerprint }}"
+          --toolchain "${{ steps.toolchain.outputs.fingerprint }}" \
+          --provenance source-build \
+          --source-ref "refs/tags/openssl-${{ inputs.openssl_version }}"
+        cp "$BUILD_ROOT/manifest.json" "$BUILD_ROOT/provenance.json"
 
     - name: Save Android native cache
       if: steps.validate-cache.outputs.valid != 'true'
       uses: actions/cache/save@v5
       with:
         path: /tmp/git2dart-android-${{ inputs.architecture }}
-        key: native-v1-android-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-android/action.yml', '.github/scripts/native_cache_manifest.py') }}
+        key: native-v2-android-${{ inputs.architecture }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-${{ inputs.libssh2_version }}-${{ inputs.openssl_version }}-${{ hashFiles('.github/actions/build-android/action.yml', '.github/scripts/native_cache_manifest.py') }}
+
+    - name: Include Android OpenSSL provenance in release artifact
+      shell: bash
+      run: cp "/tmp/git2dart-android-${{ inputs.architecture }}/provenance.json" "/tmp/git2dart-android-${{ inputs.architecture }}/export/openssl-provenance.json"
 
     - name: Upload Android artifact
       uses: actions/upload-artifact@v7
       with:
         name: cache-android-${{ inputs.architecture }}
-        path: /tmp/git2dart-android-${{ inputs.architecture }}/export/**
+        path: |
+          /tmp/git2dart-android-${{ inputs.architecture }}/export/**
         retention-days: 1

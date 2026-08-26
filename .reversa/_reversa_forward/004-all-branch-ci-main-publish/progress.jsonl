@@ -1,0 +1,9 @@
+{"ts":"2026-08-24T05:20:00Z","action":"T001","status":"done","files":[".reversa/_reversa_forward/004-all-branch-ci-main-publish/gate-1-red.md"]}
+{"ts":"2026-08-24T05:20:00Z","action":"T002","status":"done","files":["test/workflow_trigger_policy_test.dart"]}
+{"ts":"2026-08-24T05:20:00Z","action":"T003","status":"done","files":["test/release_inventory_workflow_test.dart"]}
+{"ts":"2026-08-24T05:20:00Z","action":"T004","status":"done","files":[".github/workflows/build_package.yml"]}
+{"ts":"2026-08-24T05:20:00Z","action":"T005","status":"done","files":[".github/workflows/build_package.yml"]}
+{"ts":"2026-08-24T05:20:00Z","action":"T006","status":"done","files":[".github/workflows/build_package.yml"]}
+{"ts":"2026-08-24T05:20:00Z","action":"T007","status":"done","files":["test/workflow_trigger_policy_test.dart","test/release_inventory_workflow_test.dart"]}
+{"ts":"2026-08-24T05:20:00Z","action":"T008","status":"done","files":[".reversa/_reversa_forward/004-all-branch-ci-main-publish/gate-2-green.md"]}
+{"ts":"2026-08-24T05:20:00Z","action":"E001","status":"done","files":[".github/workflows/build_package.yml","test/workflow_trigger_policy_test.dart"]}

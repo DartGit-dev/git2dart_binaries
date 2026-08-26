@@ -43,5 +43,6 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 # external build triggered from this build file.
 set(git2dart_binaries_bundled_libraries
   "${CMAKE_CURRENT_SOURCE_DIR}/libgit2.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libssh2.so"
   PARENT_SCOPE
 )

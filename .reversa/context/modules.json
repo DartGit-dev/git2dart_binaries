@@ -1,0 +1,332 @@
+{
+  "generated_at": "2026-08-16T15:59:16Z",
+  "modules": [
+    {
+      "name": "dart-ffi-facade",
+      "path": "lib",
+      "purpose": "Expose the CI-generated libgit2 ABI, checked lifecycle/error diagnostics, and handwritten conversion and validation helpers through one Dart package API.",
+      "primary_files": ["lib/git2dart_binaries.dart", "lib/src/bindings.dart", "lib/src/error.dart", "lib/src/extensions.dart"],
+      "functions": [
+        {"name":"Libgit2LifecycleException.toString","file":"lib/src/error.dart","params":[],"returns":"String","confidence":"confirmed"},
+        {"name":"GetLastError.getLastError","file":"lib/src/error.dart","params":["this: Libgit2"],"returns":"LibGit2Error?","confidence":"confirmed"},
+        {"name":"IsValidSHA.isValidSHA1","file":"lib/src/extensions.dart","params":["this: String"],"returns":"bool","confidence":"confirmed"},
+        {"name":"ToDartString.toDartString","file":"lib/src/extensions.dart","params":["this: Pointer<Char>","length: int?"],"returns":"String","confidence":"confirmed"},
+        {"name":"IsValidGitObjectType.isValidGitObjectType","file":"lib/src/extensions.dart","params":["this: int"],"returns":"bool","confidence":"confirmed"},
+        {"name":"IsValidRefName.isValidRefName","file":"lib/src/extensions.dart","params":["this: String"],"returns":"bool","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"Libgit2LifecycleOperation","fields":[{"name":"values","type":"initialize | rollback | shutdown | finalizerCleanup","required":true}],"confidence":"confirmed"},
+        {"name":"Libgit2LifecycleException","fields":[{"name":"operation","type":"Libgit2LifecycleOperation","required":true},{"name":"nativeResult","type":"int?","required":false},{"name":"cause","type":"Object?","required":false},{"name":"causeStackTrace","type":"StackTrace?","required":false},{"name":"ownerLabel","type":"String?","required":false}],"confidence":"confirmed"},
+        {"name":"LibGit2Error","fields":[{"name":"_errorPointer","type":"Pointer<git_error>","required":true},{"name":"message","type":"String","required":true},{"name":"errorClass","type":"git_error_t","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"SHA-1 text must contain only hexadecimal characters and stay within the generated libgit2 prefix/full-hash limits.","location":"lib/src/extensions.dart:17","confidence":"confirmed"},
+        {"description":"The local reference-name predicate rejects its handwritten invalid-character, suffix, double-dot, and dot-slash cases; it does not invoke the native validator.","location":"lib/src/extensions.dart:77","confidence":"confirmed"},
+        {"description":"The object-type predicate accepts every integer at or above GIT_OBJECT_COMMIT.value rather than checking explicit enum membership.","location":"lib/src/extensions.dart:58","confidence":"confirmed"},
+        {"description":"A null Pointer<Char> converts to an empty Dart string; otherwise the optional byte length is forwarded to package:ffi.","location":"lib/src/extensions.dart:41","confidence":"confirmed"},
+        {"description":"Only a non-null git_error_last result can create a public LibGit2Error wrapper; the native pointer remains borrowed.","location":"lib/src/error.dart:73","confidence":"confirmed"},
+        {"description":"Lifecycle exception diagnostics always include the operation and omit nullable result, owner, and cause fields when absent.","location":"lib/src/error.dart:31","confidence":"confirmed"}
+      ],
+      "dependencies": ["dart:ffi", "package:ffi", "CI-generated lib/src/bindings.dart", "libgit2 last-error pointer lifetime"],
+      "algorithms": ["nullable native last-error projection", "null-safe UTF-8 pointer conversion", "SHA-1 and reference-name validation", "object-type lower-bound classification", "conditional lifecycle diagnostic formatting"],
+      "complexity": "medium"
+    },
+    {
+      "name": "native-loader-lifecycle",
+      "path": "lib/src/runtime.dart",
+      "purpose": "Load the platform libgit2 artifact and manage one checked isolate-local native lease with transient calls, persistent owners, rollback, finalizer diagnostics, and guarded shutdown.",
+      "primary_files": ["lib/src/runtime.dart", "lib/src/util.dart", "test/libgit2_runtime_test.dart", "test/runtime_loader_process_test.dart", "test/fixtures/loader_probe.dart"],
+      "functions": [
+        {"name":"Libgit2Runtime._load","file":"lib/src/runtime.dart","params":[],"returns":"Libgit2Runtime","confidence":"confirmed"},
+        {"name":"Libgit2RuntimeState.ensureInitialized","file":"lib/src/runtime.dart","params":[],"returns":"void","confidence":"confirmed"},
+        {"name":"Libgit2RuntimeState.withCall","file":"lib/src/runtime.dart","params":["callback: T Function()"],"returns":"T","confidence":"confirmed"},
+        {"name":"Libgit2RuntimeState.acquireOwner","file":"lib/src/runtime.dart","params":["debugLabel: String?"],"returns":"Libgit2OwnerLease","confidence":"confirmed"},
+        {"name":"Libgit2RuntimeState.shutdown","file":"lib/src/runtime.dart","params":[],"returns":"int","confidence":"confirmed"},
+        {"name":"Libgit2OwnerLease.bindDestructor","file":"lib/src/runtime.dart","params":["destructor: void Function()"],"returns":"void","confidence":"confirmed"},
+        {"name":"Libgit2OwnerLease.release","file":"lib/src/runtime.dart","params":[],"returns":"void","confidence":"confirmed"},
+        {"name":"Libgit2OwnerLease.rollbackConstruction","file":"lib/src/runtime.dart","params":[],"returns":"void","confidence":"confirmed"},
+        {"name":"Libgit2OwnerLease.transfer","file":"lib/src/runtime.dart","params":[],"returns":"void","confidence":"confirmed"},
+        {"name":"_OwnerCleanup._complete","file":"lib/src/runtime.dart","params":["invokeDestructor: bool"],"returns":"void","confidence":"confirmed"},
+        {"name":"nativeLoaderPlanForTesting","file":"lib/src/runtime.dart","params":["operatingSystem: String"],"returns":"NativeLoaderPlan","confidence":"confirmed"},
+        {"name":"_loadLibrary","file":"lib/src/runtime.dart","params":[],"returns":"DynamicLibrary","confidence":"confirmed"},
+        {"name":"_loadWindowsDependencies","file":"lib/src/runtime.dart","params":["packageRoot: String"],"returns":"void","confidence":"confirmed"},
+        {"name":"_resolvePackageRoot","file":"lib/src/runtime.dart","params":[],"returns":"String","confidence":"confirmed"},
+        {"name":"_packageRootFromConfig","file":"lib/src/runtime.dart","params":[],"returns":"String?","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"Libgit2Runtime","fields":[{"name":"_bindings","type":"Libgit2","required":true},{"name":"_options","type":"Libgit2Opts","required":true},{"name":"_state","type":"Libgit2RuntimeState","required":true}],"confidence":"confirmed"},
+        {"name":"Libgit2RuntimeState","fields":[{"name":"_phase","type":"_RuntimePhase","required":true},{"name":"_activeCallCount","type":"int","required":true},{"name":"_liveOwnerCount","type":"int","required":true},{"name":"_shutdownResult","type":"int","required":false}],"confidence":"confirmed"},
+        {"name":"Libgit2OwnerLease","fields":[{"name":"_cleanup","type":"_OwnerCleanup","required":true},{"name":"_finalizer","type":"Finalizer<_OwnerCleanup>","required":true}],"confidence":"confirmed"},
+        {"name":"OwnerCleanup","fields":[{"name":"runtime","type":"Libgit2RuntimeState","required":true},{"name":"debugLabel","type":"String","required":true},{"name":"_destructor","type":"void Function()?","required":false},{"name":"_isCompleting","type":"bool","required":true},{"name":"_isCompleted","type":"bool","required":true}],"confidence":"confirmed"},
+        {"name":"RuntimePhase","fields":[{"name":"values","type":"uninitialized | initialized | terminated | faulted","required":true}],"confidence":"confirmed"},
+        {"name":"NativeLoaderPlan","fields":[{"name":"libraryName","type":"String","required":true},{"name":"packageSubdirectory","type":"String?","required":false},{"name":"hasPackageFallback","type":"bool","required":true}],"confidence":"confirmed"},
+        {"name":"PackageConfigEntry","fields":[{"name":"name","type":"String","required":true},{"name":"rootUri","type":"String","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"A native lease is committed only when initialization returns a positive result without throwing; all other results attempt one rollback.","location":"lib/src/runtime.dart:112","confidence":"confirmed"},
+        {"description":"Failed rollback or shutdown faults the isolate-local runtime terminally; successful shutdown is cached, idempotent, and prevents re-entry.","location":"lib/src/runtime.dart:132","confidence":"confirmed"},
+        {"description":"Transient calls decrement their pin in finally, and shutdown is rejected while any transient or persistent pin remains.","location":"lib/src/runtime.dart:163","confidence":"confirmed"},
+        {"description":"Persistent owner completion decrements its pin only after successful destruction or explicit ownership transfer; cleanup failure retains the pin.","location":"lib/src/runtime.dart:337","confidence":"confirmed"},
+        {"description":"iOS resolves symbols from the process image; Android has no package-path fallback; desktop platforms try a bare name before the package path.","location":"lib/src/runtime.dart:385","confidence":"confirmed"},
+        {"description":"Windows loads sorted libcrypto DLLs, then sorted libssl DLLs, then libssh2.dll during package fallback.","location":"lib/src/runtime.dart:441","confidence":"confirmed"},
+        {"description":"GIT2DART_BINARIES_PACKAGE_ROOT takes precedence over package URI and package-config discovery.","location":"lib/src/runtime.dart:467","confidence":"confirmed"}
+      ],
+      "dependencies": ["dart:convert", "dart:ffi", "dart:io", "dart:isolate", "package:meta", "package:path", "CI-generated bindings", "Libgit2Opts", "Dart Finalizer"],
+      "algorithms": ["checked init with compensating rollback", "isolate-local lifecycle phase machine", "transient and persistent logical pin accounting", "exact-once owner cleanup with transfer/finalizer fallback", "guarded idempotent terminal shutdown", "two-stage dynamic-library loading", "multi-source cached package-root resolution", "ordered platform dependency preload"],
+      "complexity": "high"
+    },
+    {
+      "name": "libgit2-global-options",
+      "path": "lib/src/opts_bindings.dart",
+      "purpose": "Map 33 discriminator-specific Dart methods onto 14 exact-width variadic FFI shapes for libgit2 process-global options and prove selected shapes through native round trips.",
+      "primary_files": ["lib/src/opts_bindings.dart", "test/opts_bindings_integration_test.dart", "test/fixtures/abi_probe/abi_probe.dart", "test/package_consumer_bundle_test.dart", "tool/package_consumer_bundle.dart"],
+      "functions": [
+        {"name":"git_libgit2_opts_get/set_mwindow_*","file":"lib/src/opts_bindings.dart","params":["Pointer<Size> output or int value"],"returns":"int","confidence":"confirmed"},
+        {"name":"git_libgit2_opts_get/set_search_path","file":"lib/src/opts_bindings.dart","params":["level: int","git_buf output or Pointer<Char> path"],"returns":"int","confidence":"confirmed"},
+        {"name":"git_libgit2_opts_cache_*","file":"lib/src/opts_bindings.dart","params":["object type, Size/IntPtr values or outputs"],"returns":"int","confidence":"confirmed"},
+        {"name":"git_libgit2_opts_get/set_template_path","file":"lib/src/opts_bindings.dart","params":["git_buf output or Pointer<Char> path"],"returns":"int","confidence":"confirmed"},
+        {"name":"git_libgit2_opts_ssl_and_user_agent","file":"lib/src/opts_bindings.dart","params":["certificate pointers or user-agent buffer/string"],"returns":"int","confidence":"confirmed"},
+        {"name":"git_libgit2_opts_behavior_flags","file":"lib/src/opts_bindings.dart","params":["enabled: int or Pointer<Int> output"],"returns":"int","confidence":"confirmed"},
+        {"name":"git_libgit2_opts_get/set_pack_*","file":"lib/src/opts_bindings.dart","params":["Pointer<Size> output or int value"],"returns":"int","confidence":"confirmed"},
+        {"name":"git_libgit2_opts_get/set_extensions","file":"lib/src/opts_bindings.dart","params":["git_strarray output or Pointer<Pointer<Char>> plus len"],"returns":"int","confidence":"confirmed"},
+        {"name":"_git_libgit2_opts_* signature adapters","file":"lib/src/opts_bindings.dart","params":["option: int","one of 14 ffi.VarArgs tuples"],"returns":"int","confidence":"confirmed"},
+        {"name":"ABI probe main","file":"test/fixtures/abi_probe/abi_probe.dart","params":[],"returns":"void/process exit and JSON record","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"Libgit2Opts","fields":[{"name":"_lookup","type":"Pointer<T> Function<T extends NativeType>(String)","required":true},{"name":"_git_libgit2_opts_*Ptr","type":"14 late Pointer<NativeFunction<...>> fields","required":false},{"name":"_git_libgit2_opts_*","type":"14 late Dart function fields","required":false}],"confidence":"confirmed"},
+        {"name":"VariadicSignatureFamily","fields":[{"name":"returnType","type":"ffi.Int","required":true},{"name":"optionType","type":"ffi.Int","required":true},{"name":"varArgs","type":"discriminator-specific ffi.VarArgs tuple","required":true},{"name":"dartFunction","type":"int Function(...)","required":true}],"confidence":"confirmed"},
+        {"name":"AbiProbeRecord","fields":[{"name":"availability","type":"String","required":true},{"name":"pointer_width","type":"int","required":true},{"name":"submitted_size","type":"int","required":true},{"name":"observed_size","type":"int","required":false}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"Every wrapper forwards a fixed generated option discriminator through the matching variadic tuple and returns native status unchanged.","location":"lib/src/opts_bindings.dart:29","confidence":"confirmed"},
+        {"description":"Unsigned pointer-width option values use ffi.Size/Pointer<ffi.Size>; signed cache-size values use ffi.IntPtr/Pointer<ffi.IntPtr>.","location":"lib/src/opts_bindings.dart:548","confidence":"confirmed"},
+        {"description":"Negative pack maximum object size is rejected before native size_t conversion; other integer/range/nullability constraints are not generally Dart-validated.","location":"lib/src/opts_bindings.dart:425","confidence":"confirmed"},
+        {"description":"The wrapper does not own or dispose caller buffers, C strings, arrays, or libgit2-filled output allocations.","location":"lib/src/opts_bindings.dart:108","confidence":"confirmed"},
+        {"description":"The feature-005 64-bit ABI probe must preserve 0x100000011 through set/get and restore the original global value.","location":"test/fixtures/abi_probe/abi_probe.dart:7","confidence":"confirmed"},
+        {"description":"The standalone probe reports non-64-bit hosts as unavailable, but the parent integration file accesses the runtime before checking for a declared package root.","location":"test/opts_bindings_integration_test.dart:12","confidence":"confirmed"}
+      ],
+      "dependencies": ["dart:ffi ffi.VarArgs", "package:ffi allocation helpers", "CI-generated git_libgit2_opt_t/git_buf/git_strarray", "git_libgit2_opts ABI", "managed libgit2Runtime", "declared native package payload"],
+      "algorithms": ["discriminator-to-typed-variadic dispatch", "lazy symbol adapter resolution", "pointer-width signed/unsigned ABI preservation", "state-preserving native set/get/restore probe", "caller-owned buffer and array lifecycle"],
+      "complexity": "high"
+    },
+    {
+      "name": "android-tls-bootstrap",
+      "path": "lib/src/android_ssl_helper.dart",
+      "purpose": "Extract the package CA asset through replaceable async operations, cache only completed writes, and return a path for externally owned libgit2 TLS configuration.",
+      "primary_files": ["lib/src/android_ssl_helper.dart", "lib/git2dart_binaries.dart", "pubspec.yaml", "assets/certs/cacert.pem", "android/src/main/assets/certs/cacert.pem", "test/android_ssl_helper_test.dart", "test/android_ssl_helper_diagnostic_test.dart"],
+      "functions": [
+        {"name":"AndroidSSLHelper.initialize","file":"lib/src/android_ssl_helper.dart","params":[],"returns":"Future<String>","confidence":"confirmed"},
+        {"name":"AndroidSSLHelper.initializeWith","file":"lib/src/android_ssl_helper.dart","params":["dependencies: AndroidSSLDependencies"],"returns":"Future<String>","confidence":"confirmed"},
+        {"name":"AndroidSSLHelper._initialize","file":"lib/src/android_ssl_helper.dart","params":["dependencies: AndroidSSLDependencies"],"returns":"Future<String>","confidence":"confirmed"},
+        {"name":"AndroidSSLHelper.certPath","file":"lib/src/android_ssl_helper.dart","params":[],"returns":"String?","confidence":"confirmed"},
+        {"name":"AndroidSSLHelper.isInitialized","file":"lib/src/android_ssl_helper.dart","params":[],"returns":"bool","confidence":"confirmed"},
+        {"name":"AndroidSSLHelper.resetForTesting","file":"lib/src/android_ssl_helper.dart","params":[],"returns":"void","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"AndroidSSLDependencies","fields":[{"name":"temporaryDirectory","type":"Future<Directory> Function()","required":true},{"name":"loadCertificateAsset","type":"Future<Uint8List> Function()","required":true},{"name":"writeCertificate","type":"Future<void> Function(File, Uint8List)","required":true}],"confidence":"confirmed"},
+        {"name":"AndroidTLSCompletionState","fields":[{"name":"_initialized","type":"bool","required":true},{"name":"_certPath","type":"String?","required":false}],"confidence":"confirmed"},
+        {"name":"AndroidTLSInitializationAttempt","fields":[{"name":"dependencies","type":"AndroidSSLDependencies","required":true},{"name":"temporaryDirectory","type":"Directory","required":false},{"name":"target","type":"File","required":false},{"name":"certificateBytes","type":"Uint8List","required":false}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"A sequential cache hit requires both _initialized=true and a non-null _certPath; no dependency operation runs on that path.","location":"lib/src/android_ssl_helper.dart:97","confidence":"confirmed"},
+        {"description":"The helper commits _certPath and _initialized only after the selected certificate writer completes successfully.","location":"lib/src/android_ssl_helper.dart:110","confidence":"confirmed"},
+        {"description":"Directory, asset, and writer errors emit a bounded stderr message, preserve incomplete state for a first attempt, and are rethrown.","location":"lib/src/android_ssl_helper.dart:101","confidence":"confirmed"},
+        {"description":"The default loader addresses packages/git2dart_binaries/assets/certs/cacert.pem and the default writer flushes bytes to <temporary>/cacert.pem.","location":"lib/src/android_ssl_helper.dart:136","confidence":"confirmed"},
+        {"description":"Managed libgit2 initialization and certificate-location application are documented caller obligations; the helper neither enforces ordering nor invokes the native option.","location":"lib/src/android_ssl_helper.dart:34","confidence":"confirmed"},
+        {"description":"Concurrent first attempts are not serialized because no in-flight Future or mutex is stored.","location":"lib/src/android_ssl_helper.dart:96","confidence":"confirmed"},
+        {"description":"The intended test-only injection surface remains publicly nameable and is exported by the package barrel.","location":"lib/git2dart_binaries.dart:4","confidence":"confirmed"},
+        {"description":"Feature-005 host tests prove injected sequential success/cache/failure/retry state transitions, not Android default dependency execution, external consumer application, HTTPS, or hosted cross-platform behavior.","location":"test/android_ssl_helper_test.dart:47","confidence":"confirmed"}
+      ],
+      "dependencies": ["dart:io Directory/File/stderr", "dart:typed_data Uint8List", "Flutter rootBundle", "path_provider getTemporaryDirectory", "assets/certs/cacert.pem", "external managed-libgit2/bootstrap caller"],
+      "algorithms": ["dependency-selected certificate extraction", "post-write completion commit", "sequential cache reuse", "exception-preserving retry", "unsynchronized concurrent-first-call path", "host-injected behavior proof"],
+      "complexity": "medium"
+    },
+    {
+      "name": "platform-packaging",
+      "path": "android, ios, linux, macos, windows",
+      "purpose": "Map CI-generated native artifacts into Flutter platform packages and prove selected expanded desktop/mobile consumption routes without conflating declarations, fixtures, devices, hosted provenance, or publication.",
+      "primary_files": ["pubspec.yaml", "android/build.gradle", "android/CMakeLists.txt", "android/src/main/AndroidManifest.xml", "ios/git2dart_binaries.podspec", "ios/Classes/Git2dartBinariesPlugin.swift", "linux/CMakeLists.txt", "linux/git2dart_binaries_plugin.cc", "macos/git2dart_binaries.podspec", "macos/Classes/Git2dartBinariesPlugin.swift", "windows/CMakeLists.txt", "windows/git2dart_binaries_plugin.cpp", ".github/actions/build-android/action.yml", ".github/actions/build-ios/action.yml", ".github/actions/build-linux/action.yml", ".github/actions/build-macos/action.yml", ".github/actions/build-windows/action.yml", ".github/workflows/build_package.yml", "tool/package_consumer_bundle.dart", "test/package_consumer_bundle_test.dart", "test/runtime_loader_process_test.dart", "test/macos_dylib_packaging_test.dart"],
+      "functions": [
+        {"name":"assembleConsumerBundle","file":"tool/package_consumer_bundle.dart","params":["sourceRoot: Directory","bindingFile: File","payloadRoot: Directory","bundleRoot: Directory","platform: String","bindingOrigin: String='same-run'"],"returns":"BundleEvidence","confidence":"confirmed"},
+        {"name":"runCleanConsumer","file":"tool/package_consumer_bundle.dart","params":["bundleRoot: Directory","mode: String","imports: List<String>","packageRootOverride: Directory?","timeout: Duration"],"returns":"Future<ConsumerRunResult>","confidence":"confirmed"},
+        {"name":"_consumerSource","file":"tool/package_consumer_bundle.dart","params":["mode: String","imports: List<String>"],"returns":"String","confidence":"confirmed"},
+        {"name":"_requiredPayload","file":"tool/package_consumer_bundle.dart","params":["platform: String"],"returns":"List<bool Function(String)>","confidence":"confirmed"},
+        {"name":"_copyTree","file":"tool/package_consumer_bundle.dart","params":["source: Directory","destination: Directory","exclude: bool Function(String)?"],"returns":"void","confidence":"confirmed"},
+        {"name":"_copyFile","file":"tool/package_consumer_bundle.dart","params":["source: File","root: Directory","relative: String"],"returns":"void","confidence":"confirmed"},
+        {"name":"git2dart_binaries_plugin_register_with_registrar","file":"linux/git2dart_binaries_plugin.cc","params":["registrar: FlPluginRegistrar*"],"returns":"void","confidence":"confirmed"},
+        {"name":"Git2dartBinariesPluginCApiRegisterWithRegistrar","file":"windows/git2dart_binaries_plugin_c_api.cpp","params":["registrar: FlutterDesktopPluginRegistrarRef"],"returns":"void","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"FlutterPluginPlatformRecord","fields":[{"name":"platform","type":"String","required":true},{"name":"pluginClass","type":"String","required":true},{"name":"ffiPlugin","type":"bool","required":true}],"confidence":"confirmed"},
+        {"name":"NativeArtifactSet","fields":[{"name":"platform","type":"String","required":true},{"name":"abiOrSlice","type":"String?","required":false},{"name":"artifacts","type":"List<String>","required":true},{"name":"linkOrLoadMode","type":"String","required":true},{"name":"provenanceSidecar","type":"String?","required":false}],"confidence":"confirmed"},
+        {"name":"AndroidPackageConfiguration","fields":[{"name":"namespace","type":"String","required":true},{"name":"compileSdkVersion","type":"int","required":true},{"name":"minSdkVersion","type":"int","required":true},{"name":"javaVersion","type":"String","required":true},{"name":"abis","type":"List<String>","required":true}],"confidence":"confirmed"},
+        {"name":"ApplePodPackageConfiguration","fields":[{"name":"platform","type":"ios | macos","required":true},{"name":"version","type":"String","required":true},{"name":"minimumOs","type":"String","required":true},{"name":"vendoredArtifacts","type":"List<String>","required":true},{"name":"linkFlags","type":"List<String>","required":true}],"confidence":"confirmed"},
+        {"name":"BundleEvidence","fields":[{"name":"bundleRoot","type":"Directory","required":true},{"name":"platform","type":"String","required":true},{"name":"bindingOrigin","type":"String","required":true},{"name":"payloadFiles","type":"List<String>","required":true}],"confidence":"confirmed"},
+        {"name":"ConsumerRunResult","fields":[{"name":"exitCode","type":"int","required":true},{"name":"category","type":"String","required":true},{"name":"stdout","type":"String","required":true},{"name":"stderr","type":"String","required":true},{"name":"succeeded","type":"bool","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"Every declared Flutter target is an FFI plugin, but platform registration shims do not implement Git operations.","location":"pubspec.yaml:46","confidence":"confirmed"},
+        {"description":"Android release inventory requires libgit2, libssh2, libssl, and libcrypto for each of armeabi-v7a, arm64-v8a, x86, and x86_64.","location":".github/workflows/build_package.yml:747","confidence":"confirmed"},
+        {"description":"iOS packages four XCFrameworks and force-loads the libgit2 archive for both device and simulator SDKs.","location":"ios/git2dart_binaries.podspec:16","confidence":"confirmed"},
+        {"description":"macOS dylib identity must be @rpath/libgit2.dylib and the exported file must not depend dynamically on libssh2 or OpenSSL.","location":".github/actions/build-macos/action.yml:168","confidence":"confirmed"},
+        {"description":"Linux packages libgit2.so and libssh2.so while compatible OpenSSL shared libraries remain an environment dependency.","location":"linux/CMakeLists.txt:36","confidence":"confirmed"},
+        {"description":"Windows bundles libgit2.dll, libssh2.dll, and every root-level versioned OpenSSL DLL matched by CMake globs.","location":"windows/CMakeLists.txt:44","confidence":"confirmed"},
+        {"description":"Disposable assembly requires an empty output, a binding outside the checkout, a caller-asserted same-run label, and the platform minimum basename inventory.","location":"tool/package_consumer_bundle.dart:31","confidence":"confirmed"},
+        {"description":"A clean consumer must resolve its path dependency exactly to the disposable bundle before a bounded compile/load probe is accepted.","location":"tool/package_consumer_bundle.dart:138","confidence":"confirmed"},
+        {"description":"The current hosted disposable consumer route selects Linux only; mobile integration apps depend on the artifact-populated checkout.","location":".github/workflows/build_package.yml:836","confidence":"confirmed"},
+        {"description":"Pub 1.12.1, Apple podspec 1.11.2, and Android Gradle 1.0 metadata are not synchronized by a local rule.","location":"pubspec.yaml:3","confidence":"confirmed"}
+      ],
+      "dependencies": ["Flutter plugin toolchain", "Gradle/Android NDK/CMake", "CocoaPods/Xcode", "Linux CMake/GTK", "Windows CMake/Flutter wrapper", "CI-generated bindings and native payloads", "managed runtime loader", "GitHub Actions artifacts", "system OpenSSL on Linux"],
+      "algorithms": ["five-platform artifact mapping", "iOS slice-to-XCFramework assembly", "macOS install-name and static-dependency qualification", "desktop payload basename validation", "safe disposable package copy with binding replacement", "exact package-config resolution check", "bounded sanitized consumer subprocess", "host/device/release evidence separation"],
+      "complexity": "high"
+    },
+    {
+      "name": "native-build-bindings-generation",
+      "path": ".github/actions",
+      "purpose": "Generate the CI-owned Dart ABI and five-platform native exports from pinned sources through fingerprinted, manifest-validated cache and provenance routes.",
+      "primary_files": [".github/workflows/build_package.yml", ".github/actions/generate-bindings/action.yml", ".github/actions/build-android/action.yml", ".github/actions/build-ios/action.yml", ".github/actions/build-linux/action.yml", ".github/actions/build-macos/action.yml", ".github/actions/build-windows/action.yml", ".github/scripts/native_cache_manifest.py", "ffigen.yaml", "pubspec.lock", "test/native_cache_manifest_cli_test.dart", "test/generate_bindings_cache_policy_test.dart", "test/mobile_cache_fingerprint_facts_test.dart", "test/openssl_provenance_workflow_facts_test.dart"],
+      "functions": [
+        {"name":"safe_relative","file":".github/scripts/native_cache_manifest.py","params":["value: str"],"returns":"str","confidence":"confirmed"},
+        {"name":"sanitized_error","file":".github/scripts/native_cache_manifest.py","params":["error: object","roots: Path..."],"returns":"str","confidence":"confirmed"},
+        {"name":"metadata","file":".github/scripts/native_cache_manifest.py","params":["args: argparse.Namespace"],"returns":"dict[str,str]","confidence":"confirmed"},
+        {"name":"digest","file":".github/scripts/native_cache_manifest.py","params":["path: Path"],"returns":"str","confidence":"confirmed"},
+        {"name":"exported_files","file":".github/scripts/native_cache_manifest.py","params":["root: Path"],"returns":"dict[str,dict[str,int|str]]","confidence":"confirmed"},
+        {"name":"create","file":".github/scripts/native_cache_manifest.py","params":["args: argparse.Namespace"],"returns":"int","confidence":"confirmed"},
+        {"name":"validate","file":".github/scripts/native_cache_manifest.py","params":["args: argparse.Namespace"],"returns":"int","confidence":"confirmed"},
+        {"name":"parser","file":".github/scripts/native_cache_manifest.py","params":[],"returns":"argparse.ArgumentParser","confidence":"confirmed"},
+        {"name":"main","file":".github/scripts/native_cache_manifest.py","params":[],"returns":"int","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"NativeVersionSet","fields":[{"name":"libgit2","type":"String","required":true},{"name":"libssh2","type":"String","required":true},{"name":"openssl","type":"String","required":true},{"name":"flutter","type":"String","required":true}],"confidence":"confirmed"},
+        {"name":"ToolchainFingerprint","fields":[{"name":"platform","type":"String","required":true},{"name":"runnerOsArch","type":"String","required":true},{"name":"compiler","type":"String","required":true},{"name":"cmake","type":"String","required":true},{"name":"targetInputs","type":"List<String>","required":true},{"name":"sha256","type":"String","required":true}],"confidence":"confirmed"},
+        {"name":"NativeCacheKey","fields":[{"name":"prefix","type":"String","required":true},{"name":"platformOrAbi","type":"String","required":true},{"name":"toolchainFingerprint","type":"String","required":true},{"name":"nativeVersions","type":"NativeVersionSet","required":true},{"name":"recipeHash","type":"String","required":true}],"confidence":"confirmed"},
+        {"name":"NativeCacheManifest","fields":[{"name":"schema","type":"String","required":true},{"name":"platform","type":"String","required":true},{"name":"abi","type":"String","required":true},{"name":"libgit2","type":"String","required":true},{"name":"libssh2","type":"String","required":true},{"name":"openssl","type":"String","required":true},{"name":"toolchain","type":"String","required":true},{"name":"provenance","type":"String","required":true},{"name":"files","type":"Map<String,NativeCacheFileRecord>","required":true}],"confidence":"confirmed"},
+        {"name":"NativeCacheFileRecord","fields":[{"name":"relativePath","type":"String","required":true},{"name":"sha256","type":"String","required":true},{"name":"size","type":"int","required":true}],"confidence":"confirmed"},
+        {"name":"NativeProvenanceRecord","fields":[{"name":"provenance","type":"source-build | approved-exception","required":true},{"name":"source_ref","type":"String?","required":false},{"name":"exception_id","type":"String?","required":false}],"confidence":"confirmed"},
+        {"name":"BindingGenerationConfiguration","fields":[{"name":"output","type":"String","required":true},{"name":"entryPoints","type":"List<String>","required":true},{"name":"compilerOptions","type":"List<String>","required":true},{"name":"className","type":"String","required":true}],"confidence":"confirmed"},
+        {"name":"PlatformBuildExport","fields":[{"name":"platform","type":"String","required":true},{"name":"abiOrSlice","type":"String?","required":false},{"name":"files","type":"List<String>","required":true},{"name":"provenanceSidecar","type":"String","required":true},{"name":"artifactName","type":"String","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"Bindings and native libraries receive the same pinned libgit2 1.9.6 input; native builds also pin libssh2 1.11.1 and OpenSSL 3.0.15.","location":".github/workflows/build_package.yml:12","confidence":"confirmed"},
+        {"description":"Generated bindings derive from pinned public/sys headers with experimental SHA-256 enabled and are uploaded rather than retained in the current checkout.","location":"ffigen.yaml:1","confidence":"confirmed"},
+        {"description":"A cache is reusable only after exact manifest metadata, safe relative paths, complete file set, SHA-256, and size validation.","location":".github/scripts/native_cache_manifest.py:86","confidence":"confirmed"},
+        {"description":"Source-build and approved-exception provenance require mutually exclusive source_ref and exception_id fields.","location":".github/scripts/native_cache_manifest.py:33","confidence":"confirmed"},
+        {"description":"New native exports check git_libgit2_init and git_repository_open; cache-hit semantic execution varies by platform.","location":".github/actions/build-linux/action.yml:144","confidence":"confirmed"},
+        {"description":"Bindings cache keys hash the generator action, manifest script, ffigen configuration, and pubspec lockfile.","location":".github/actions/generate-bindings/action.yml:27","confidence":"confirmed"},
+        {"description":"Android API level and iOS deployment/OpenSSL target are included in target fingerprints.","location":".github/actions/build-android/action.yml:123","confidence":"confirmed"},
+        {"description":"The iOS action adds a provenance sidecar to export after manifest creation, making the saved export file set differ from its manifest.","location":".github/actions/build-ios/action.yml:240","confidence":"confirmed"},
+        {"description":"Windows prefix restoration omits the recipe hash while the manifest does not record that hash, allowing older-recipe cache self-validation.","location":".github/actions/build-windows/action.yml:48","confidence":"confirmed"},
+        {"description":"Create-side ValueError handling references undefined root and manifest_path variables, producing a secondary NameError.","location":".github/scripts/native_cache_manifest.py:137","confidence":"confirmed"},
+        {"description":"Feature-005 local tests prove manifest CLI corruption behavior and parsed configuration facts, not compiler/cache-service execution or same-run artifacts.","location":"test/native_cache_manifest_cli_test.dart:22","confidence":"confirmed"}
+      ],
+      "dependencies": ["GitHub Actions cache/artifacts", "Python 3", "SHA-256/JSON filesystem manifest", "Flutter 3.44.0 and ffigen", "libclang and pinned libgit2 headers", "CMake/Ninja/MSVC/Xcode/Android NDK", "OpenSSL 3.0.15", "libssh2 1.11.1", "libgit2 1.9.6"],
+      "algorithms": ["platform toolchain fingerprinting", "recipe/version cache-key construction", "exact manifest create/validate", "streaming file hashing", "exclusive provenance normalization", "cache hit/invalid/miss branching", "CI-owned FFI binding generation", "five-platform source build/export normalization", "symbol/link qualification", "provenance sidecar propagation"],
+      "complexity": "high"
+    },
+    {
+      "name": "validation-release-assembly",
+      "path": ".github/workflows/build_package.yml",
+      "purpose": "Coordinate the 14-job validation DAG, qualify same-run proof/inventory/provenance, assemble a disposable consumer and expanded package, dry-run validation, and event-gated publication.",
+      "primary_files": [".github/workflows/build_package.yml", ".github/scripts/platform_release_proof.py", ".github/openssl-exceptions/README.md", ".github/openssl-exceptions/exception.schema.json", "tool/package_consumer_bundle.dart", "tool/workflow_policy_facts.dart", "test/workflow_trigger_policy_test.dart", "test/workflow_policy_graph_test.dart", "test/release_inventory_workflow_facts_test.dart", "test/platform_release_proof_workflow_facts_test.dart", "test/platform_release_proof_test.dart", "test/package_consumer_bundle_test.dart", "test/openssl_provenance_workflow_facts_test.dart", "test/opts_bindings_integration_test.dart", "integration_test/opts_bindings_integration_test.dart"],
+      "functions": [
+        {"name":"inventory","file":".github/scripts/platform_release_proof.py","params":["root: Path","expected: tuple[str,...]"],"returns":"tuple[list[dict],list[str],list[str]]","confidence":"confirmed"},
+        {"name":"linkage","file":".github/scripts/platform_release_proof.py","params":["root: Path","platform: str"],"returns":"tuple[bool,str]","confidence":"confirmed"},
+        {"name":"observed_versions","file":".github/scripts/platform_release_proof.py","params":["root: Path","expected: dict[str,str]","evidence: Path?"],"returns":"tuple[dict[str,dict[str,str]],list[str]]","confidence":"confirmed"},
+        {"name":"create","file":".github/scripts/platform_release_proof.py","params":["args: argparse.Namespace"],"returns":"int","confidence":"confirmed"},
+        {"name":"validate","file":".github/scripts/platform_release_proof.py","params":["args: argparse.Namespace"],"returns":"int","confidence":"confirmed"},
+        {"name":"platform_release_proof.main","file":".github/scripts/platform_release_proof.py","params":[],"returns":"int","confidence":"confirmed"},
+        {"name":"assembleConsumerBundle","file":"tool/package_consumer_bundle.dart","params":["sourceRoot: Directory","bindingFile: File","payloadRoot: Directory","bundleRoot: Directory","platform: String","bindingOrigin: String"],"returns":"BundleEvidence","confidence":"confirmed"},
+        {"name":"runCleanConsumer","file":"tool/package_consumer_bundle.dart","params":["bundleRoot: Directory","mode: String","imports: List<String>","packageRootOverride: Directory?","timeout: Duration"],"returns":"Future<ConsumerRunResult>","confidence":"confirmed"},
+        {"name":"package_consumer_bundle.main","file":"tool/package_consumer_bundle.dart","params":["arguments: List<String>"],"returns":"Future<void>","confidence":"confirmed"},
+        {"name":"WorkflowCondition.parse","file":"tool/workflow_policy_facts.dart","params":["value: Object?"],"returns":"WorkflowCondition","confidence":"confirmed"},
+        {"name":"WorkflowPolicyFacts.fromFile","file":"tool/workflow_policy_facts.dart","params":["path: String"],"returns":"WorkflowPolicyFacts","confidence":"confirmed"},
+        {"name":"eventAccepted","file":"tool/workflow_policy_facts.dart","params":["event: String","ref: String"],"returns":"bool","confidence":"confirmed"},
+        {"name":"validationReachable","file":"tool/workflow_policy_facts.dart","params":["event: String","ref: String"],"returns":"bool","confidence":"confirmed"},
+        {"name":"publicationReachable","file":"tool/workflow_policy_facts.dart","params":["event: String","ref: String"],"returns":"bool","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"ReleasePayload","fields":[{"name":"bindings","type":"bindings.dart","required":true},{"name":"desktopArtifacts","type":"Map<Platform,List<File>>","required":true},{"name":"androidAbis","type":"Map<String,List<File>>","required":true},{"name":"iosFrameworks","type":"List<XCFramework>","required":true},{"name":"provenanceSidecars","type":"List<File>","required":true},{"name":"metadata","type":"pub package files","required":true}],"confidence":"confirmed"},
+        {"name":"PlatformReleaseProof","fields":[{"name":"schema","type":"String","required":true},{"name":"candidate","type":"String","required":true},{"name":"platform","type":"String","required":true},{"name":"abi","type":"String","required":true},{"name":"status","type":"passed | failed","required":true},{"name":"inventory","type":"PlatformProofInventory","required":true},{"name":"linkage","type":"Map<String,String>","required":true},{"name":"versions","type":"Map<String,DependencyVersionObservation>","required":true},{"name":"attestation","type":"ApplePlatformAttestation?","required":false},{"name":"failure_codes","type":"List<String>","required":true}],"confidence":"confirmed"},
+        {"name":"PlatformProofInventory","fields":[{"name":"expected","type":"List<String>","required":true},{"name":"present","type":"List<PlatformProofFileRecord>","required":true},{"name":"missing","type":"List<String>","required":true},{"name":"unexpected","type":"List<String>","required":true}],"confidence":"confirmed"},
+        {"name":"PlatformProofFileRecord","fields":[{"name":"path","type":"String","required":true},{"name":"sha256","type":"String","required":true},{"name":"size","type":"int","required":true}],"confidence":"confirmed"},
+        {"name":"DependencyVersionObservation","fields":[{"name":"intended","type":"String","required":true},{"name":"observed","type":"String","required":true},{"name":"comparison","type":"match | mismatch | unavailable","required":true},{"name":"evidence","type":"payload | build-input | unavailable","required":true}],"confidence":"confirmed"},
+        {"name":"ApplePlatformAttestation","fields":[{"name":"input_sha256","type":"String","required":true},{"name":"emitted_sha256","type":"String","required":true},{"name":"toolchain","type":"String","required":true},{"name":"sdk","type":"String","required":true},{"name":"compiled_metadata","type":"Map<String,DependencyVersionObservation>","required":true}],"confidence":"confirmed"},
+        {"name":"WorkflowCondition","fields":[{"name":"kind","type":"always | pullRequest | mainPush | cacheMiss","required":true},{"name":"source","type":"String","required":true}],"confidence":"confirmed"},
+        {"name":"WorkflowStepFact","fields":[{"name":"name","type":"String","required":true},{"name":"uses","type":"String?","required":false},{"name":"run","type":"String?","required":false},{"name":"condition","type":"WorkflowCondition","required":true},{"name":"withValues","type":"Map<String,Object?>","required":true}],"confidence":"confirmed"},
+        {"name":"WorkflowJobFact","fields":[{"name":"id","type":"String","required":true},{"name":"needs","type":"Set<String>","required":true},{"name":"condition","type":"WorkflowCondition","required":true},{"name":"steps","type":"List<WorkflowStepFact>","required":true}],"confidence":"confirmed"},
+        {"name":"WorkflowPolicyFacts","fields":[{"name":"events","type":"Map<String,Object?>","required":true},{"name":"jobs","type":"Map<String,WorkflowJobFact>","required":true}],"confidence":"confirmed"},
+        {"name":"OpenSSLExceptionRecord","fields":[{"name":"id","type":"String","required":true},{"name":"platform","type":"String","required":true},{"name":"abi","type":"String","required":true},{"name":"openssl","type":"String","required":true},{"name":"infeasibility_evidence","type":"String","required":true},{"name":"approver","type":"String","required":true},{"name":"review_by","type":"Date","required":true},{"name":"exact_parity","type":"verified","required":true}],"confidence":"confirmed"}
+      ],
+      "business_rules": [
+        {"description":"The release job waits for five platform-test jobs and the three-ABI Android-other matrix before eligibility.","location":".github/workflows/build_package.yml:655","confidence":"confirmed"},
+        {"description":"Every producer uploads diagnostic platform proof; aggregate validation requires eight unique passed scopes.","location":".github/scripts/platform_release_proof.py:193","confidence":"confirmed"},
+        {"description":"Proof creation records expected native inventory, hashes, size, observed versions, linkage, and optional Apple attestation.","location":".github/scripts/platform_release_proof.py:150","confidence":"confirmed"},
+        {"description":"Aggregate validation does not enforce candidate identity, inventory completeness, linkage/version/attestation semantics, or file hashes against release payload.","location":".github/scripts/platform_release_proof.py:193","confidence":"confirmed"},
+        {"description":"Same-run proof origin depends on current-run artifact download semantics rather than record candidate validation.","location":".github/workflows/build_package.yml:715","confidence":"confirmed"},
+        {"description":"Release inventory requires bindings, desktop libraries, four libraries for every Android ABI, and four iOS XCFramework metadata files.","location":".github/workflows/build_package.yml:723","confidence":"confirmed"},
+        {"description":"OpenSSL provenance must report native-v2, configured version, non-empty files, and all five platform names before eligibility.","location":".github/workflows/build_package.yml:762","confidence":"confirmed"},
+        {"description":"Approved OpenSSL exceptions require checked-in exact-parity records with evidence, approver, and an unexpired review date.","location":".github/workflows/build_package.yml:784","confidence":"confirmed"},
+        {"description":"The explicit expanded-payload sum must not exceed 256 MiB before the pub dry run.","location":".github/workflows/build_package.yml:802","confidence":"confirmed"},
+        {"description":"The disposable release consumer injects the downloaded binding and Linux payload, then compiles public API and loads native libgit2.","location":".github/workflows/build_package.yml:836","confidence":"confirmed"},
+        {"description":"BundleEvidence is caller-labelled and runCleanConsumer requires only file presence, not proof JSON validity or payload identity.","location":"tool/package_consumer_bundle.dart:138","confidence":"confirmed"},
+        {"description":"Package validation remains reachable for accepted PR/branch-push events, but publication is exact main-branch push only.","location":"tool/workflow_policy_facts.dart:161","confidence":"confirmed"},
+        {"description":"Pull requests upload release-package for seven days; main pushes invoke a third-party publisher with pub.dev secrets and skipTests.","location":".github/workflows/build_package.yml:866","confidence":"confirmed"},
+        {"description":"Feature-005 local tests prove parser/CLI/fixture semantics, not GitHub service execution, current cross-platform artifacts, or credentialed publication.","location":"test/workflow_policy_graph_test.dart:35","confidence":"confirmed"}
+      ],
+      "dependencies": ["all build modules", "GitHub Actions artifact service", "Python 3 and platform inspection tools", "Flutter/Dart pub", "Android API-29 x86_64 emulator", "iOS arm64 simulator", "OpenSSL exception registry", "k-paxian/dart-package-publisher", "pub.dev credentials"],
+      "algorithms": ["14-job dependency DAG", "platform proof inventory/version/linkage creation", "eight-scope aggregate proof validation", "artifact injection by package path", "native inventory qualification", "OpenSSL provenance and exception qualification", "explicit payload-size summation", "disposable Linux consumer assembly/compile/load", "workflow condition parsing and reachability", "PR artifact versus main-push publication routing"],
+      "complexity": "high"
+    },
+    {
+      "name": "behavior-proving-tests",
+      "path": "test / tool",
+      "purpose": "Provide the W001-W006 observable-behavior evidence ladder across deterministic state machines, bounded probes, artifact CLIs, disposable consumers, analyzer AST facts, and parsed workflow policy.",
+      "primary_files": ["test/support/behavior_proof_fixture.dart", "test/fixtures/abi_probe/abi_probe.dart", "test/fixtures/loader_probe.dart", "test/opts_bindings_integration_test.dart", "test/runtime_loader_process_test.dart", "test/libgit2_runtime_test.dart", "test/libgit2_lifecycle_integration_test.dart", "test/macos_dylib_packaging_test.dart", "test/error_api_test.dart", "test/android_ssl_helper_test.dart", "test/android_ssl_helper_diagnostic_test.dart", "test/native_cache_manifest_cli_test.dart", "test/platform_release_proof_test.dart", "test/package_consumer_bundle_test.dart", "test/architecture_policy_ast_test.dart", "test/workflow_policy_graph_test.dart", "test/workflow_trigger_policy_test.dart", "test/release_inventory_workflow_facts_test.dart", "test/platform_release_proof_workflow_facts_test.dart", "test/mobile_cache_fingerprint_facts_test.dart", "test/generate_bindings_cache_policy_test.dart", "test/openssl_provenance_workflow_facts_test.dart", "tool/architecture_policy_facts.dart", "tool/workflow_policy_facts.dart", "tool/package_consumer_bundle.dart", ".reversa/_reversa_forward/005-behavior-proving-tests/source-assertion-replacement-inventory.md", ".reversa/_reversa_forward/005-behavior-proving-tests/regression-watch.md"],
+      "functions": [
+        {"name":"BehaviorProofFixture.create","file":"test/support/behavior_proof_fixture.dart","params":["prefix: String"],"returns":"Future<BehaviorProofFixture>","confidence":"confirmed"},
+        {"name":"BehaviorProofFixture.file","file":"test/support/behavior_proof_fixture.dart","params":["relativePath: String"],"returns":"File","confidence":"confirmed"},
+        {"name":"BehaviorProofFixture.sanitize","file":"test/support/behavior_proof_fixture.dart","params":["value: Object?"],"returns":"String","confidence":"confirmed"},
+        {"name":"BehaviorProofFixture.runBounded","file":"test/support/behavior_proof_fixture.dart","params":["executable: String","arguments: List<String>","workingDirectory: String?","environment: Map<String,String>?","timeout: Duration"],"returns":"Future<ProcessResult>","confidence":"confirmed"},
+        {"name":"BehaviorProofFixture.dispose","file":"test/support/behavior_proof_fixture.dart","params":[],"returns":"Future<void>","confidence":"confirmed"},
+        {"name":"dartExecutable","file":"test/support/behavior_proof_fixture.dart","params":[],"returns":"String","confidence":"confirmed"},
+        {"name":"abi_probe.main","file":"test/fixtures/abi_probe/abi_probe.dart","params":[],"returns":"void","confidence":"confirmed"},
+        {"name":"loader_probe.main","file":"test/fixtures/loader_probe.dart","params":["arguments: List<String>"],"returns":"void","confidence":"confirmed"},
+        {"name":"verifyAnalyzerResolution","file":"tool/architecture_policy_facts.dart","params":["packageConfigPath: String"],"returns":"AnalyzerResolution","confidence":"confirmed"},
+        {"name":"collectArchitectureFacts","file":"tool/architecture_policy_facts.dart","params":["root: String"],"returns":"List<ArchitectureFact>","confidence":"confirmed"},
+        {"name":"_ArchitectureVisitor.visitClassDeclaration","file":"tool/architecture_policy_facts.dart","params":["node: ClassDeclaration"],"returns":"void","confidence":"confirmed"},
+        {"name":"_ArchitectureVisitor.visitMethodInvocation","file":"tool/architecture_policy_facts.dart","params":["node: MethodInvocation"],"returns":"void","confidence":"confirmed"},
+        {"name":"_ArchitectureVisitor.visitTopLevelVariableDeclaration","file":"tool/architecture_policy_facts.dart","params":["node: TopLevelVariableDeclaration"],"returns":"void","confidence":"confirmed"},
+        {"name":"architecture_policy_facts.main","file":"tool/architecture_policy_facts.dart","params":[],"returns":"void","confidence":"confirmed"}
+      ],
+      "entities": [
+        {"name":"BehaviorProofFixture","fields":[{"name":"root","type":"Directory","required":true},{"name":"defaultTimeout","type":"Duration(30s)","required":true}],"confidence":"confirmed"},
+        {"name":"ABIProbeRecord","fields":[{"name":"availability","type":"available | unavailable","required":true},{"name":"pointer_width","type":"int","required":true},{"name":"submitted_size","type":"int","required":true},{"name":"observed_size","type":"int?","required":false}],"confidence":"confirmed"},
+        {"name":"LoaderProbeRecord","fields":[{"name":"status","type":"loaded?","required":false},{"name":"package_root","type":"String?","required":false},{"name":"library","type":"String?","required":false},{"name":"package_fallback","type":"bool?","required":false}],"confidence":"confirmed"},
+        {"name":"AnalyzerResolution","fields":[{"name":"version","type":"String","required":true},{"name":"root","type":"String","required":true}],"confidence":"confirmed"},
+        {"name":"ArchitectureFact","fields":[{"name":"file","type":"String","required":true},{"name":"kind","type":"class | native-lifecycle-transition | prohibited-lifecycle-global","required":true},{"name":"symbol","type":"String","required":true},{"name":"allowed","type":"bool","required":true}],"confidence":"confirmed"},
+        {"name":"BehaviorRegressionWatch","fields":[{"name":"id","type":"W001..W006","required":true},{"name":"origin","type":"String","required":true},{"name":"expected_rule","type":"String","required":true},{"name":"verification_type","type":"String","required":true},{"name":"violation_signal","type":"String","required":true}],"confidence":"confirmed"},
+        {"name":"SourceAssertionReplacement","fields":[{"name":"requirement","type":"FR-01..FR-08","required":true},{"name":"retired_assertion","type":"String","required":true},{"name":"replacement_evidence","type":"String","required":true},{"name":"action_ids","type":"List<String>","required":true}],"confidence":"confirmed"},
+        {"name":"EvidenceClassification","fields":[{"name":"tier","type":"source | parsed | injected | fixture-native | hosted | publication","required":true},{"name":"prerequisites","type":"List<String>","required":true},{"name":"observable","type":"String","required":true},{"name":"proves","type":"List<String>","required":true},{"name":"does_not_prove","type":"List<String>","required":true}],"confidence":"inferred"}
+      ],
+      "business_rules": [
+        {"description":"W001 accepts native ABI success only when a 64-bit process observes 0x100000011 exactly after the FFI round trip.","location":"test/fixtures/abi_probe/abi_probe.dart:8","confidence":"confirmed"},
+        {"description":"An unavailable ABI prerequisite is explicit but can leave the enclosing test green; it is not equivalent to behavior success.","location":"test/opts_bindings_integration_test.dart:20","confidence":"confirmed"},
+        {"description":"W002 loader failure and Android plan use bounded fresh processes to avoid cached dynamic-library state.","location":"test/runtime_loader_process_test.dart:12","confidence":"confirmed"},
+        {"description":"Positive loader probes report the supplied package root but not the actual loaded-library path or successful fallback stage.","location":"test/fixtures/loader_probe.dart:16","confidence":"confirmed"},
+        {"description":"W003 caches Android TLS state only after a completed injected write and retries after directory, asset, or write failure.","location":"test/android_ssl_helper_test.dart:44","confidence":"confirmed"},
+        {"description":"W004 CLI fixtures require non-zero outcomes for independent corruption families and sanitize the disposable fixture root.","location":"test/native_cache_manifest_cli_test.dart:22","confidence":"confirmed"},
+        {"description":"The platform aggregate test accepts hand-written passed records with empty inventory and versions and null attestation.","location":"test/platform_release_proof_test.dart:148","confidence":"confirmed"},
+        {"description":"W005 verifies exact package-config bundle resolution but uses a caller-supplied same-run label and does not observe native handle origin.","location":"test/package_consumer_bundle_test.dart:50","confidence":"confirmed"},
+        {"description":"The current Windows consumer fixture is cached published package 1.12.1, not a current workflow artifact.","location":"test/package_consumer_bundle_test.dart:14","confidence":"confirmed"},
+        {"description":"W006 requires resolved analyzer 8.2.0 and parsed workflow facts; both remain local structural models rather than hosted execution.","location":"tool/architecture_policy_facts.dart:9","confidence":"confirmed"},
+        {"description":"The architecture visitor matches syntax names rather than resolved element identity and does not inspect parser diagnostics.","location":"tool/architecture_policy_facts.dart:94","confidence":"confirmed"},
+        {"description":"Feature-005 replacement inventory removes source-string acceptance for FR-01 through FR-08; unrelated error-constructor source text remains static only.","location":".reversa/_reversa_forward/005-behavior-proving-tests/source-assertion-replacement-inventory.md:1","confidence":"confirmed"},
+        {"description":"Fresh safe execution passed 39 cases; the feature execution record reports 67 tests with three environment/platform skips when expanded prerequisites were present.","location":".reversa/_reversa_forward/005-behavior-proving-tests/actions.md:78","confidence":"confirmed"},
+        {"description":"No local test establishes current same-run hosted artifacts, five-platform runtime, pub.dev publication, or neighboring git2dart behavior.","location":".reversa/_reversa_forward/005-behavior-proving-tests/investigation.md:35","confidence":"confirmed"}
+      ],
+      "dependencies": ["Flutter test and package:test", "behavior fixture temp roots/subprocesses", "Python artifact CLIs", "analyzer 8.2.0", "YAML parser 3.1.3", "generated bindings/native payload when available", "cached published 1.12.1 fixture on local Windows", "GitHub Actions for authoritative same-run evidence"],
+      "algorithms": ["guarded disposable fixture paths", "bounded subprocess capture and sanitization", "serialized above-uint32 ABI round trip with restoration", "fresh-process loader success/failure planning", "injected Android TLS transition matrix", "independent CLI corruption matrices", "disposable package resolution and native probe modes", "exact analyzer resolution and AST fact collection", "workflow DAG/condition fact evaluation", "source-assertion replacement traceability", "six-watch evidence ladder"],
+      "complexity": "high"
+    }
+  ]
+}

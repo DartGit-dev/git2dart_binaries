@@ -1,0 +1,83 @@
+diff --git a/lib/src/opts_bindings.dart b/lib/src/opts_bindings.dart
+--- a/lib/src/opts_bindings.dart
++++ b/lib/src/opts_bindings.dart
+@@
+-  int git_libgit2_opts_get_mwindow_size(ffi.Pointer<ffi.Int> out) {
+-    return _git_libgit2_opts_get_int(
++  int git_libgit2_opts_get_mwindow_size(ffi.Pointer<ffi.Size> out) {
++    return _git_libgit2_opts_get_size(
+@@
+-    return _git_libgit2_opts_set_int(
++    return _git_libgit2_opts_set_size(
+       git_libgit2_opt_t.GIT_OPT_SET_MWINDOW_SIZE.value,
+       value,
+@@
+-  int git_libgit2_opts_get_mwindow_mapped_limit(ffi.Pointer<ffi.Int> out) {
+-    return _git_libgit2_opts_get_int(
++  int git_libgit2_opts_get_mwindow_mapped_limit(ffi.Pointer<ffi.Size> out) {
++    return _git_libgit2_opts_get_size(
+@@
+-    return _git_libgit2_opts_set_int(
++    return _git_libgit2_opts_set_size(
+       git_libgit2_opt_t.GIT_OPT_SET_MWINDOW_MAPPED_LIMIT.value,
+       value,
+@@
+-  int git_libgit2_opts_get_mwindow_file_limit(ffi.Pointer<ffi.Int> out) {
+-    return _git_libgit2_opts_get_int(
++  int git_libgit2_opts_get_mwindow_file_limit(ffi.Pointer<ffi.Size> out) {
++    return _git_libgit2_opts_get_size(
+@@
+-    return _git_libgit2_opts_set_int(
++    return _git_libgit2_opts_set_size(
+       git_libgit2_opt_t.GIT_OPT_SET_MWINDOW_FILE_LIMIT.value,
+       value,
+@@
+-    return _git_libgit2_opts_set_int(
++    return _git_libgit2_opts_set_ssize(
+       git_libgit2_opt_t.GIT_OPT_SET_CACHE_MAX_SIZE.value,
+       bytes,
+@@
+-    ffi.Pointer<ffi.Int> current,
+-    ffi.Pointer<ffi.Int> allowed,
++    ffi.Pointer<ffi.IntPtr> current,
++    ffi.Pointer<ffi.IntPtr> allowed,
+@@
+-  int git_libgit2_opts_get_pack_max_objects(ffi.Pointer<ffi.Int> out) {
+-    return _git_libgit2_opts_get_int(
++  int git_libgit2_opts_get_pack_max_objects(ffi.Pointer<ffi.Size> out) {
++    return _git_libgit2_opts_get_size(
+@@
+-    return _git_libgit2_opts_set_int(
++    return _git_libgit2_opts_set_size(
+       git_libgit2_opt_t.GIT_OPT_SET_PACK_MAX_OBJECTS.value,
+       value,
+@@
+   late final _git_libgit2_opts_set_size =
+       _git_libgit2_opts_set_sizePtr.asFunction<int Function(int, int)>();
+
++  late final _git_libgit2_opts_set_ssizePtr = _lookup<
++    ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.IntPtr,)>)>
++  >('git_libgit2_opts');
++  late final _git_libgit2_opts_set_ssize =
++      _git_libgit2_opts_set_ssizePtr.asFunction<int Function(int, int)>();
++
+@@
+   late final _git_libgit2_opts_set_cache_object_limitPtr = _lookup<
+     ffi.NativeFunction<
+-      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Int, ffi.Int)>)
++      ffi.Int Function(ffi.Int, ffi.VarArgs<(ffi.Int, ffi.Size)>)
+     >
+@@
+       ffi.Int Function(
+         ffi.Int,
+-        ffi.VarArgs<(ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>,
++        ffi.VarArgs<(ffi.Pointer<ffi.IntPtr>, ffi.Pointer<ffi.IntPtr>)>,
+       )
+@@
+-            int Function(int, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)
++            int Function(
++              int,
++              ffi.Pointer<ffi.IntPtr>,
++              ffi.Pointer<ffi.IntPtr>,
++            )
+           >();

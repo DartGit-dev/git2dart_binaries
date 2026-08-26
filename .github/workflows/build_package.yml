@@ -3,10 +3,7 @@ on:
   push:
     # tags:
     # - "v[0-9]+.[0-9]+.[0-9]+*"
-    branches:
-      - "main"
-      - "1.11.2"
-      # - "**"
+    branches: ['**']
   pull_request:
     branches:
       - "main"
@@ -46,6 +43,15 @@ jobs:
         with:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
+          openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Prove final Linux payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform linux --root /tmp/export --version-evidence /tmp/openssl/VERSION.dat --output "$RUNNER_TEMP/platform-proof-linux" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-linux
+          path: ${{ runner.temp }}/platform-proof-linux
+          retention-days: 7
 
   build_libgit2_macos:
     runs-on: macos-latest
@@ -59,9 +65,19 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Prove final macOS payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform macos --root export --attestation-input /tmp/git2dart-macos --output "$RUNNER_TEMP/platform-proof-macos" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-macos
+          path: ${{ runner.temp }}/platform-proof-macos
+          retention-days: 7
 
   build_libgit2_ios:
-    runs-on: macos-latest
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     strategy:
       fail-fast: false
       matrix:
@@ -91,8 +107,13 @@ jobs:
 
   assemble_libgit2_ios:
     needs: [build_libgit2_ios]
-    runs-on: macos-latest
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
       - name: Download iOS slices
         uses: actions/download-artifact@v7
         with:
@@ -131,12 +152,38 @@ jobs:
             -library "$simulator_dir/libgit2/lib/libgit2.a" \
             -output "$output_dir/libgit2.xcframework"
 
+          mkdir -p "$output_dir/provenance"
+          python3 - "$slices_dir" "$output_dir/provenance/openssl-provenance.json" <<'PY'
+          import json
+          import pathlib
+          import sys
+          inputs = sorted(pathlib.Path(sys.argv[1]).glob('provenance-*.json'))
+          if len(inputs) != 2:
+              raise SystemExit(f'Expected exactly two iOS provenance sidecars, found {len(inputs)}')
+          records = [json.loads(path.read_text(encoding='utf-8')) for path in inputs]
+          baseline = records[0]
+          if any(record.get(key) != baseline.get(key) for record in records[1:] for key in ('schema', 'platform', 'openssl', 'provenance', 'source_ref')):
+              raise SystemExit('iOS source provenance sidecars disagree')
+          baseline['abi'] = 'ios-xcframework'
+          baseline['files'] = {f'{path.stem}/{name}': item for path, record in zip(inputs, records) for name, item in record['files'].items()}
+          pathlib.Path(sys.argv[2]).write_text(json.dumps(baseline, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          PY
+
       - name: Upload iOS XCFrameworks
         uses: actions/upload-artifact@v7
         with:
           name: cache-ios
-          path: /tmp/git2dart-ios/export/**
+          path: |
+            /tmp/git2dart-ios/export/**
           retention-days: 1
+      - name: Prove final iOS XCFramework payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform ios --root /tmp/git2dart-ios/export --attestation-input /tmp/git2dart-ios/slices --output "$RUNNER_TEMP/platform-proof-ios" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-ios
+          path: ${{ runner.temp }}/platform-proof-ios
+          retention-days: 7
 
   build_libgit2_windows:
     runs-on: windows-latest
@@ -149,6 +196,16 @@ jobs:
         with:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
+          openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Prove final Windows payload
+        continue-on-error: true
+        shell: pwsh
+        run: python .github/scripts/platform_release_proof.py create --platform windows --root D:/export --output "$env:RUNNER_TEMP/platform-proof-windows" --candidate "$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT" --libgit2 "$env:LIBGIT2_VERSION" --libssh2 "$env:LIBSSH2_VERSION" --openssl "$env:OPENSSL_VERSION"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-windows
+          path: ${{ runner.temp }}/platform-proof-windows
+          retention-days: 7
 
   build_libgit2_android_x86_64:
     runs-on: ubuntu-latest
@@ -163,6 +220,14 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Prove final Android x86_64 payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform android --abi x86_64 --root /tmp/git2dart-android-x86_64/export --output "$RUNNER_TEMP/platform-proof-android-x86_64" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-android-x86_64
+          path: ${{ runner.temp }}/platform-proof-android-x86_64
+          retention-days: 7
 
   build_libgit2_android_other:
     runs-on: ubuntu-latest
@@ -180,6 +245,14 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Prove final Android payload
+        continue-on-error: true
+        run: python3 .github/scripts/platform_release_proof.py create --platform android --abi "${{ matrix.os }}" --root "/tmp/git2dart-android-${{ matrix.os }}/export" --output "$RUNNER_TEMP/platform-proof-android-${{ matrix.os }}" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: platform-proof-android-${{ matrix.os }}
+          path: ${{ runner.temp }}/platform-proof-android-${{ matrix.os }}
+          retention-days: 7
 
   run_linux_tests:
     needs: [generate_bindings, build_libgit2_linux]
@@ -260,12 +333,6 @@ jobs:
           path: ./lib/src/
           name: cache-bindings
 
-      - name: Verify windows dependencies
-        shell: pwsh
-        run: |
-          openssl version
-          Get-Command openssl -ErrorAction Stop
-
       - name: download windows deps
         uses: actions/download-artifact@v7
         with:
@@ -286,7 +353,9 @@ jobs:
 
   run_ios_tests:
     needs: [generate_bindings, assemble_libgit2_ios]
-    runs-on: macos-latest
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     timeout-minutes: 40
     steps:
       - name: Check out repository
@@ -336,8 +405,9 @@ jobs:
           File.write(pubspec_path, pubspec.to_yaml)
           RUBY
 
-          mkdir -p "$test_app/test" "$test_app/integration_test" "$test_app/test_driver"
+          mkdir -p "$test_app/test/support" "$test_app/integration_test" "$test_app/test_driver"
           cp "$GITHUB_WORKSPACE/test/opts_bindings_integration_test.dart" "$test_app/test/"
+          cp "$GITHUB_WORKSPACE/test/support/behavior_proof_fixture.dart" "$test_app/test/support/"
           cp "$GITHUB_WORKSPACE/integration_test/"*.dart "$test_app/integration_test/"
           cp "$GITHUB_WORKSPACE/test_driver/integration_test.dart" "$test_app/test_driver/"
 
@@ -568,8 +638,9 @@ jobs:
           File.write(pubspec_path, pubspec.to_yaml)
           RUBY
 
-          mkdir -p "$test_app/test" "$test_app/integration_test"
+          mkdir -p "$test_app/test/support" "$test_app/integration_test"
           cp "$GITHUB_WORKSPACE/test/opts_bindings_integration_test.dart" "$test_app/test/"
+          cp "$GITHUB_WORKSPACE/test/support/behavior_proof_fixture.dart" "$test_app/test/support/"
           cp "$GITHUB_WORKSPACE/integration_test/opts_bindings_integration_test.dart" "$test_app/integration_test/"
 
           cd "$test_app"
@@ -649,6 +720,93 @@ jobs:
           path: ./android/src/main/jniLibs/armeabi-v7a
           name: cache-android-armeabi-v7a
 
+      - name: Download same-run platform proofs
+        uses: actions/download-artifact@v7
+        with:
+          pattern: platform-proof-*
+          path: .platform-proofs
+          merge-multiple: false
+      - name: Qualify same-run platform proofs before release eligibility
+        run: python3 .github/scripts/platform_release_proof.py validate --proofs .platform-proofs --payload-root .
+      - name: Verify native release inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            lib/src/bindings.dart
+            linux/libgit2.so
+            linux/libssh2.so
+            macos/libgit2.dylib
+            windows/libgit2.dll
+            windows/libssh2.dll
+          )
+          for file in "${required_files[@]}"; do
+            test -s "$file" || { echo "::error::Missing required release file: $file"; exit 1; }
+          done
+
+          for dependency in 'libcrypto*.dll' 'libssl*.dll'; do
+            find windows -maxdepth 1 -type f -name "$dependency" -print -quit | grep -q . || {
+              echo "::error::Missing required Windows dependency: $dependency"
+              exit 1
+            }
+          done
+
+          for abi in x86_64 arm64-v8a x86 armeabi-v7a; do
+            for library in libssl.so libcrypto.so libssh2.so libgit2.so; do
+              file="android/src/main/jniLibs/$abi/$library"
+              test -s "$file" || { echo "::error::Missing required Android file: $file"; exit 1; }
+            done
+          done
+
+          for framework in libcrypto libssl libssh2 libgit2; do
+            directory="ios/$framework.xcframework"
+            test -d "$directory" && test -s "$directory/Info.plist" || {
+              echo "::error::Missing required iOS XCFramework: $directory"
+              exit 1
+            }
+          done
+
+      - name: Qualify OpenSSL provenance before package eligibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$OPENSSL_VERSION" <<'PY'
+          import datetime as dt
+          import json
+          import pathlib
+          import sys
+          expected = sys.argv[1]
+          sidecars = list(pathlib.Path('.').rglob('*provenance*.json'))
+          if not sidecars:
+              raise SystemExit('Missing OpenSSL provenance sidecars')
+          platforms = set()
+          for path in sidecars:
+              data = json.loads(path.read_text(encoding='utf-8'))
+              required = {'schema', 'platform', 'abi', 'openssl', 'provenance', 'files'}
+              if data.get('schema') != 'native-v2' or not required <= data.keys() or data['openssl'] != expected or not data['files']:
+                  raise SystemExit(f'Invalid OpenSSL provenance sidecar: {path}')
+              if data['provenance'] == 'source-build':
+                  if 'source_ref' not in data or 'exception_id' in data:
+                      raise SystemExit(f'Contradictory source-build evidence: {path}')
+              elif data['provenance'] == 'approved-exception':
+                  exception_id = data.get('exception_id')
+                  record = pathlib.Path('.github/openssl-exceptions') / f'{exception_id}.json'
+                  if not exception_id or not record.is_file():
+                      raise SystemExit(f'Unknown OpenSSL exception: {path}')
+                  item = json.loads(record.read_text(encoding='utf-8'))
+                  if (item.get('id'), item.get('platform'), item.get('abi'), item.get('openssl'), item.get('exact_parity')) != (exception_id, data['platform'], data['abi'], expected, 'verified'):
+                      raise SystemExit(f'Exception parity is not exact: {path}')
+                  if not item.get('infeasibility_evidence') or not item.get('approver') or dt.date.fromisoformat(item['review_by']) < dt.date.today():
+                      raise SystemExit(f'Exception is incomplete or expired: {path}')
+              else:
+                  raise SystemExit(f'Unsupported OpenSSL provenance: {path}')
+              platforms.add(data['platform'])
+          if platforms != {'windows', 'linux', 'macos', 'android', 'ios'}:
+              raise SystemExit(f'Missing participating platform provenance: {platforms}')
+          print(f'OpenSSL provenance eligible: {expected}; {len(sidecars)} sidecars')
+          PY
+
       - name: Check expanded package size
         shell: bash
         run: |
@@ -683,6 +841,33 @@ jobs:
           pub-cache: true
           pub-cache-key: git2dart-pub-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.yaml') }}
 
+      - name: Assemble disposable same-run consumer bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          mkdir -p "$RUNNER_TEMP/same-run-bindings"
+          cp lib/src/bindings.dart "$RUNNER_TEMP/same-run-bindings/bindings.dart"
+          dart run tool/package_consumer_bundle.dart assemble \
+            --source . \
+            --binding "$RUNNER_TEMP/same-run-bindings/bindings.dart" \
+            --payload linux \
+            --platform linux \
+            --output "$RUNNER_TEMP/git2dart-consumer-bundle"
+
+      - name: Compile public API from disposable consumer bundle
+        run: dart run tool/package_consumer_bundle.dart run --bundle "$RUNNER_TEMP/git2dart-consumer-bundle" --mode compile-public-api
+
+      - name: Load native payload from disposable consumer bundle
+        run: dart run tool/package_consumer_bundle.dart run --bundle "$RUNNER_TEMP/git2dart-consumer-bundle" --mode load-native
+
+      - name: Ignore generated bindings checkout delta during package validation
+        shell: bash
+        run: |
+          if git ls-files --error-unmatch lib/src/bindings.dart >/dev/null 2>&1; then
+            git update-index --assume-unchanged lib/src/bindings.dart
+          fi
+
       - name: Validate publish package
         shell: bash
         run: |
@@ -715,7 +900,7 @@ jobs:
             pubspec.yaml
 
       - name: Publish package
-        if: ${{ github.event_name != 'pull_request' }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: k-paxian/dart-package-publisher@v.1.6.2
         with:
           accessToken: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}

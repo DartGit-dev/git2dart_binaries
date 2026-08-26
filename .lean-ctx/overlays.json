@@ -1,0 +1,472 @@
+{
+  "overlays": [
+    {
+      "id": "ov_file:F:/git2dart_binaries/.reversa/_fork_update_source/lib/commands/update.js_1787412988179",
+      "target": "file:F:/git2dart_binaries/.reversa/_fork_update_source/lib/commands/update.js",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-22T15:36:28.179694100Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/.agents/skills/reversa-forward_1787412989707",
+      "target": "file:F:/git2dart/.agents/skills/reversa-forward",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-22T15:36:29.707580400Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/README.md_1787456774908",
+      "target": "file:F:/git2dart/reversa/bugs/README.md",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-23T03:46:14.908625500Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/.agents/skills/reversa-debugger/references/bug-schema.md_1787456775800",
+      "target": "file:F:/git2dart/.agents/skills/reversa-debugger/references/bug-schema.md",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-23T03:46:15.800614600Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle_1787456776063",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-23T03:46:16.063773200Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa-clarify/SKILL.md_1787456776552",
+      "target": "file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa-clarify/SKILL.md",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-23T03:46:16.552195300Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_binaries_1787456792987",
+      "target": "file:F:/git2dart_binaries",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:32.987318500Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_1787456793977",
+      "target": "file:F:/git2dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:33.977879700Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_binaries/lib/src/runtime.dart_1787456802709",
+      "target": "file:F:/git2dart_binaries/lib/src/runtime.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:42.709243100Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/test/libgit2_test.dart_1787456804541",
+      "target": "file:F:/git2dart/test/libgit2_test.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:44.541910300Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/.agents/skills/reversa-debugger-fix/SKILL.md_1787456805428",
+      "target": "file:F:/git2dart/.agents/skills/reversa-debugger-fix/SKILL.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:45.428245900Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/.reversa/state.json_1787456806112",
+      "target": "file:F:/git2dart/.reversa/state.json",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:46.112991100Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/lib/src/libgit2.dart_1787456807569",
+      "target": "file:F:/git2dart/lib/src/libgit2.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:47.569884700Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa-coding/SKILL.md_1787456810657",
+      "target": "file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa-coding/SKILL.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:50.657990900Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/.reversa/tmp-update-source-20260822/scripts/sync-installed-agents.mjs_1787456812783",
+      "target": "file:F:/git2dart/.reversa/tmp-update-source-20260822/scripts/sync-installed-agents.mjs",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:52.783590300Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/test/blob_test.dart_1787456816600",
+      "target": "file:F:/git2dart/test/blob_test.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:56.600893Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa/SKILL.md_1787456818360",
+      "target": "file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa/SKILL.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:46:58.360759100Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/AGENTS.md_1787456820110",
+      "target": "file:F:/git2dart/AGENTS.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:00.110465100Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/tool/compare_git2dart_binaries_api.dart_1787456821867",
+      "target": "file:F:/git2dart/tool/compare_git2dart_binaries_api.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:01.867579Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/test_1787456827013",
+      "target": "file:F:/git2dart/test",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:07.013627300Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/pubspec_overrides.yaml_1787456828638",
+      "target": "file:F:/git2dart/pubspec_overrides.yaml",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:08.638574700Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/.agents/skills/reversa/SKILL.md_1787456833397",
+      "target": "file:F:/git2dart/.agents/skills/reversa/SKILL.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:13.397397900Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa-audit/SKILL.md_1787456836653",
+      "target": "file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa-audit/SKILL.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:16.653532500Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/.reversa/tmp-zc7x-gate2-20260822-1/lib/src/note.dart_1787456839737",
+      "target": "file:F:/git2dart/.reversa/tmp-zc7x-gate2-20260822-1/lib/src/note.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:19.737473300Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa-to-do/SKILL.md_1787456844049",
+      "target": "file:C:/Users/Viktor/.codex/worktrees/b242/git2dart_binaries/.agents/skills/reversa-to-do/SKILL.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:24.049118700Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/.reversa/tmp-update-source-20260822/lib/routing/managed-profiles.js_1787456856491",
+      "target": "file:F:/git2dart/.reversa/tmp-update-source-20260822/lib/routing/managed-profiles.js",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:36.491355800Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/test/libgit2_lifecycle_test.dart_1787456861216",
+      "target": "file:F:/git2dart/test/libgit2_lifecycle_test.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-23T03:47:41.216192800Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/plan.html_1787569050798",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/plan.html",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:30.798303100Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.diff_1787569056170",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.diff",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:36.170455900Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.proposed.diff_1787569071009",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/fix/CHG-001.proposed.diff",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:51.009978500Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_binaries/test/opts_bindings_integration_test.dart_1787569074275",
+      "target": "file:F:/git2dart_binaries/test/opts_bindings_integration_test.dart",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:54.275039Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/bug.md_1787569077684",
+      "target": "file:F:/git2dart/reversa/bugs/native-runtime-and-platform-boundary/bugs/BUG-20260817-ZC7X-unbalanced-libgit2-lifecycle/bug.md",
+      "operation": {
+        "type": "unpin"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": {
+        "agent": "mcp"
+      },
+      "created_at": "2026-08-24T10:57:57.684881900Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_binaries/.reversa/_reversa_forward/005-behavior-proving-tests/audit/cross-check.md_1787657388000",
+      "target": "file:F:/git2dart_binaries/.reversa/_reversa_forward/005-behavior-proving-tests/audit/cross-check.md",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-25T11:29:48.000524400Z",
+      "stale": false
+    },
+    {
+      "id": "ov_file:F:/git2dart_binaries/.github/actions/build-ios/action.yml_1787657390137",
+      "target": "file:F:/git2dart_binaries/.github/actions/build-ios/action.yml",
+      "operation": {
+        "type": "exclude",
+        "reason": "evicted via dashboard"
+      },
+      "scope": "project",
+      "before_hash": "",
+      "author": "user",
+      "created_at": "2026-08-25T11:29:50.137969800Z",
+      "stale": false
+    }
+  ]
+}

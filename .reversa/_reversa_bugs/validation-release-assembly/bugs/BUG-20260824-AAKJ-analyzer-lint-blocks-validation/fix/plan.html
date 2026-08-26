@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Correction plan: BUG-20260824-AAKJ</title>
+<style>
+  body { background:#0f172a; color:#e2e8f0; font:16px system-ui,sans-serif; margin:0; }
+  main { max-width:900px; margin:40px auto; padding:28px; }
+  h1,h2 { color:#f8fafc; } code { color:#a5f3fc; } .card { background:#172033; border:1px solid #334155; border-radius:12px; padding:18px; margin:16px 0; }
+  table { width:100%; border-collapse:collapse; } th,td { text-align:left; padding:10px; border-bottom:1px solid #334155; } .low { color:#86efac; }
+</style>
+<main>
+  <h1>BUG-20260824-AAKJ: Analyzer lint diagnostics block validation</h1>
+  <div class="card">Context: validation-release-assembly. Severity: medium. Priority: P1.</div>
+  <section class="card"><h2>Root cause</h2><p>Confirmed: two test literals violate active analyzer rules, making <code>flutter analyze</code> return exit code 1.</p></section>
+  <section class="card"><h2>Strategy</h2><p>Direct correction. The blast radius is limited to two test-only text edits.</p></section>
+  <section class="card"><h2>Correction Change Set</h2><table><tr><th>CHG</th><th>Type</th><th>Artifact</th><th>Purpose</th></tr><tr><td>CHG-001</td><td>test</td><td>test/opts_bindings_integration_test.dart</td><td>Order Dart imports alphabetically.</td></tr><tr><td>CHG-002</td><td>test</td><td>test/workflow_trigger_policy_test.dart</td><td>Use a multiline assertion literal for the expected newline.</td></tr></table></section>
+  <section class="card"><h2>Validation</h2><p>Reproduce with <code>flutter analyze</code>, then rerun the same command after the correction. Run the two affected test files as focused regression checks.</p></section>
+  <section class="card"><h2>Risk</h2><p class="low">Low: no API, data, dependency, or runtime change. Scope excludes release workflow behavior.</p></section>
+</main>
+</html>

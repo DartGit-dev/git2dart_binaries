@@ -1,0 +1,3 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BUG-20260816-AAHL — Fix Plan</title></head>
+<body><h1>Search-path buffer ownership fix</h1><p>Capture the initial path in caller-owned memory, dispose each libgit2-populated <code>git_buf</code> before reuse, and restore the original path from a <code>finally</code> block. The focused integration test will validate the native calls; ownership correctness is structural.</p></body></html>

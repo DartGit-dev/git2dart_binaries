@@ -1,0 +1,9 @@
+diff --git a/.github/actions/generate-bindings/action.yml b/.github/actions/generate-bindings/action.yml
+--- a/.github/actions/generate-bindings/action.yml
++++ b/.github/actions/generate-bindings/action.yml
+@@
+-        key: native-v1-bindings-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-none-none-${{ hashFiles('.github/actions/generate-bindings/action.yml', '.github/scripts/native_cache_manifest.py') }}
++        key: native-v1-bindings-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-none-none-${{ hashFiles('.github/actions/generate-bindings/action.yml', '.github/scripts/native_cache_manifest.py', 'ffigen.yaml', 'pubspec.lock') }}
+@@
+-        key: native-v1-bindings-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-none-none-${{ hashFiles('.github/actions/generate-bindings/action.yml', '.github/scripts/native_cache_manifest.py') }}
++        key: native-v1-bindings-${{ runner.arch }}-${{ steps.toolchain.outputs.fingerprint }}-${{ inputs.libgit2_version }}-none-none-${{ hashFiles('.github/actions/generate-bindings/action.yml', '.github/scripts/native_cache_manifest.py', 'ffigen.yaml', 'pubspec.lock') }}
