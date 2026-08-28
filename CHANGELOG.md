@@ -1,3 +1,11 @@
+## [1.14.0] - 2026-08-28
+### Security
+- Updated bundled libgit2 builds to `1.9.7`, which includes the upstream
+  libssh2 remote-path escaping fix for CVE-2026-5917.
+
+### Changed
+- Bumped the package to version `1.14.0`.
+
 ## [1.13.0] - 2026-08-26
 ### Added
 - Added an explicit managed libgit2 runtime lifecycle to the public API, with
