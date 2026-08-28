@@ -27,8 +27,9 @@ final class WorkflowCondition {
     WorkflowConditionKind.mainPush =>
       event == 'push' && ref == 'refs/heads/main',
     WorkflowConditionKind.docsCommit =>
-      event == 'push' && commitMessage.contains('[docs]'),
-    WorkflowConditionKind.nonDocsCommit => !commitMessage.contains('[docs]'),
+      event == 'push' && _commitSubject(commitMessage).contains('[docs]'),
+    WorkflowConditionKind.nonDocsCommit =>
+      !_commitSubject(commitMessage).contains('[docs]'),
     WorkflowConditionKind.cacheMiss => false,
   };
 
@@ -49,10 +50,10 @@ final class WorkflowCondition {
         "github.event_name == 'push' && github.ref == 'refs/heads/main'") {
       return WorkflowCondition(WorkflowConditionKind.mainPush, normalized);
     }
-    if (normalized == "contains(github.event.head_commit.message, '[docs]')") {
+    if (normalized == "needs.classify_commit.outputs.docs_commit == 'true'") {
       return WorkflowCondition(WorkflowConditionKind.docsCommit, normalized);
     }
-    if (normalized == "!contains(github.event.head_commit.message, '[docs]')") {
+    if (normalized == "needs.classify_commit.outputs.docs_commit != 'true'") {
       return WorkflowCondition(WorkflowConditionKind.nonDocsCommit, normalized);
     }
     if (RegExp(
@@ -63,6 +64,8 @@ final class WorkflowCondition {
     throw FormatException('unsupported workflow condition: $source');
   }
 }
+
+String _commitSubject(String message) => message.split(RegExp(r'\r?\n')).first;
 
 final class WorkflowStepFact {
   const WorkflowStepFact({
@@ -189,8 +192,9 @@ final class WorkflowPolicyFacts {
       ref: ref,
       commitMessage: commitMessage,
       visiting: <String>{},
-    ))
+    )) {
       return false;
+    }
     final publish = jobs['publish_package'];
     if (publish == null) return false;
     return publish.stepIndex('Validate publish package') >= 0;
@@ -205,8 +209,9 @@ final class WorkflowPolicyFacts {
       event: event,
       ref: ref,
       commitMessage: commitMessage,
-    ))
+    )) {
       return false;
+    }
     final publishStep = jobs['publish_package']!.step('Publish package');
     return publishStep.condition.evaluate(
       event: event,
