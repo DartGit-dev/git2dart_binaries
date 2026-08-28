@@ -93,4 +93,17 @@ void main() {
       ),
     );
   });
+
+  test('resets the iOS simulator before retrying a timed-out test', () {
+    final workflow =
+        File('.github/workflows/build_package.yml').readAsStringSync();
+
+    expect(
+      workflow,
+      contains(r'xcrun simctl terminate "$device_id" "$bundle_id" || true'),
+    );
+    expect(workflow, contains(r'xcrun simctl shutdown "$device_id" || true'));
+    expect(workflow, contains(r'xcrun simctl erase "$device_id"'));
+    expect(workflow, contains(r'xcrun simctl boot "$device_id"'));
+  });
 }
