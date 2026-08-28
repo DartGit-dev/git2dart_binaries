@@ -671,7 +671,7 @@ jobs:
           force-avd-creation: false
           disable-animations: true
           pre-emulator-launch-script: adb start-server
-          emulator-options: -no-window -gpu swiftshader_indirect -delay-adb -no-snapshot-save -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -delay-adb -no-snapshot-load -no-snapshot-save -noaudio -no-boot-anim -camera-back none
           script: cd "$RUNNER_TEMP/git2dart_mobile_test" && timeout 900s flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded || { status=$?; flutter devices; exit "$status"; }
 
   publish_package:

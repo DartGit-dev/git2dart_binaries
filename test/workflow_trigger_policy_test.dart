@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:test/test.dart';
 
 import '../tool/workflow_policy_facts.dart';
@@ -75,6 +77,20 @@ void main() {
         commitMessage: 'docs: refresh API reference',
       ),
       isFalse,
+    );
+  });
+
+  test('cold boots the cached Android AVD before integration tests', () {
+    final workflow =
+        File('.github/workflows/build_package.yml').readAsStringSync();
+
+    expect(
+      workflow,
+      contains(
+        'emulator-options: -no-window -gpu swiftshader_indirect '
+        '-delay-adb -no-snapshot-load -no-snapshot-save -noaudio '
+        '-no-boot-anim -camera-back none',
+      ),
     );
   });
 }
