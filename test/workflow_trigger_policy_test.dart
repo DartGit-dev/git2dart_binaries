@@ -94,7 +94,7 @@ void main() {
     );
   });
 
-  test('resets the iOS simulator before retrying a timed-out test', () {
+  test('switches iOS simulators before one bounded retry', () {
     final workflow =
         File('.github/workflows/build_package.yml').readAsStringSync();
 
@@ -103,7 +103,10 @@ void main() {
       contains(r'xcrun simctl terminate "$device_id" "$bundle_id" || true'),
     );
     expect(workflow, contains(r'xcrun simctl shutdown "$device_id" || true'));
-    expect(workflow, contains(r'xcrun simctl erase "$device_id"'));
+    expect(workflow, contains('xcrun simctl list devices available -j'));
+    expect(workflow, contains(r'device["udid"] != current'));
+    expect(workflow, contains(r'device_id="$retry_device_id"'));
     expect(workflow, contains(r'xcrun simctl boot "$device_id"'));
+    expect(RegExp(r'run_ios_tests 300').allMatches(workflow), hasLength(2));
   });
 }
