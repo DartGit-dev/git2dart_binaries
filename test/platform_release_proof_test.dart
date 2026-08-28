@@ -266,7 +266,7 @@ void main() {
       source.copySync(target.path);
     }
     final versions = fixture.file('round-trip-versions.txt')
-      ..writeAsStringSync('1.9.6\n1.11.1\n3.0.15\n');
+      ..writeAsStringSync('1.9.7\n1.11.1\n3.0.15\n');
     final result = await _create(
       fixture,
       platform: platform,
@@ -355,7 +355,7 @@ Future<void> _writeCompleteProofs(
 Map<String, Object> _fixtureVersions() => <String, Object>{
   for (final version
       in <String, String>{
-        'libgit2': '1.9.6',
+        'libgit2': '1.9.7',
         'libssh2': '1.11.1',
         'openssl': '3.0.15',
       }.entries)
@@ -451,7 +451,7 @@ Future<ProcessResult> _create(
   '--candidate',
   'fixture',
   '--libgit2',
-  '1.9.6',
+  '1.9.7',
   '--libssh2',
   '1.11.1',
   '--openssl',

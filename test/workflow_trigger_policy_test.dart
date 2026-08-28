@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:test/test.dart';
 
 import '../tool/workflow_policy_facts.dart';
@@ -76,5 +78,35 @@ void main() {
       ),
       isFalse,
     );
+  });
+
+  test('cold boots the cached Android AVD before integration tests', () {
+    final workflow =
+        File('.github/workflows/build_package.yml').readAsStringSync();
+
+    expect(
+      workflow,
+      contains(
+        'emulator-options: -no-window -gpu swiftshader_indirect '
+        '-delay-adb -no-snapshot-load -no-snapshot-save -noaudio '
+        '-no-boot-anim -camera-back none',
+      ),
+    );
+  });
+
+  test('switches iOS simulators before one bounded retry', () {
+    final workflow =
+        File('.github/workflows/build_package.yml').readAsStringSync();
+
+    expect(
+      workflow,
+      contains(r'xcrun simctl terminate "$device_id" "$bundle_id" || true'),
+    );
+    expect(workflow, contains(r'xcrun simctl shutdown "$device_id" || true'));
+    expect(workflow, contains('xcrun simctl list devices available -j'));
+    expect(workflow, contains(r'device["udid"] != current'));
+    expect(workflow, contains(r'device_id="$retry_device_id"'));
+    expect(workflow, contains(r'xcrun simctl boot "$device_id"'));
+    expect(RegExp(r'run_ios_tests 300').allMatches(workflow), hasLength(2));
   });
 }

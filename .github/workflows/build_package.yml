@@ -9,7 +9,7 @@ on:
       - "main"
 env:
   PUB_ENVIRONMENT: bot.github
-  LIBGIT2_VERSION: "1.9.6"
+  LIBGIT2_VERSION: "1.9.7"
   LIBSSH2_VERSION: "1.11.1"
   OPENSSL_VERSION: "3.0.15"
   FLUTTER_VERSION: "3.44.0"
@@ -519,12 +519,21 @@ jobs:
                   rescue Errno::ESRCH
                   rescue Errno::EPERM => error
                     warn "::warning::Could not terminate process group #{pid}: #{error.message}"
+                    begin
+                      Process.kill("TERM", pid)
+                      sleep 5
+                    rescue Errno::ESRCH
+                    end
                   ensure
                     begin
                       Process.kill("KILL", -pid)
                     rescue Errno::ESRCH
                     rescue Errno::EPERM => error
                       warn "::warning::Could not kill process group #{pid}: #{error.message}"
+                      begin
+                        Process.kill("KILL", pid)
+                      rescue Errno::ESRCH
+                      end
                     end
                   end
                 end
@@ -554,13 +563,50 @@ jobs:
               exit "$status"
             fi
 
-            timestamp "iOS test timed out; rebooting simulator before retry"
+            timestamp "iOS test timed out; switching simulator before retry"
+            app_bundle="$test_app/build/ios/iphonesimulator/Runner.app"
+            bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app_bundle/Info.plist")"
+            xcrun simctl terminate "$device_id" "$bundle_id" || true
             xcrun simctl shutdown "$device_id" || true
+
+            for attempt in {1..60}; do
+              simulator_state="$(xcrun simctl list devices | awk -F '[()]' -v id="$device_id" '$2 == id { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $4); print $4; exit }')"
+              if [ "$simulator_state" = "Shutdown" ]; then
+                break
+              fi
+              if [ "$attempt" -eq 60 ]; then
+                echo "::error::Simulator $device_id did not shut down before retry"
+                exit 1
+              fi
+              sleep 2
+            done
+
+            retry_device_id="$(
+              xcrun simctl list devices available -j | ruby -rjson -e '
+                current = ARGV.shift
+                runtime_devices = JSON.parse(STDIN.read).fetch("devices").values.find do |devices|
+                  devices.any? { |device| device["udid"] == current }
+                end
+                retry_device = runtime_devices&.find do |device|
+                  device["name"].start_with?("iPhone") && device["udid"] != current
+                end
+                puts retry_device["udid"] if retry_device
+              ' "$device_id"
+            )"
+
+            if [ -n "$retry_device_id" ]; then
+              timestamp "Retrying on alternate simulator $retry_device_id"
+              device_id="$retry_device_id"
+            else
+              timestamp "No alternate simulator found; erasing $device_id"
+              xcrun simctl erase "$device_id"
+            fi
+
             xcrun simctl boot "$device_id" || true
             xcrun simctl bootstatus "$device_id" -b
             flutter devices
 
-            run_ios_tests 600
+            run_ios_tests 300
           fi
 
           timestamp "Finished flutter test on iOS simulator"
@@ -671,7 +717,7 @@ jobs:
           force-avd-creation: false
           disable-animations: true
           pre-emulator-launch-script: adb start-server
-          emulator-options: -no-window -gpu swiftshader_indirect -delay-adb -no-snapshot-save -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -delay-adb -no-snapshot-load -no-snapshot-save -noaudio -no-boot-anim -camera-back none
           script: cd "$RUNNER_TEMP/git2dart_mobile_test" && timeout 900s flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded || { status=$?; flutter devices; exit "$status"; }
 
   publish_package:

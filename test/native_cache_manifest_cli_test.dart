@@ -99,7 +99,7 @@ Future<ProcessResult> _run(
   '--abi',
   'x64',
   '--libgit2',
-  '1.9.6',
+  '1.9.7',
   '--libssh2',
   '1.11.1',
   '--openssl',
@@ -109,7 +109,7 @@ Future<ProcessResult> _run(
   '--provenance',
   'source-build',
   '--source-ref',
-  'refs/tags/v1.9.6',
+  'refs/tags/v1.9.7',
 ]);
 
 String _pythonExecutable() => Platform.isWindows ? 'python' : 'python3';
