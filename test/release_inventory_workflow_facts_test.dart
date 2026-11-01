@@ -20,6 +20,6 @@ void main() {
       expect(index, isNonNegative, reason: name);
       expect(index, lessThan(release), reason: name);
     }
-    expect(publish.needs.length, 6);
+    expect(publish.needs.length, 7);
   });
 }

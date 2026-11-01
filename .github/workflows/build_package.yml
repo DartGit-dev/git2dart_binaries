@@ -64,7 +64,19 @@ jobs:
     needs: classify_commit
     if: ${{ needs.classify_commit.outputs.docs_commit != 'true' }}
     runs-on: ubuntu-latest
+    # The container, rather than the hosted runner, defines the Linux ABI.
+    container:
+      image: ubuntu:22.04
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Install Linux container prerequisites
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -o Acquire::Retries=3
+          apt-get install -o Acquire::Retries=3 -y --no-install-recommends build-essential ca-certificates git pkg-config python3 sudo zlib1g-dev zstd
+
       - name: Check out repository
         uses: actions/checkout@v6
 
@@ -74,6 +86,8 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Test Linux glibc compatibility check
+        run: python3 -m unittest discover -s test -p 'test_check_linux_glibc.py'
       - name: Prove final Linux payload
         continue-on-error: true
         run: python3 .github/scripts/platform_release_proof.py create --platform linux --root /tmp/export --version-evidence /tmp/openssl/VERSION.dat --output "$RUNNER_TEMP/platform-proof-linux" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
@@ -293,6 +307,58 @@ jobs:
           name: platform-proof-android-${{ matrix.os }}
           path: ${{ runner.temp }}/platform-proof-android-${{ matrix.os }}
           retention-days: 7
+
+  run_linux_compatibility:
+    needs: build_libgit2_linux
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install Linux runtime dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -o Acquire::Retries=3
+          apt-get install -o Acquire::Retries=3 -y --no-install-recommends ca-certificates libssl3 python3 zlib1g
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: ./linux
+          name: cache-linux
+      - name: Open a repository on glibc 2.35
+        run: |
+          env -u LD_LIBRARY_PATH python3 - <<'PY'
+          import ctypes
+          import os
+          import pathlib
+          import tempfile
+
+          root = pathlib.Path('linux').resolve()
+          ssh = ctypes.CDLL(str(root / 'libssh2.so'))
+          git = ctypes.CDLL(str(root / 'libgit2.so'))
+          git.git_libgit2_init.restype = ctypes.c_int
+          git.git_libgit2_shutdown.restype = ctypes.c_int
+          git.git_repository_init.argtypes = [ctypes.POINTER(ctypes.c_void_p), ctypes.c_char_p, ctypes.c_uint]
+          git.git_repository_open.argtypes = [ctypes.POINTER(ctypes.c_void_p), ctypes.c_char_p]
+          git.git_repository_free.argtypes = [ctypes.c_void_p]
+
+          def check(result, operation):
+              if result < 0:
+                  raise RuntimeError(f'{operation} failed: {result}')
+
+          check(git.git_libgit2_init(), 'libgit2 initialization')
+          with tempfile.TemporaryDirectory() as directory:
+              path = os.fsencode(os.path.join(directory, 'repo'))
+              repo = ctypes.c_void_p()
+              check(git.git_repository_init(ctypes.byref(repo), path, 0), 'repository initialization')
+              git.git_repository_free(repo)
+              repo = ctypes.c_void_p()
+              check(git.git_repository_open(ctypes.byref(repo), path), 'repository open')
+              git.git_repository_free(repo)
+          check(git.git_libgit2_shutdown(), 'libgit2 shutdown')
+          PY
 
   run_linux_tests:
     needs: [generate_bindings, build_libgit2_linux]
@@ -747,7 +813,7 @@ jobs:
           script: cd "$RUNNER_TEMP/git2dart_mobile_test" && timeout 900s flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded || { status=$?; flutter devices; exit "$status"; }
 
   publish_package:
-    needs: [run_linux_tests, run_macos_tests, run_windows_tests, run_ios_tests, run_android_tests, build_libgit2_android_other]
+    needs: [run_linux_compatibility, run_linux_tests, run_macos_tests, run_windows_tests, run_ios_tests, run_android_tests, build_libgit2_android_other]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository

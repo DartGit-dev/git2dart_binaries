@@ -18,13 +18,16 @@ runs:
       run: |
         sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends binutils clang cmake curl perl make
         mkdir /tmp/export
+        if [ "$(id -u)" -eq 0 ] && ! id -u git2dart-ci >/dev/null 2>&1; then
+          useradd --create-home git2dart-ci
+        fi
 
     - name: Fingerprint Linux toolchain
       id: toolchain
       shell: bash
       run: |
         set -euo pipefail
-        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-openssl-${{ inputs.openssl_version }}"
+        raw="${RUNNER_OS}-${RUNNER_ARCH}-$(getconf GNU_LIBC_VERSION)-$(cc --version | sed -n '1p')-$(clang --version | sed -n '1p')-$(cmake --version | sed -n '1p')-openssl-${{ inputs.openssl_version }}"
         fingerprint="$(printf '%s' "$raw" | sha256sum | cut -d' ' -f1)"
         echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
         echo "openssl_version=${{ inputs.openssl_version }}" >> "$GITHUB_OUTPUT"
@@ -90,7 +93,12 @@ runs:
         mv ./openssl /tmp/openssl && cd /tmp/openssl
         ./Configure --prefix=/tmp/openssl/install --openssldir=/tmp/openssl/install/ssl shared
         make -j"$(nproc)"
-        make test
+        if [ "$(id -u)" -eq 0 ]; then
+          chown -R git2dart-ci /tmp/openssl
+          sudo -H -u git2dart-ci make test
+        else
+          make test
+        fi
         make install_sw
 
     - name: Build libssh2
@@ -125,8 +133,13 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        cd /tmp/libgit2
-        ./bld/libgit2_tests
+        if [ "$(id -u)" -eq 0 ]; then
+          chown -R git2dart-ci /tmp/libgit2
+          sudo -H -u git2dart-ci bash -c 'cd /tmp/libgit2 && ./bld/libgit2_tests'
+        else
+          cd /tmp/libgit2
+          ./bld/libgit2_tests
+        fi
 
     - name: Export git2 library
       if: steps.validate-cache.outputs.valid != 'true'
@@ -155,6 +168,10 @@ runs:
           echo "| libssh2.so | $libssh2_before | $libssh2_after |"
           echo "| libgit2.so | $libgit2_before | $libgit2_after |"
         } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Verify Linux glibc compatibility
+      shell: bash
+      run: python3 .github/scripts/check_linux_glibc.py /tmp/export/libgit2.so /tmp/export/libssh2.so
 
     - name: Create Linux cache manifest
       if: steps.validate-cache.outputs.valid != 'true'

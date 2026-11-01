@@ -4,6 +4,11 @@
 
 git2dart package provides ability to use [libgit2](https://github.com/libgit2/libgit2) in Dart/Flutter.
 
+Linux artifacts built by this workflow target Ubuntu 22.04's glibc 2.35
+baseline. CI checks both bundled libraries and opens a repository using the
+downloaded artifacts in a clean Ubuntu 22.04 container. Previously published
+artifacts are not rebuilt automatically.
+
 ## Managed libgit2 lifecycle
 
 The package owns native-library discovery and one checked libgit2 increment per
