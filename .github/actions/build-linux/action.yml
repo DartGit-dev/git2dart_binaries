@@ -91,7 +91,7 @@ runs:
       run: |
         set -euo pipefail
         mv ./openssl /tmp/openssl && cd /tmp/openssl
-        ./Configure --prefix=/tmp/openssl/install --openssldir=/tmp/openssl/install/ssl shared
+        ./Configure --prefix=/tmp/openssl/install --openssldir=/tmp/openssl/install/ssl --libdir=lib shared
         make -j"$(nproc)"
         if [ "$(id -u)" -eq 0 ]; then
           chown -R git2dart-ci /tmp/openssl
@@ -100,6 +100,8 @@ runs:
           make test
         fi
         make install_sw
+        test -s /tmp/openssl/install/lib/libcrypto.so
+        test -s /tmp/openssl/install/lib/libssl.so
 
     - name: Build libssh2
       if: steps.validate-cache.outputs.valid != 'true'
