@@ -218,6 +218,11 @@ def linkage(root: Path, platform: str) -> tuple[bool, str]:
     env = os.environ.copy()
     key = "PATH" if platform == "windows" else "DYLD_LIBRARY_PATH" if platform == "macos" else "LD_LIBRARY_PATH"
     env[key] = f"{root}{os.pathsep}{env.get(key, '')}"
+    if platform == "linux":
+        # Match the runtime loader: the bundled sidecar filename differs from
+        # its SONAME, so it must be loaded before the dependent library.
+        script = "import ctypes,sys; sidecar=ctypes.CDLL(sys.argv[1]); ctypes.CDLL(sys.argv[2])"
+        return _run([sys.executable, "-c", script, str(root / "libssh2.so"), str(library)], env)
     script = "import ctypes,sys; ctypes.CDLL(sys.argv[1])"
     return _run([sys.executable, "-c", script, str(library)], env)
 
