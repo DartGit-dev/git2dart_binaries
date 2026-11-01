@@ -338,8 +338,10 @@ jobs:
           import tempfile
 
           root = pathlib.Path('linux').resolve()
-          ssh = ctypes.CDLL(str(root / 'libssh2.so'))
           git = ctypes.CDLL(str(root / 'libgit2.so'))
+          sidecar = str((root / 'libssh2.so.1').resolve())
+          if sidecar not in pathlib.Path('/proc/self/maps').read_text():
+              raise RuntimeError('libgit2 did not load the bundled libssh2.so.1')
           git.git_libgit2_init.restype = ctypes.c_int
           git.git_libgit2_shutdown.restype = ctypes.c_int
           git.git_repository_init.argtypes = [ctypes.POINTER(ctypes.c_void_p), ctypes.c_char_p, ctypes.c_uint]
@@ -383,7 +385,7 @@ jobs:
 
       - name: Install linux dependencies
         run: |
-            sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends openssl
+            sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends clang cmake libgtk-3-dev ninja-build openssl pkg-config xauth xvfb
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -396,6 +398,36 @@ jobs:
 
       - run: flutter pub get
       - run: flutter test -r expanded
+
+      - name: Build and run a relocated Linux Flutter bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/git2dart-linux-app"
+          bundle="$RUNNER_TEMP/git2dart-relocated-bundle"
+          flutter create --empty --no-pub --platforms=linux --project-name git2dart_bundle_probe "$app"
+          python3 - "$app/pubspec.yaml" "$GITHUB_WORKSPACE" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          pubspec = pathlib.Path(sys.argv[1])
+          text = pubspec.read_text()
+          dependency = 'dependencies:\n  git2dart_binaries:\n    path: ' + json.dumps(sys.argv[2]) + '\n'
+          if 'dependencies:\n' not in text:
+              raise SystemExit('Flutter app pubspec has no dependencies section')
+          pubspec.write_text(text.replace('dependencies:\n', dependency, 1))
+          PY
+          cp test/fixtures/linux_flutter_bundle_probe.dart "$app/lib/main.dart"
+          cd "$app"
+          flutter pub get
+          flutter build linux --release
+          cp -a build/linux/x64/release/bundle "$bundle"
+          test -s "$bundle/lib/libssh2.so.1"
+          env -u LD_LIBRARY_PATH \
+            GIT2DART_BINARIES_PACKAGE_ROOT="$RUNNER_TEMP/nonexistent-package-root" \
+            GIT2DART_EXPECTED_SSH2="$bundle/lib/libssh2.so.1" \
+            timeout 60s xvfb-run -a "$bundle/git2dart_bundle_probe"
 
   run_macos_tests:
     needs: [generate_bindings, build_libgit2_macos]
@@ -891,6 +923,7 @@ jobs:
             lib/src/bindings.dart
             linux/libgit2.so
             linux/libssh2.so
+            linux/libssh2.so.1
             macos/libgit2.dylib
             windows/libgit2.dll
             windows/libssh2.dll

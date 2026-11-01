@@ -128,7 +128,7 @@ runs:
       run: |
         mv ./libgit2 /tmp/libgit2
         cd /tmp/libgit2
-        cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DOPENSSL_ROOT_DIR=/tmp/openssl/install -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
+        cmake -B bld -DUSE_SSH=libssh2 -DBUILD_TESTS=ON -DEXPERIMENTAL_SHA256=ON -DOPENSSL_ROOT_DIR=/tmp/openssl/install -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/libgit2/install '-DCMAKE_INSTALL_RPATH=$ORIGIN' -DLIBSSH2_INCLUDE_DIR=/tmp/libssh2/install/include -DLIBSSH2_LIBRARY=/tmp/libssh2/install/lib/libssh2.so
         cmake --build bld --parallel --target install
 
     - name: Run libgit2 tests
@@ -155,6 +155,8 @@ runs:
         libgit2_before="$(wc -c < /tmp/export/libgit2.so | tr -d ' ')"
 
         strip --strip-unneeded /tmp/export/libssh2.so /tmp/export/libgit2.so
+        # Flutter installs files by name; do not depend on preserving symlinks.
+        cp /tmp/export/libssh2.so /tmp/export/libssh2.so.1
 
         exported_symbols="$(readelf --dyn-syms --wide /tmp/export/libgit2.so)"
         grep -q 'git_libgit2_init' <<< "$exported_symbols"
@@ -173,7 +175,10 @@ runs:
 
     - name: Verify Linux glibc compatibility
       shell: bash
-      run: python3 .github/scripts/check_linux_glibc.py /tmp/export/libgit2.so /tmp/export/libssh2.so
+      run: |
+        set -euo pipefail
+        cmp /tmp/export/libssh2.so /tmp/export/libssh2.so.1
+        python3 .github/scripts/check_linux_glibc.py /tmp/export/libgit2.so /tmp/export/libssh2.so /tmp/export/libssh2.so.1
 
     - name: Create Linux cache manifest
       if: steps.validate-cache.outputs.valid != 'true'

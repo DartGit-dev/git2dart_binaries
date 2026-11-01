@@ -1,4 +1,4 @@
-"""Verify the Linux proof loads the bundled sidecar by its package filename."""
+"""Verify packaged Linux libraries resolve their versioned sidecar themselves."""
 import importlib.util
 import shutil
 import subprocess
@@ -18,12 +18,12 @@ SPEC.loader.exec_module(proof)
     "Linux and clang are required",
 )
 class LinuxReleaseLinkageTest(unittest.TestCase):
-    def test_loads_bundled_sidecar_when_soname_file_is_absent(self):
+    def test_requires_soname_file_and_origin_runpath_without_preload(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             sidecar_source = root / "sidecar.c"
             library_source = root / "library.c"
-            sidecar = root / "libssh2.so"
+            sidecar = root / "libssh2.so.1"
             library = root / "libgit2.so"
             sidecar_source.write_text("int git2dart_proof_only(void) { return 42; }\n")
             library_source.write_text(
@@ -38,6 +38,7 @@ class LinuxReleaseLinkageTest(unittest.TestCase):
                 check=True,
                 capture_output=True,
             )
+            shutil.copyfile(sidecar, root / "libssh2.so")
             subprocess.run(
                 [
                     "clang", "-shared", "-fPIC", str(library_source),
@@ -47,10 +48,22 @@ class LinuxReleaseLinkageTest(unittest.TestCase):
                 capture_output=True,
             )
 
-            self.assertFalse((root / "libssh2.so.1").exists())
+            # A matching file alone is insufficient without $ORIGIN in libgit2.
+            ok, _ = proof.linkage(root, "linux")
+            self.assertFalse(ok)
+
+            subprocess.run(
+                [
+                    "clang", "-shared", "-fPIC", str(library_source),
+                    str(sidecar), "-Wl,-rpath,$ORIGIN", "-o", str(library),
+                ],
+                check=True,
+                capture_output=True,
+            )
             ok, diagnostic = proof.linkage(root, "linux")
             self.assertTrue(ok, diagnostic)
 
+            # The legacy unversioned copy must not mask a missing SONAME file.
             sidecar.unlink()
             ok, _ = proof.linkage(root, "linux")
             self.assertFalse(ok)

@@ -8,6 +8,8 @@ Linux artifacts built by this workflow target Ubuntu 22.04's glibc 2.35
 baseline. CI checks both bundled libraries and opens a repository using the
 downloaded artifacts in a clean Ubuntu 22.04 container. Previously published
 artifacts are not rebuilt automatically.
+Linux Flutter bundles include the `libssh2.so.1` SONAME alongside `libgit2.so`;
+compatible system OpenSSL 3 libraries remain a runtime dependency.
 
 ## Managed libgit2 lifecycle
 

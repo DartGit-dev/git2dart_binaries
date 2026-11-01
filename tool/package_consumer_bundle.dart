@@ -370,6 +370,7 @@ List<bool Function(String)> _requiredPayload(String platform) =>
       'linux' => <bool Function(String)>[
         (name) => name == 'libgit2.so',
         (name) => name == 'libssh2.so',
+        (name) => name == 'libssh2.so.1',
       ],
       'macos' => <bool Function(String)>[(name) => name == 'libgit2.dylib'],
       _ => throw UnsupportedError('unsupported consumer platform: $platform'),

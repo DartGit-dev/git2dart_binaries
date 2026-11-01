@@ -20,7 +20,7 @@ FAILURE_CODES = {
     "unavailable", "unsafe-field",
 }
 EXPECTED = {
-    "linux": ("libgit2.so", "libssh2.so"),
+    "linux": ("libgit2.so", "libssh2.so", "libssh2.so.1"),
     "macos": ("libgit2.dylib",),
     "windows": ("libgit2.dll", "libssh2.dll", "libcrypto*.dll", "libssl*.dll"),
     "android": ("libgit2.so", "libssh2.so", "libcrypto.so", "libssl.so"),
@@ -217,12 +217,12 @@ def linkage(root: Path, platform: str) -> tuple[bool, str]:
     library = root / ("libgit2.dll" if platform == "windows" else "libgit2.dylib" if platform == "macos" else "libgit2.so")
     env = os.environ.copy()
     key = "PATH" if platform == "windows" else "DYLD_LIBRARY_PATH" if platform == "macos" else "LD_LIBRARY_PATH"
-    env[key] = f"{root}{os.pathsep}{env.get(key, '')}"
     if platform == "linux":
-        # Match the runtime loader: the bundled sidecar filename differs from
-        # its SONAME, so it must be loaded before the dependent library.
-        script = "import ctypes,sys; sidecar=ctypes.CDLL(sys.argv[1]); ctypes.CDLL(sys.argv[2])"
-        return _run([sys.executable, "-c", script, str(root / "libssh2.so"), str(library)], env)
+        # Check the packaged loader path without a pub-cache preload or an
+        # environment override that could hide a missing SONAME or RUNPATH.
+        env.pop(key, None)
+    else:
+        env[key] = f"{root}{os.pathsep}{env.get(key, '')}"
     script = "import ctypes,sys; ctypes.CDLL(sys.argv[1])"
     return _run([sys.executable, "-c", script, str(library)], env)
 
