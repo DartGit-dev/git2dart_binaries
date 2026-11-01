@@ -64,7 +64,19 @@ jobs:
     needs: classify_commit
     if: ${{ needs.classify_commit.outputs.docs_commit != 'true' }}
     runs-on: ubuntu-latest
+    # The container, rather than the hosted runner, defines the Linux ABI.
+    container:
+      image: ubuntu:22.04
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Install Linux container prerequisites
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -o Acquire::Retries=3
+          apt-get install -o Acquire::Retries=3 -y --no-install-recommends build-essential ca-certificates git pkg-config python3 sudo zlib1g-dev zstd
+
       - name: Check out repository
         uses: actions/checkout@v6
 
@@ -74,6 +86,10 @@ jobs:
           libgit2_version: ${{ env.LIBGIT2_VERSION }}
           libssh2_version: ${{ env.LIBSSH2_VERSION }}
           openssl_version: ${{ env.OPENSSL_VERSION }}
+      - name: Test Linux glibc compatibility check
+        run: python3 -m unittest discover -s test -p 'test_check_linux_glibc.py'
+      - name: Test Linux release proof linkage
+        run: python3 test/test_linux_release_linkage.py
       - name: Prove final Linux payload
         continue-on-error: true
         run: python3 .github/scripts/platform_release_proof.py create --platform linux --root /tmp/export --version-evidence /tmp/openssl/VERSION.dat --output "$RUNNER_TEMP/platform-proof-linux" --candidate "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --libgit2 "${LIBGIT2_VERSION}" --libssh2 "${LIBSSH2_VERSION}" --openssl "${OPENSSL_VERSION}"
@@ -294,6 +310,60 @@ jobs:
           path: ${{ runner.temp }}/platform-proof-android-${{ matrix.os }}
           retention-days: 7
 
+  run_linux_compatibility:
+    needs: build_libgit2_linux
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install Linux runtime dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -o Acquire::Retries=3
+          apt-get install -o Acquire::Retries=3 -y --no-install-recommends ca-certificates libssl3 python3 zlib1g
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: ./linux
+          name: cache-linux
+      - name: Open a repository on glibc 2.35
+        run: |
+          env -u LD_LIBRARY_PATH python3 - <<'PY'
+          import ctypes
+          import os
+          import pathlib
+          import tempfile
+
+          root = pathlib.Path('linux').resolve()
+          git = ctypes.CDLL(str(root / 'libgit2.so'))
+          sidecar = str((root / 'libssh2.so.1').resolve())
+          if sidecar not in pathlib.Path('/proc/self/maps').read_text():
+              raise RuntimeError('libgit2 did not load the bundled libssh2.so.1')
+          git.git_libgit2_init.restype = ctypes.c_int
+          git.git_libgit2_shutdown.restype = ctypes.c_int
+          git.git_repository_init.argtypes = [ctypes.POINTER(ctypes.c_void_p), ctypes.c_char_p, ctypes.c_uint]
+          git.git_repository_open.argtypes = [ctypes.POINTER(ctypes.c_void_p), ctypes.c_char_p]
+          git.git_repository_free.argtypes = [ctypes.c_void_p]
+
+          def check(result, operation):
+              if result < 0:
+                  raise RuntimeError(f'{operation} failed: {result}')
+
+          check(git.git_libgit2_init(), 'libgit2 initialization')
+          with tempfile.TemporaryDirectory() as directory:
+              path = os.fsencode(os.path.join(directory, 'repo'))
+              repo = ctypes.c_void_p()
+              check(git.git_repository_init(ctypes.byref(repo), path, 0), 'repository initialization')
+              git.git_repository_free(repo)
+              repo = ctypes.c_void_p()
+              check(git.git_repository_open(ctypes.byref(repo), path), 'repository open')
+              git.git_repository_free(repo)
+          check(git.git_libgit2_shutdown(), 'libgit2 shutdown')
+          PY
+
   run_linux_tests:
     needs: [generate_bindings, build_libgit2_linux]
     runs-on: ubuntu-latest
@@ -315,7 +385,7 @@ jobs:
 
       - name: Install linux dependencies
         run: |
-            sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install  -o Acquire::Retries=3 -y --no-install-recommends openssl
+            sudo DEBIAN_FRONTEND=noninteractive apt-get update -o Acquire::Retries=3 && sudo DEBIAN_FRONTEND=noninteractive apt-get install -o Acquire::Retries=3 -y --no-install-recommends clang cmake libgtk-3-dev ninja-build openssl pkg-config xauth xvfb
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -328,6 +398,36 @@ jobs:
 
       - run: flutter pub get
       - run: flutter test -r expanded
+
+      - name: Build and run a relocated Linux Flutter bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/git2dart-linux-app"
+          bundle="$RUNNER_TEMP/git2dart-relocated-bundle"
+          flutter create --empty --no-pub --platforms=linux --project-name git2dart_bundle_probe "$app"
+          python3 - "$app/pubspec.yaml" "$GITHUB_WORKSPACE" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          pubspec = pathlib.Path(sys.argv[1])
+          text = pubspec.read_text()
+          dependency = 'dependencies:\n  git2dart_binaries:\n    path: ' + json.dumps(sys.argv[2]) + '\n'
+          if 'dependencies:\n' not in text:
+              raise SystemExit('Flutter app pubspec has no dependencies section')
+          pubspec.write_text(text.replace('dependencies:\n', dependency, 1))
+          PY
+          cp test/fixtures/linux_flutter_bundle_probe.dart "$app/lib/main.dart"
+          cd "$app"
+          flutter pub get
+          flutter build linux --release
+          cp -a build/linux/x64/release/bundle "$bundle"
+          test -s "$bundle/lib/libssh2.so.1"
+          env -u LD_LIBRARY_PATH \
+            GIT2DART_BINARIES_PACKAGE_ROOT="$RUNNER_TEMP/nonexistent-package-root" \
+            GIT2DART_EXPECTED_SSH2="$bundle/lib/libssh2.so.1" \
+            timeout 60s xvfb-run -a "$bundle/git2dart_bundle_probe"
 
   run_macos_tests:
     needs: [generate_bindings, build_libgit2_macos]
@@ -747,7 +847,7 @@ jobs:
           script: cd "$RUNNER_TEMP/git2dart_mobile_test" && timeout 900s flutter test integration_test/opts_bindings_integration_test.dart -d emulator-5554 -r expanded || { status=$?; flutter devices; exit "$status"; }
 
   publish_package:
-    needs: [run_linux_tests, run_macos_tests, run_windows_tests, run_ios_tests, run_android_tests, build_libgit2_android_other]
+    needs: [run_linux_compatibility, run_linux_tests, run_macos_tests, run_windows_tests, run_ios_tests, run_android_tests, build_libgit2_android_other]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -823,6 +923,7 @@ jobs:
             lib/src/bindings.dart
             linux/libgit2.so
             linux/libssh2.so
+            linux/libssh2.so.1
             macos/libgit2.dylib
             windows/libgit2.dll
             windows/libssh2.dll

@@ -1,3 +1,12 @@
+## [1.14.1] - 2026-11-02
+### Fixed
+- Linux: build native artifacts against the glibc 2.35 baseline, restoring
+  compatibility with Ubuntu 22.04 and compatible distributions.
+  ([#28](https://github.com/DartGit-dev/git2dart_binaries/issues/28))
+- Linux: bundle `libssh2.so.1` and resolve it next to `libgit2.so` so packaged
+  Flutter applications can load the native library without a pub cache.
+  ([#27](https://github.com/DartGit-dev/git2dart_binaries/issues/27))
+
 ## [1.14.0] - 2026-08-28
 ### Security
 - Updated bundled libgit2 builds to `1.9.7`, which includes the upstream

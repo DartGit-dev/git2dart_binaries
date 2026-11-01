@@ -18,7 +18,7 @@ const _scopes = <(String, String)>[
 ];
 
 const _expectedInventory = <String, List<String>>{
-  'linux': <String>['libgit2.so', 'libssh2.so'],
+  'linux': <String>['libgit2.so', 'libssh2.so', 'libssh2.so.1'],
   'macos': <String>['libgit2.dylib'],
   'windows': <String>[
     'libgit2.dll',
@@ -179,6 +179,7 @@ void main() {
         ..createSync();
       File(p.join(root.path, 'libgit2.so')).writeAsStringSync('not-a-library');
       File(p.join(root.path, 'libssh2.so')).writeAsStringSync('not-a-library');
+      File(p.join(root.path, 'libssh2.so.1')).writeAsStringSync('not-a-library');
       File(p.join(root.path, 'unexpected.so')).writeAsStringSync('unexpected');
       final evidence = fixture.file('VERSION.dat')
         ..writeAsStringSync('libgit2: 0.0.1\nlibssh2: 0.0.2\nopenssl: 0.0.3\n');

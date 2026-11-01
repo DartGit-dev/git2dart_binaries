@@ -46,6 +46,26 @@ void main() {
     );
   });
 
+  test('assembler rejects a Linux payload without the libssh2 SONAME', () {
+    final binding = fixture.file('external/bindings.dart')
+      ..writeAsStringSync('// fixture');
+    final payload = Directory(p.join(fixture.root.path, 'linux-payload'))
+      ..createSync();
+    File(p.join(payload.path, 'libgit2.so')).writeAsStringSync('fixture');
+    File(p.join(payload.path, 'libssh2.so')).writeAsStringSync('fixture');
+
+    expect(
+      () => assembleConsumerBundle(
+        sourceRoot: Directory.current,
+        bindingFile: binding,
+        payloadRoot: payload,
+        bundleRoot: Directory(p.join(fixture.root.path, 'linux-bundle')),
+        platform: 'linux',
+      ),
+      throwsStateError,
+    );
+  });
+
   test(
     'clean consumer compiles public imports and rejects internal imports',
     () async {
